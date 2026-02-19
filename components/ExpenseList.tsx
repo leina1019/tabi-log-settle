@@ -77,6 +77,7 @@ const ExpenseList: React.FC<Props> = ({ expenses, onDelete, onEdit, onResetAll, 
 
         <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
           <button
+            type="button"
             onClick={() => setSelectedCategory('All')}
             className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-[10px] font-bold border transition-colors ${selectedCategory === 'All' ? 'bg-primary border-primary text-white' : 'bg-white border-surface-gray-mid text-ink-sub'}`}
           >
@@ -85,6 +86,7 @@ const ExpenseList: React.FC<Props> = ({ expenses, onDelete, onEdit, onResetAll, 
           {CATEGORIES.map(cat => (
             <button
               key={cat}
+              type="button"
               onClick={() => setSelectedCategory(cat)}
               className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-[10px] font-bold border transition-colors ${selectedCategory === cat ? 'bg-primary border-primary text-white' : 'bg-white border-surface-gray-mid text-ink-sub'}`}
             >

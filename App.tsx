@@ -454,7 +454,7 @@ const App: React.FC = () => {
       </header>
 
       {/* Main Content Area */}
-      <main className="flex-1 overflow-y-auto px-4 pb-28 relative z-10 scrollbar-hide">
+      <main className="flex-1 overflow-y-auto px-4 pb-28 scrollbar-hide">
         {view === 'history' && (
           <ExpenseList
             expenses={expenses}

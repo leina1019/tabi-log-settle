@@ -298,7 +298,7 @@ const Dashboard: React.FC<Props> = ({
                   </div>
                 </div>
                 <div className="flex justify-end">
-                  <button onClick={resetCoverImage} className="text-[9px] text-ink-light hover:text-ink uppercase tracking-wider font-bold">デフォルトに戻す</button>
+                  <button type="button" onClick={resetCoverImage} className="text-[9px] text-ink-light hover:text-ink uppercase tracking-wider font-bold">デフォルトに戻す</button>
                 </div>
                 <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageChange} />
               </div>
@@ -318,8 +318,8 @@ const Dashboard: React.FC<Props> = ({
                 </div>
               </div>
               <div className="flex gap-3 pt-2">
-                <button onClick={() => setIsEditingTrip(false)} className="flex-1 py-3 rounded-xl text-xs font-bold text-ink-sub hover:bg-surface-gray">キャンセル</button>
-                <button onClick={saveTripSettings} className="flex-1 py-3 rounded-xl bg-premium-gold text-ocean-dark text-xs font-bold shadow-lg">保存</button>
+                <button type="button" onClick={() => setIsEditingTrip(false)} className="flex-1 py-3 rounded-xl text-xs font-bold text-ink-sub hover:bg-surface-gray border border-surface-gray-mid">キャンセル</button>
+                <button type="button" onClick={saveTripSettings} className="flex-1 py-3 rounded-xl bg-premium-gold text-ocean-dark text-xs font-bold shadow-lg hover:opacity-90 active:scale-95 transition-all">保存</button>
               </div>
             </div>
           </div>
@@ -329,20 +329,20 @@ const Dashboard: React.FC<Props> = ({
       {/* Budget Progress (Glass) */}
       <div className="glass p-6 rounded-3xl">
         <div className="flex justify-between items-start mb-4">
-          <button onClick={() => setSelectedMemberId('ALL')} className="text-left group">
+          <button type="button" onClick={() => setSelectedMemberId('ALL')} className="text-left group">
             <h3 className="text-ink-sub text-[10px] font-bold uppercase tracking-[0.2em] mb-1 group-hover:text-accent transition-colors">総支出 &gt;</h3>
             <div className="flex items-baseline gap-2">
               <p className="text-3xl font-sans font-bold text-ink group-hover:scale-105 transition-transform origin-left">{formatCurrency(totalJPY, 'JPY')}</p>
             </div>
           </button>
           <div className="text-right">
-            <button onClick={() => { setTempBudget(budget.toString()); setIsEditingBudget(true); }} className="text-[10px] text-accent font-bold uppercase tracking-widest hover:text-primary transition-colors">
+            <button type="button" onClick={() => { setTempBudget(budget.toString()); setIsEditingBudget(true); }} className="text-[10px] text-accent font-bold uppercase tracking-widest hover:text-primary transition-colors">
               目標予算 &gt;
             </button>
             {isEditingBudget ? (
               <div className="flex items-center justify-end gap-2 mt-1">
                 <input type="number" value={tempBudget} onChange={e => setTempBudget(e.target.value)} className="w-20 bg-transparent border-b border-premium-gold text-right text-sm font-bold outline-none" autoFocus />
-                <button onClick={saveBudget} className="text-xs text-premium-gold">OK</button>
+                <button type="button" onClick={saveBudget} className="text-xs text-premium-gold font-bold">OK</button>
               </div>
             ) : (
               <p className="text-sm font-bold text-ink/80">{formatCurrency(budget, 'JPY')}</p>
@@ -363,7 +363,7 @@ const Dashboard: React.FC<Props> = ({
       <div className="space-y-4">
         <div className="flex justify-between items-end px-2">
           <h3 className="text-[10px] font-bold text-ink-sub uppercase tracking-[0.2em]">メンバー</h3>
-          <button onClick={onOpenSettle} className="text-[10px] font-bold text-primary uppercase tracking-widest hover:text-primary-dark transition-colors">
+          <button type="button" onClick={onOpenSettle} className="text-[10px] font-bold text-primary uppercase tracking-widest hover:text-primary-dark transition-colors">
             清算を確認 &gt;
           </button>
         </div>
@@ -373,6 +373,7 @@ const Dashboard: React.FC<Props> = ({
             return (
               <button
                 key={m.id}
+                type="button"
                 onClick={() => setSelectedMemberId(m.id)}
                 className="w-full text-left glass p-5 rounded-2xl flex items-center justify-between active:scale-[0.98] transition-all hover:shadow-md group"
               >
@@ -412,10 +413,11 @@ const Dashboard: React.FC<Props> = ({
         {evaluation ? (
           <div>
             <p className="text-xs leading-relaxed text-ink-sub font-medium italic mb-3">"{evaluation}"</p>
-            <button onClick={() => setEvaluation(null)} className="text-[10px] text-ink-light hover:text-ink">閉じる</button>
+            <button type="button" onClick={() => setEvaluation(null)} className="text-[10px] text-ink-light hover:text-ink">閉じる</button>
           </div>
         ) : (
           <button
+            type="button"
             onClick={handleEvaluateBudget}
             disabled={isLoading}
             className="w-full py-3 rounded-xl border border-primary/20 bg-primary-light hover:bg-primary/10 text-xs font-bold tracking-widest text-primary transition-all"
@@ -443,7 +445,7 @@ const Dashboard: React.FC<Props> = ({
                   </div>
                 )}
               </div>
-              <button onClick={() => setSelectedMemberId(null)} className="p-2 text-ink-light hover:text-ink rounded-full bg-surface-gray">
+              <button type="button" onClick={() => setSelectedMemberId(null)} className="p-2 text-ink-light hover:text-ink rounded-full bg-surface-gray">
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
               </button>
             </div>

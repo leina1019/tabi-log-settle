@@ -46,7 +46,7 @@ const TicketView: React.FC<Props> = ({ tickets, onSave, onDelete }) => {
     <div className="space-y-6 pt-2">
       <div className="flex justify-between items-center px-2">
         <h2 className="text-xl font-sans font-bold tracking-wide text-ink">チケット</h2>
-        <button onClick={handleOpenAdd} className="text-[10px] font-bold text-primary uppercase tracking-widest border border-primary/40 px-3 py-1.5 rounded-full hover:bg-primary hover:text-white transition-colors">
+        <button type="button" onClick={handleOpenAdd} className="text-[10px] font-bold text-primary uppercase tracking-widest border border-primary/40 px-3 py-1.5 rounded-full hover:bg-primary hover:text-white transition-colors">
           + 追加
         </button>
       </div>
@@ -177,8 +177,8 @@ const TicketView: React.FC<Props> = ({ tickets, onSave, onDelete }) => {
               </div>
 
               <div className="flex gap-3 pt-2">
-                <button onClick={() => setIsModalOpen(false)} className="flex-1 py-3 rounded-xl text-xs font-bold text-ink-sub hover:bg-surface-gray">キャンセル</button>
-                <button onClick={handleSubmit} className="flex-1 py-3 rounded-xl bg-primary text-white text-xs font-bold shadow-lg">保存</button>
+                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-3 rounded-xl text-xs font-bold text-ink-sub hover:bg-surface-gray border border-surface-gray-mid">キャンセル</button>
+                <button type="button" onClick={handleSubmit} className="flex-1 py-3 rounded-xl bg-primary text-white text-xs font-bold shadow-lg hover:bg-primary/90 active:scale-95 transition-all">保存</button>
               </div>
             </div>
           </div>

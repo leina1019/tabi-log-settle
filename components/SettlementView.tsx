@@ -32,7 +32,7 @@ const SettlementView: React.FC<Props> = ({ settlements, expenses, onBack, userPr
     <div className="space-y-6 pt-2 pb-10">
       <div className="flex items-center gap-2 mb-4">
         {onBack && (
-          <button onClick={onBack} className="p-2 -ml-2 text-ink-sub hover:text-ink">
+          <button type="button" onClick={onBack} className="p-2 -ml-2 text-ink-sub hover:text-ink">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
           </button>
         )}
