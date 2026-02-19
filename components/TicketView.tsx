@@ -131,7 +131,7 @@ const TicketView: React.FC<Props> = ({ tickets, onSave, onDelete }) => {
 
       {isModalOpen && (
         <div className="fixed inset-0 z-[60] bg-primary/90 backdrop-blur-sm flex items-end sm:items-center justify-center p-4">
-          <div className="bg-white w-full max-w-sm rounded-[24px] p-6 border border-surface-gray-mid shadow-xl overflow-y-auto max-h-[85vh]">
+          <div className="bg-white w-full max-w-sm rounded-[24px] p-6 border border-surface-gray-mid shadow-xl overflow-y-auto max-h-[80vh] pb-10">
             <h3 className="text-lg font-sans font-bold mb-4 text-ink">{formData.id ? 'チケット編集' : 'チケット追加'}</h3>
             <div className="space-y-4">
               <div>

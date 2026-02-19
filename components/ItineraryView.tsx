@@ -227,7 +227,7 @@ const ItineraryView: React.FC<Props> = ({ items, onSave, onDelete, tripStartDate
       {/* Add/Edit Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-[60] bg-primary/90 backdrop-blur-sm flex items-end sm:items-center justify-center p-4">
-          <div className="bg-white w-full max-w-sm rounded-[24px] p-6 border border-surface-gray-mid shadow-xl overflow-y-auto max-h-[90vh]">
+          <div className="bg-white w-full max-w-sm rounded-[24px] p-6 border border-surface-gray-mid shadow-xl overflow-y-auto max-h-[80vh] pb-10">
             <h3 className="text-lg font-sans font-bold mb-4 text-ink">{formData.id ? '予定を編集' : '予定を追加'}</h3>
             <div className="space-y-4">
               <div>
@@ -247,7 +247,7 @@ const ItineraryView: React.FC<Props> = ({ items, onSave, onDelete, tripStartDate
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-white/60 mb-2 uppercase tracking-widest">種類</label>
+                <label className="block text-[10px] font-bold text-ink-sub mb-2 uppercase tracking-widest">種類</label>
                 <div className="grid grid-cols-4 gap-2">
                   {['activity', 'meal', 'move', 'stay'].map(type => (
                     <button

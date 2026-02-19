@@ -283,7 +283,7 @@ const Dashboard: React.FC<Props> = ({
       {/* Trip Settings Modal */}
       {isEditingTrip && (
         <div className="fixed inset-0 z-[100] bg-primary/90 backdrop-blur-sm flex items-end sm:items-center justify-center p-4" onClick={() => setIsEditingTrip(false)}>
-          <div className="bg-white w-full max-w-sm rounded-[24px] p-6 border border-surface-gray-mid shadow-xl" onClick={e => e.stopPropagation()}>
+          <div className="bg-white w-full max-w-sm rounded-[24px] p-6 border border-surface-gray-mid shadow-xl max-h-[80vh] overflow-y-auto pb-10" onClick={e => e.stopPropagation()}>
             <h3 className="text-lg font-sans font-bold mb-4 text-ink">旅行設定</h3>
             <div className="space-y-4">
               <div>
