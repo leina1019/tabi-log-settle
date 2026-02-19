@@ -47,6 +47,7 @@ const Dashboard: React.FC<Props> = ({
   const [tempStart, setTempStart] = useState(tripStartDate);
   const [tempEnd, setTempEnd] = useState(tripEndDate);
   const [tempCoverImage, setTempCoverImage] = useState(tripCoverImage);
+  const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const totalJPY = expenses.reduce((sum, e) => sum + convertToJPY(e.amount, e.currency, e.exchangeRate), 0);
@@ -156,7 +157,13 @@ const Dashboard: React.FC<Props> = ({
     if (!isNaN(val) && val > 0) { onBudgetChange(val); setIsEditingBudget(false); }
   };
 
-  const saveTripSettings = () => {
+  const handleSaveTripSettings = () => {
+    setError(null);
+    if (!tempTripName.trim()) {
+      setError('旅行先を入力してください');
+      return;
+    }
+
     onTripNameChange(tempTripName);
     onTripDatesChange(tempStart, tempEnd);
     onTripCoverImageChange(tempCoverImage);
@@ -285,6 +292,16 @@ const Dashboard: React.FC<Props> = ({
         <div className="fixed inset-0 z-[100] bg-primary/90 backdrop-blur-sm flex items-end sm:items-center justify-center p-4" onClick={() => setIsEditingTrip(false)}>
           <div className="bg-white w-full max-w-sm rounded-[24px] p-5 border border-surface-gray-mid shadow-xl max-h-[80vh] overflow-y-auto pb-10" onClick={e => e.stopPropagation()}>
             <h3 className="text-lg font-sans font-bold mb-3 text-ink">旅行設定</h3>
+
+            {error && (
+              <div className="mb-4 p-3 bg-red-50 text-red-500 text-xs font-bold rounded-xl border border-red-100 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+                {error}
+              </div>
+            )}
+
             <div className="space-y-3">
               <div>
                 <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">カバー画像</label>
@@ -319,7 +336,7 @@ const Dashboard: React.FC<Props> = ({
               </div>
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={() => setIsEditingTrip(false)} className="flex-1 py-3 rounded-xl text-xs font-bold text-ink-sub hover:bg-surface-gray border border-surface-gray-mid">キャンセル</button>
-                <button type="button" onClick={saveTripSettings} className="flex-1 py-3 rounded-xl bg-premium-gold text-ocean-dark text-xs font-bold shadow-lg hover:opacity-90 active:scale-95 transition-all">保存</button>
+                <button type="button" onClick={handleSaveTripSettings} className="flex-1 py-3 rounded-xl bg-premium-gold text-ocean-dark text-xs font-bold shadow-lg hover:opacity-90 active:scale-95 transition-all">保存</button>
               </div>
             </div>
           </div>

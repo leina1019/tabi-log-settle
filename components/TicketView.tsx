@@ -11,19 +11,32 @@ interface Props {
 const TicketView: React.FC<Props> = ({ tickets, onSave, onDelete }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState<Partial<Ticket>>({ type: 'flight' });
+  const [error, setError] = useState<string | null>(null);
 
   const handleOpenAdd = () => {
     setFormData({ type: 'flight' });
+    setError(null);
     setIsModalOpen(true);
   };
 
   const handleOpenEdit = (ticket: Ticket) => {
     setFormData({ ...ticket });
+    setError(null);
     setIsModalOpen(true);
   };
 
-  const handleSubmit = () => {
-    if (!formData.title || !formData.date) return;
+  const handleSubmit = (e?: React.FormEvent) => {
+    e?.preventDefault();
+    setError(null);
+
+    if (!formData.title) {
+      setError('タイトルを入力してください');
+      return;
+    }
+    if (!formData.date) {
+      setError('日付を入力してください');
+      return;
+    }
 
     const now = new Date().toISOString();
     const itemToSave: Ticket = {
@@ -133,7 +146,17 @@ const TicketView: React.FC<Props> = ({ tickets, onSave, onDelete }) => {
         <div className="fixed inset-0 z-[100] bg-primary/90 backdrop-blur-sm flex items-end sm:items-center justify-center p-4">
           <div className="bg-white w-full max-w-sm rounded-[24px] p-5 border border-surface-gray-mid shadow-xl overflow-y-auto max-h-[80vh] pb-10">
             <h3 className="text-lg font-sans font-bold mb-3 text-ink">{formData.id ? 'チケット編集' : 'チケット追加'}</h3>
-            <div className="space-y-3">
+
+            {error && (
+              <div className="mb-4 p-3 bg-red-50 text-red-500 text-xs font-bold rounded-xl border border-red-100 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+                {error}
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-3">
               <div>
                 <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">種類</label>
                 <select className="w-full bg-surface-gray border border-surface-gray-mid rounded-xl p-2.5 text-sm text-ink outline-none" value={formData.type} onChange={e => setFormData({ ...formData, type: e.target.value as any })}>
@@ -178,9 +201,9 @@ const TicketView: React.FC<Props> = ({ tickets, onSave, onDelete }) => {
 
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-3 rounded-xl text-xs font-bold text-ink-sub hover:bg-surface-gray border border-surface-gray-mid">キャンセル</button>
-                <button type="button" onClick={handleSubmit} className="flex-1 py-3 rounded-xl bg-primary text-white text-xs font-bold shadow-lg hover:bg-primary/90 active:scale-95 transition-all">保存</button>
+                <button type="submit" className="flex-1 py-3 rounded-xl bg-primary text-white text-xs font-bold shadow-lg hover:bg-primary/90 active:scale-95 transition-all">保存</button>
               </div>
-            </div>
+            </form>
           </div>
         </div>
       )}
