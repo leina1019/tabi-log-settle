@@ -14,12 +14,17 @@ export const CATEGORIES = [
 ];
 
 export const CURRENCIES = [
-  { code: 'AUD', symbol: 'A$', name: '豪ドル', flag: '🇦🇺', defaultRate: 105 },
   { code: 'JPY', symbol: '¥', name: '日本円', flag: '🇯🇵', defaultRate: 1 },
-  { code: 'USD', symbol: '$', name: '米ドル', flag: '🇺🇸', defaultRate: 150 },
+  { code: 'AUD', symbol: 'A$', name: '豪ドル', flag: '🇦🇺', defaultRate: 100 },
+  { code: 'USD', symbol: '$', name: '米ドル', flag: '🇺🇸', defaultRate: 153 },
   { code: 'EUR', symbol: '€', name: 'ユーロ', flag: '🇪🇺', defaultRate: 165 },
   { code: 'KRW', symbol: '₩', name: 'ウォン', flag: '🇰🇷', defaultRate: 0.11 },
   { code: 'TWD', symbol: 'NT$', name: '台湾ドル', flag: '🇹🇼', defaultRate: 4.8 },
+  { code: 'THB', symbol: '฿', name: 'バーツ', flag: '🇹🇭', defaultRate: 4.3 },
+  { code: 'VND', symbol: '₫', name: 'ドン', flag: '🇻🇳', defaultRate: 0.006 },
+  { code: 'SGD', symbol: 'S$', name: 'SGドル', flag: '🇸🇬', defaultRate: 114 },
+  { code: 'GBP', symbol: '£', name: 'ポンド', flag: '🇬🇧', defaultRate: 195 },
+  { code: 'CNY', symbol: '¥', name: '元', flag: '🇨🇳', defaultRate: 21.5 },
 ] as const;
 
 // デフォルトレート（AUD）

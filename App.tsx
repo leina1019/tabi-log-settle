@@ -386,8 +386,20 @@ const App: React.FC = () => {
             onClick={async () => {
               if (tripId) {
                 const url = window.location.href;
-                navigator.clipboard.writeText(url);
-                alert("共有リンクをコピーしました！LINEなどで送ってください。");
+                if (navigator.share) {
+                  try {
+                    await navigator.share({ title: 'たびログ精算', text: '旅行の精算をしよう！', url });
+                  } catch (e) {
+                    console.log('Share canceled', e);
+                    // シェアキャンセルの場合は何もしないが、エラー時はクリップボードへ
+                  }
+                } else {
+                  navigator.clipboard.writeText(url).then(() => {
+                    alert("共有リンクをコピーしました！\nLINEなどで送ってください。\n\n" + url);
+                  }).catch(() => {
+                    prompt("リンクをコピーしてください", url);
+                  });
+                }
               } else {
                 if (!window.confirm('新しい共有リンクを発行しますか？')) return;
                 setSyncStatus('syncing');
@@ -406,8 +418,18 @@ const App: React.FC = () => {
                   setTripId(newId);
                   const url = `${window.location.origin}${window.location.pathname}?trip=${newId}`;
                   window.history.pushState({}, '', url);
-                  navigator.clipboard.writeText(url);
-                  alert("共有リンクを作成・コピーしました！");
+
+                  if (navigator.share) {
+                    try {
+                      await navigator.share({ title: 'たびログ精算', text: '旅行の精算をしよう！', url });
+                    } catch (e) { console.log('Share canceled', e); }
+                  } else {
+                    navigator.clipboard.writeText(url).then(() => {
+                      alert("共有リンクを作成・コピーしました！\n\n" + url);
+                    }).catch(() => {
+                      prompt("リンクをコピーしてください", url);
+                    });
+                  }
                   setSyncStatus('success');
                 } catch (e) {
                   console.error(e);
