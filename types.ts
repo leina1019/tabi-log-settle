@@ -13,7 +13,7 @@ export interface Expense {
   date: string;
   title: string;
   amount: number;
-  currency: 'AUD' | 'JPY' | 'USD' | 'EUR' | 'KRW' | 'TWD'; // 多通貨対応
+  currency: string; // constants.tsxのCURRENCIESと合わせて動的に対応（JPY/AUD/USD/EUR/KRW/TWD/THB/VND/SGD/GBP/CNYなど）
   exchangeRate: number;
   sourceUrl?: string;
   paidBy: Participant;
