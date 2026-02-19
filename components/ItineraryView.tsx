@@ -195,8 +195,8 @@ const ItineraryView: React.FC<Props> = ({ items, onSave, onDelete, tripStartDate
                 key={d}
                 onClick={() => setSelectedDate(d)}
                 className={`flex-shrink-0 flex flex-col items-center justify-center w-16 h-20 rounded-2xl border transition-all ${isSelected
-                    ? 'bg-primary border-primary shadow-md transform scale-105'
-                    : 'bg-surface-gray border-surface-gray-mid text-ink-light'
+                  ? 'bg-primary border-primary shadow-md transform scale-105'
+                  : 'bg-surface-gray border-surface-gray-mid text-ink-light'
                   }`}
               >
                 <span className={`text-[9px] font-bold uppercase tracking-wider mb-1 ${isSelected ? 'text-white' : 'text-ink-light'}`}>{label.day}</span>
@@ -312,7 +312,7 @@ const ItineraryView: React.FC<Props> = ({ items, onSave, onDelete, tripStartDate
 
       {/* 予定追加/編集モーダル */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-[60] bg-primary/90 backdrop-blur-sm flex items-end sm:items-center justify-center p-4">
+        <div className="fixed inset-0 z-[100] bg-primary/90 backdrop-blur-sm flex items-end sm:items-center justify-center p-4">
           <div
             className="bg-white w-full max-w-sm rounded-[24px] p-5 border border-surface-gray-mid shadow-xl overflow-y-auto max-h-[88vh] pb-6"
             onClick={(e) => e.stopPropagation()}
