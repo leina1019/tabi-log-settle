@@ -39,7 +39,8 @@ export interface ItineraryItem {
   location?: string;
   memo?: string;
   link?: string; // URL for maps or restaurant info
-  type: 'move' | 'activity' | 'meal' | 'stay' | 'other';
+  imageUrl?: string; // アップロード画像 or OGP取得画像
+  type: 'move' | 'activity' | 'meal' | 'stay' | 'shopping' | 'sightseeing' | 'other';
   updatedAt?: string; // For sync
 }
 
