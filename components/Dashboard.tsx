@@ -164,10 +164,15 @@ const Dashboard: React.FC<Props> = ({
       return;
     }
 
-    onTripNameChange(tempTripName);
-    onTripDatesChange(tempStart, tempEnd);
-    onTripCoverImageChange(tempCoverImage);
-    setIsEditingTrip(false);
+    try {
+      onTripNameChange(tempTripName);
+      onTripDatesChange(tempStart, tempEnd);
+      onTripCoverImageChange(tempCoverImage);
+      setIsEditingTrip(false);
+    } catch (err) {
+      console.error(err);
+      alert('保存中にエラーが発生しました');
+    }
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {

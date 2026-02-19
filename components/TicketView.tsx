@@ -29,6 +29,7 @@ const TicketView: React.FC<Props> = ({ tickets, onSave, onDelete }) => {
     e?.preventDefault();
     setError(null);
 
+    // バリデーション
     if (!formData.title) {
       setError('タイトルを入力してください');
       return;
@@ -38,15 +39,20 @@ const TicketView: React.FC<Props> = ({ tickets, onSave, onDelete }) => {
       return;
     }
 
-    const now = new Date().toISOString();
-    const itemToSave: Ticket = {
-      ...formData,
-      id: formData.id || crypto.randomUUID(),
-      updatedAt: now
-    } as Ticket;
+    try {
+      const now = new Date().toISOString();
+      const itemToSave: Ticket = {
+        ...formData,
+        id: formData.id || crypto.randomUUID(),
+        updatedAt: now
+      } as Ticket;
 
-    onSave(itemToSave);
-    setIsModalOpen(false);
+      onSave(itemToSave);
+      setIsModalOpen(false);
+    } catch (err) {
+      console.error(err);
+      alert('保存中にエラーが発生しました');
+    }
   };
 
   const handleDeleteClick = (id: string) => {
@@ -156,7 +162,7 @@ const TicketView: React.FC<Props> = ({ tickets, onSave, onDelete }) => {
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-3">
+            <div className="space-y-3">
               <div>
                 <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">種類</label>
                 <select className="w-full bg-surface-gray border border-surface-gray-mid rounded-xl p-2.5 text-sm text-ink outline-none" value={formData.type} onChange={e => setFormData({ ...formData, type: e.target.value as any })}>
@@ -201,9 +207,9 @@ const TicketView: React.FC<Props> = ({ tickets, onSave, onDelete }) => {
 
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-3 rounded-xl text-xs font-bold text-ink-sub hover:bg-surface-gray border border-surface-gray-mid">キャンセル</button>
-                <button type="submit" className="flex-1 py-3 rounded-xl bg-primary text-white text-xs font-bold shadow-lg hover:bg-primary/90 active:scale-95 transition-all">保存</button>
+                <button type="button" onClick={handleSubmit} className="flex-1 py-3 rounded-xl bg-primary text-white text-xs font-bold shadow-lg hover:bg-primary/90 active:scale-95 transition-all">保存</button>
               </div>
-            </form>
+            </div>
           </div>
         </div>
       )}
