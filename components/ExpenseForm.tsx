@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Participant, Expense, UserProfile } from '../types';
 import { PARTICIPANTS, CATEGORIES, CURRENCIES, EXCHANGE_RATE_AUD_TO_JPY } from '../constants';
-import { getExchangeRate } from '../services/geminiService';
+import { fetchExchangeRate } from '../services/currencyService';
 
 interface Props {
   onAdd: (expense: Omit<import('../types').Expense, 'id' | 'createdAt' | 'updatedAt'>) => void;
@@ -29,17 +29,34 @@ const ExpenseForm: React.FC<Props> = ({ onAdd, onCancel, initialExpense, userPro
     if (!initialExpense || currency !== initialExpense.currency) {
       setRate(selectedCurrency.defaultRate);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currency]);
+
+  // リアルタイムレート取得（15秒ごとに更新）
+  useEffect(() => {
+    if (currency === 'JPY') return;
+
+    const updateRate = async () => {
+      const latestRate = await fetchExchangeRate(currency);
+      if (latestRate) {
+        setRate(latestRate);
+      }
+    };
+
+    // 初回実行
+    updateRate();
+
+    // 定期実行 (15秒)
+    const intervalId = setInterval(updateRate, 15000);
+    return () => clearInterval(intervalId);
   }, [currency]);
 
   const handleFetchLatestRate = async () => {
     if (currency === 'JPY' || isFetchingRate) return;
     setIsFetchingRate(true);
     try {
-      const data = await getExchangeRate(date, currency);
-      if (data.rate) {
-        setRate(data.rate);
-        if (data.sourceUrl) setSourceUrl(data.sourceUrl);
+      const latestRate = await fetchExchangeRate(currency);
+      if (latestRate) {
+        setRate(latestRate);
       }
     } catch (err) {
       console.error(err);
@@ -134,7 +151,7 @@ const ExpenseForm: React.FC<Props> = ({ onAdd, onCancel, initialExpense, userPro
               disabled={isFetchingRate}
               className="self-end text-[10px] font-bold text-accent uppercase tracking-widest hover:text-primary disabled:opacity-40 transition-opacity"
             >
-              {isFetchingRate ? `${currency}レート取得中...` : `AIで${currency}レートを取得`}
+              {isFetchingRate ? `レート更新中...` : `最新レートを取得 (15秒毎に自動更新)`}
             </button>
           </div>
         )}
