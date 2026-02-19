@@ -227,33 +227,33 @@ const ItineraryView: React.FC<Props> = ({ items, onSave, onDelete, tripStartDate
       {/* Add/Edit Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-[60] bg-primary/90 backdrop-blur-sm flex items-end sm:items-center justify-center p-4">
-          <div className="bg-white w-full max-w-sm rounded-[24px] p-6 border border-surface-gray-mid shadow-xl overflow-y-auto max-h-[80vh] pb-10">
-            <h3 className="text-lg font-sans font-bold mb-4 text-ink">{formData.id ? '予定を編集' : '予定を追加'}</h3>
-            <div className="space-y-4">
+          <div className="bg-white w-full max-w-sm rounded-[24px] p-5 border border-surface-gray-mid shadow-xl overflow-y-auto max-h-[80vh] pb-10">
+            <h3 className="text-lg font-sans font-bold mb-3 text-ink">{formData.id ? '予定を編集' : '予定を追加'}</h3>
+            <div className="space-y-3">
               <div>
-                <label className="block text-[10px] font-bold text-ink-sub mb-2 uppercase tracking-widest">タイトル</label>
-                <input type="text" placeholder="例: ディナー" className="w-full bg-surface-gray border border-surface-gray-mid rounded-xl p-3 text-sm text-ink outline-none focus:border-primary" value={formData.title || ''} onChange={e => setFormData({ ...formData, title: e.target.value })} />
+                <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">タイトル</label>
+                <input type="text" placeholder="例: ディナー" className="w-full bg-surface-gray border border-surface-gray-mid rounded-xl p-2.5 text-sm text-ink outline-none focus:border-primary" value={formData.title || ''} onChange={e => setFormData({ ...formData, title: e.target.value })} />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[10px] font-bold text-ink-sub mb-2 uppercase tracking-widest">日付</label>
-                  <input type="date" className="w-full bg-surface-gray border border-surface-gray-mid rounded-xl p-3 text-sm text-ink outline-none" value={formData.date || ''} onChange={e => setFormData({ ...formData, date: e.target.value })} />
+                  <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">日付</label>
+                  <input type="date" className="w-full bg-surface-gray border border-surface-gray-mid rounded-xl p-2.5 text-sm text-ink outline-none" value={formData.date || ''} onChange={e => setFormData({ ...formData, date: e.target.value })} />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold text-ink-sub mb-2 uppercase tracking-widest">時間</label>
-                  <input type="time" className="w-full bg-surface-gray border border-surface-gray-mid rounded-xl p-3 text-sm text-ink outline-none" value={formData.time || ''} onChange={e => setFormData({ ...formData, time: e.target.value })} />
+                  <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">時間</label>
+                  <input type="time" className="w-full bg-surface-gray border border-surface-gray-mid rounded-xl p-2.5 text-sm text-ink outline-none" value={formData.time || ''} onChange={e => setFormData({ ...formData, time: e.target.value })} />
                 </div>
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-ink-sub mb-2 uppercase tracking-widest">種類</label>
+                <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">種類</label>
                 <div className="grid grid-cols-4 gap-2">
                   {['activity', 'meal', 'move', 'stay'].map(type => (
                     <button
                       key={type}
                       onClick={() => setFormData({ ...formData, type: type as any })}
-                      className={`py-2 rounded-lg text-xl border transition-all ${formData.type === type ? 'bg-primary border-primary' : 'bg-surface-gray border-surface-gray-mid opacity-60'}`}
+                      className={`py-1.5 rounded-lg text-lg border transition-all ${formData.type === type ? 'bg-primary border-primary' : 'bg-surface-gray border-surface-gray-mid opacity-60'}`}
                     >
                       {getTypeIcon(type)}
                     </button>
@@ -262,18 +262,18 @@ const ItineraryView: React.FC<Props> = ({ items, onSave, onDelete, tripStartDate
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-ink-sub mb-2 uppercase tracking-widest">場所名</label>
-                <input type="text" placeholder="例: 東京駅" className="w-full bg-surface-gray border border-surface-gray-mid rounded-xl p-3 text-sm text-ink outline-none" value={formData.location || ''} onChange={e => setFormData({ ...formData, location: e.target.value })} />
+                <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">場所名</label>
+                <input type="text" placeholder="例: 東京駅" className="w-full bg-surface-gray border border-surface-gray-mid rounded-xl p-2.5 text-sm text-ink outline-none" value={formData.location || ''} onChange={e => setFormData({ ...formData, location: e.target.value })} />
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-ink-sub mb-2 uppercase tracking-widest">Map / サイト URL</label>
-                <input type="url" placeholder="https://maps.google.com/..." className="w-full bg-surface-gray border border-surface-gray-mid rounded-xl p-3 text-sm text-ink outline-none" value={formData.link || ''} onChange={e => setFormData({ ...formData, link: e.target.value })} />
+                <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">Map / サイト URL</label>
+                <input type="url" placeholder="https://maps.google.com/..." className="w-full bg-surface-gray border border-surface-gray-mid rounded-xl p-2.5 text-sm text-ink outline-none" value={formData.link || ''} onChange={e => setFormData({ ...formData, link: e.target.value })} />
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-ink-sub mb-2 uppercase tracking-widest">メモ</label>
-                <textarea rows={2} className="w-full bg-surface-gray border border-surface-gray-mid rounded-xl p-3 text-sm text-ink outline-none" value={formData.memo || ''} onChange={e => setFormData({ ...formData, memo: e.target.value })} />
+                <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">メモ</label>
+                <textarea rows={2} className="w-full bg-surface-gray border border-surface-gray-mid rounded-xl p-2.5 text-sm text-ink outline-none" value={formData.memo || ''} onChange={e => setFormData({ ...formData, memo: e.target.value })} />
               </div>
 
               <div className="flex gap-3 pt-2">

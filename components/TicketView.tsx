@@ -131,12 +131,12 @@ const TicketView: React.FC<Props> = ({ tickets, onSave, onDelete }) => {
 
       {isModalOpen && (
         <div className="fixed inset-0 z-[60] bg-primary/90 backdrop-blur-sm flex items-end sm:items-center justify-center p-4">
-          <div className="bg-white w-full max-w-sm rounded-[24px] p-6 border border-surface-gray-mid shadow-xl overflow-y-auto max-h-[80vh] pb-10">
-            <h3 className="text-lg font-sans font-bold mb-4 text-ink">{formData.id ? 'チケット編集' : 'チケット追加'}</h3>
-            <div className="space-y-4">
+          <div className="bg-white w-full max-w-sm rounded-[24px] p-5 border border-surface-gray-mid shadow-xl overflow-y-auto max-h-[80vh] pb-10">
+            <h3 className="text-lg font-sans font-bold mb-3 text-ink">{formData.id ? 'チケット編集' : 'チケット追加'}</h3>
+            <div className="space-y-3">
               <div>
-                <label className="block text-[10px] font-bold text-ink-sub mb-2 uppercase tracking-widest">種類</label>
-                <select className="w-full bg-surface-gray border border-surface-gray-mid rounded-xl p-3 text-sm text-ink outline-none" value={formData.type} onChange={e => setFormData({ ...formData, type: e.target.value as any })}>
+                <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">種類</label>
+                <select className="w-full bg-surface-gray border border-surface-gray-mid rounded-xl p-2.5 text-sm text-ink outline-none" value={formData.type} onChange={e => setFormData({ ...formData, type: e.target.value as any })}>
                   <option value="flight">✈️ フライト</option>
                   <option value="train">🚄 電車</option>
                   <option value="hotel">🏨 ホテル</option>
@@ -146,34 +146,34 @@ const TicketView: React.FC<Props> = ({ tickets, onSave, onDelete }) => {
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-ink-sub mb-2 uppercase tracking-widest">タイトル</label>
-                <input type="text" placeholder="例: 帰りのフライト" className="w-full bg-surface-gray border border-surface-gray-mid rounded-xl p-3 text-sm text-ink outline-none" value={formData.title || ''} onChange={e => setFormData({ ...formData, title: e.target.value })} />
+                <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">タイトル</label>
+                <input type="text" placeholder="例: 帰りのフライト" className="w-full bg-surface-gray border border-surface-gray-mid rounded-xl p-2.5 text-sm text-ink outline-none" value={formData.title || ''} onChange={e => setFormData({ ...formData, title: e.target.value })} />
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-ink-sub mb-2 uppercase tracking-widest">詳細 (会社名・場所など)</label>
-                <input type="text" placeholder="例: JAL, 東京ドーム" className="w-full bg-surface-gray border border-surface-gray-mid rounded-xl p-3 text-sm text-ink outline-none" value={formData.provider || ''} onChange={e => setFormData({ ...formData, provider: e.target.value })} />
+                <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">詳細 (会社名・場所など)</label>
+                <input type="text" placeholder="例: JAL, 東京ドーム" className="w-full bg-surface-gray border border-surface-gray-mid rounded-xl p-2.5 text-sm text-ink outline-none" value={formData.provider || ''} onChange={e => setFormData({ ...formData, provider: e.target.value })} />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[10px] font-bold text-ink-sub mb-2 uppercase tracking-widest">日付</label>
-                  <input type="date" className="w-full bg-surface-gray border border-surface-gray-mid rounded-xl p-3 text-sm text-ink outline-none" value={formData.date || ''} onChange={e => setFormData({ ...formData, date: e.target.value })} />
+                  <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">日付</label>
+                  <input type="date" className="w-full bg-surface-gray border border-surface-gray-mid rounded-xl p-2.5 text-sm text-ink outline-none" value={formData.date || ''} onChange={e => setFormData({ ...formData, date: e.target.value })} />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold text-ink-sub mb-2 uppercase tracking-widest">時間</label>
-                  <input type="time" className="w-full bg-surface-gray border border-surface-gray-mid rounded-xl p-3 text-sm text-ink outline-none" value={formData.time || ''} onChange={e => setFormData({ ...formData, time: e.target.value })} />
+                  <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">時間</label>
+                  <input type="time" className="w-full bg-surface-gray border border-surface-gray-mid rounded-xl p-2.5 text-sm text-ink outline-none" value={formData.time || ''} onChange={e => setFormData({ ...formData, time: e.target.value })} />
                 </div>
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-ink-sub mb-2 uppercase tracking-widest">予約番号 / 座席</label>
-                <input type="text" placeholder="番号や座席など" className="w-full bg-surface-gray border border-surface-gray-mid rounded-xl p-3 text-sm text-ink outline-none" value={formData.referenceNumber || ''} onChange={e => setFormData({ ...formData, referenceNumber: e.target.value })} />
+                <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">予約番号 / 座席</label>
+                <input type="text" placeholder="番号や座席など" className="w-full bg-surface-gray border border-surface-gray-mid rounded-xl p-2.5 text-sm text-ink outline-none" value={formData.referenceNumber || ''} onChange={e => setFormData({ ...formData, referenceNumber: e.target.value })} />
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-ink-sub mb-2 uppercase tracking-widest">チケットURL (Google Driveなど)</label>
-                <input type="url" placeholder="https://..." className="w-full bg-surface-gray border border-surface-gray-mid rounded-xl p-3 text-sm text-ink outline-none" value={formData.link || ''} onChange={e => setFormData({ ...formData, link: e.target.value })} />
+                <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">チケットURL</label>
+                <input type="url" placeholder="https://..." className="w-full bg-surface-gray border border-surface-gray-mid rounded-xl p-2.5 text-sm text-ink outline-none" value={formData.link || ''} onChange={e => setFormData({ ...formData, link: e.target.value })} />
               </div>
 
               <div className="flex gap-3 pt-2">

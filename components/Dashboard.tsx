@@ -283,13 +283,13 @@ const Dashboard: React.FC<Props> = ({
       {/* Trip Settings Modal */}
       {isEditingTrip && (
         <div className="fixed inset-0 z-[100] bg-primary/90 backdrop-blur-sm flex items-end sm:items-center justify-center p-4" onClick={() => setIsEditingTrip(false)}>
-          <div className="bg-white w-full max-w-sm rounded-[24px] p-6 border border-surface-gray-mid shadow-xl max-h-[80vh] overflow-y-auto pb-10" onClick={e => e.stopPropagation()}>
-            <h3 className="text-lg font-sans font-bold mb-4 text-ink">旅行設定</h3>
-            <div className="space-y-4">
+          <div className="bg-white w-full max-w-sm rounded-[24px] p-5 border border-surface-gray-mid shadow-xl max-h-[80vh] overflow-y-auto pb-10" onClick={e => e.stopPropagation()}>
+            <h3 className="text-lg font-sans font-bold mb-3 text-ink">旅行設定</h3>
+            <div className="space-y-3">
               <div>
-                <label className="block text-[10px] font-bold text-ink-sub mb-2 uppercase tracking-widest">カバー画像</label>
+                <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">カバー画像</label>
                 <div
-                  className="relative h-32 w-full rounded-xl overflow-hidden mb-2 cursor-pointer group border border-white/10"
+                  className="relative h-24 w-full rounded-xl overflow-hidden mb-2 cursor-pointer group border border-white/10"
                   onClick={() => fileInputRef.current?.click()}
                 >
                   <img src={tempCoverImage} className="w-full h-full object-cover" alt="Cover Preview" />
@@ -304,17 +304,17 @@ const Dashboard: React.FC<Props> = ({
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-ink-sub mb-2 uppercase tracking-widest">旅行先</label>
-                <input type="text" className="w-full bg-surface-gray border border-surface-gray-mid rounded-xl p-3 text-sm text-ink outline-none focus:border-primary" value={tempTripName} onChange={e => setTempTripName(e.target.value)} />
+                <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">旅行先</label>
+                <input type="text" className="w-full bg-surface-gray border border-surface-gray-mid rounded-xl p-2.5 text-sm text-ink outline-none focus:border-primary" value={tempTripName} onChange={e => setTempTripName(e.target.value)} />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[10px] font-bold text-ink-sub mb-2 uppercase tracking-widest">開始日</label>
-                  <input type="date" className="w-full bg-surface-gray border border-surface-gray-mid rounded-xl p-3 text-sm text-ink outline-none" value={tempStart} onChange={e => setTempStart(e.target.value)} />
+                  <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">開始日</label>
+                  <input type="date" className="w-full bg-surface-gray border border-surface-gray-mid rounded-xl p-2.5 text-sm text-ink outline-none" value={tempStart} onChange={e => setTempStart(e.target.value)} />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold text-ink-sub mb-2 uppercase tracking-widest">終了日</label>
-                  <input type="date" className="w-full bg-surface-gray border border-surface-gray-mid rounded-xl p-3 text-sm text-ink outline-none" value={tempEnd} onChange={e => setTempEnd(e.target.value)} />
+                  <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">終了日</label>
+                  <input type="date" className="w-full bg-surface-gray border border-surface-gray-mid rounded-xl p-2.5 text-sm text-ink outline-none" value={tempEnd} onChange={e => setTempEnd(e.target.value)} />
                 </div>
               </div>
               <div className="flex gap-3 pt-2">
