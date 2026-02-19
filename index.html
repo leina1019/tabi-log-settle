@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=0">
+  <title>たびログ精算</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+JP:wght@300;400;500;700;900&family=Playfair+Display:wght@600;700&display=swap"
+    rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            // === プライマリー（Ocean Dark 濃紺系） ===
+            primary: '#003780',
+            'primary-dark': '#002a60',
+            'primary-light': '#F4F7FA',
+            // === サーフェス ===
+            surface: {
+              DEFAULT: '#FFFFFF',
+              gray: '#F4F7FA',
+              'gray-mid': '#E2E8F0',
+            },
+            // === テキスト ===
+            ink: {
+              DEFAULT: '#1A2B4A',
+              sub: '#5A7184',
+              light: '#94A3B8',
+            },
+            // === アクセント（ゴールド） ===
+            accent: {
+              DEFAULT: '#CFA86E',
+              light: '#E5CCA0',
+            },
+            // === 既存エイリアス（後方互換） ===
+            ocean: {
+              dark: '#003780',
+              DEFAULT: '#0055aa',
+              light: '#00A1DE',
+            },
+            premium: {
+              gold: '#CFA86E',
+              goldLight: '#E5CCA0',
+            }
+          },
+          fontFamily: {
+            sans: ['"Inter"', '"Noto Sans JP"', 'sans-serif'],
+            serif: ['"Playfair Display"', '"Noto Sans JP"', 'serif'],
+            mono: ['"Inter"', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      font-family: 'Inter', 'Noto Sans JP', sans-serif;
+      background-color: #F4F7FA;
+      color: #1A2B4A;
+      -webkit-tap-highlight-color: transparent;
+      font-feature-settings: "kern" 1, "liga" 1;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Card / Glass Utilities */
+    .glass {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(0, 161, 222, 0.12);
+      box-shadow: 0 2px 16px rgba(0, 119, 182, 0.06);
+    }
+
+    .glass-dark {
+      background: rgba(0, 55, 128, 0.06);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(0, 55, 128, 0.12);
+    }
+
+    .safe-pb {
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    .safe-pt {
+      padding-top: env(safe-area-inset-top);
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #F4F7FA;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #C8D3E0;
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94A3B8;
+    }
+  </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+    "react/": "https://esm.sh/react@^19.2.4/",
+    "react": "https://esm.sh/react@^19.2.4",
+    "recharts": "https://esm.sh/recharts@^3.7.0",
+    "@google/genai": "https://esm.sh/@google/genai@^1.40.0",
+    "framer-motion": "https://esm.sh/framer-motion@^10.16.4"
+  }
+}
+</script>
+  <link rel="stylesheet" href="/index.css">
+</head>
+
+<body class="overflow-hidden">
+  <div id="root" class="h-screen w-screen overflow-hidden"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+
+</html>
