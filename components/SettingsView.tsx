@@ -9,9 +9,11 @@ interface Props {
   onLoadSampleData: () => void;
   onRestoreData: () => void;
   onBack: () => void;
+  viewModeSize: 'mobile' | 'tablet';
+  onUpdateViewModeSize: (size: 'mobile' | 'tablet') => void;
 }
 
-const SettingsView: React.FC<Props> = ({ userProfiles, onUpdateProfile, onLoadSampleData, onRestoreData, onBack }) => {
+const SettingsView: React.FC<Props> = ({ userProfiles, onUpdateProfile, onLoadSampleData, onRestoreData, onBack, viewModeSize, onUpdateViewModeSize }) => {
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, id: string) => {
@@ -133,6 +135,27 @@ const SettingsView: React.FC<Props> = ({ userProfiles, onUpdateProfile, onLoadSa
             </div>
           );
         })}
+      </div>
+
+      <div className="bg-white p-6 rounded-3xl space-y-4 shadow-sm border border-surface-gray-mid">
+        <p className="text-[10px] text-ink-light font-bold uppercase tracking-widest">表示設定</p>
+        <div className="flex gap-2">
+          <button
+            onClick={() => onUpdateViewModeSize('mobile')}
+            className={`flex-1 py-3 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${viewModeSize === 'mobile' ? 'bg-primary text-white shadow-md' : 'bg-surface-gray text-ink-sub hover:bg-surface-gray-mid'}`}
+          >
+            <span>📱</span> スマホ
+          </button>
+          <button
+            onClick={() => onUpdateViewModeSize('tablet')}
+            className={`flex-1 py-3 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${viewModeSize === 'tablet' ? 'bg-primary text-white shadow-md' : 'bg-surface-gray text-ink-sub hover:bg-surface-gray-mid'}`}
+          >
+            <span>💻</span> タブレット
+          </button>
+        </div>
+        <p className="text-[9px] text-ink-light leading-relaxed">
+          ※ PCなどの大きな画面で閲覧する際の表示幅を切り替えます。
+        </p>
       </div>
 
       <div className="px-2 space-y-4">

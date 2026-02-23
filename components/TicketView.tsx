@@ -8,11 +8,11 @@ interface Props {
   userProfiles: UserProfile[];
   onSave: (ticket: Ticket) => void;
   onDelete: (id: string) => void;
-  tripStartDate: string;
   tripEndDate: string;
+  isTablet?: boolean;
 }
 
-const TicketView: React.FC<Props> = ({ tickets, userProfiles, onSave, onDelete, tripStartDate, tripEndDate }) => {
+const TicketView: React.FC<Props> = ({ tickets, userProfiles, onSave, onDelete, tripStartDate, tripEndDate, isTablet = false }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState<Partial<Ticket>>({ type: 'flight' });
   const [selectedDate, setSelectedDate] = useState<string>('');
@@ -200,7 +200,7 @@ const TicketView: React.FC<Props> = ({ tickets, userProfiles, onSave, onDelete, 
         </div>
       </div>
 
-      <div className="space-y-4">
+      <div className={`space-y-4 px-1 ${isTablet ? 'grid grid-cols-2 gap-4 space-y-0' : ''}`}>
         {filteredTickets.length === 0 && (
           <div className="bg-white p-12 rounded-[32px] text-center border border-dashed border-surface-gray-mid">
             <div className="text-5xl mb-4 grayscale opacity-20">🎫</div>

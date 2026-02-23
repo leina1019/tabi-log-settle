@@ -17,6 +17,7 @@ interface Props {
   userProfiles: UserProfile[];
   tripCoverImage: string;
   onTripCoverImageChange: (url: string) => void;
+  isTablet?: boolean;
 }
 
 const Dashboard: React.FC<Props> = ({
@@ -32,7 +33,8 @@ const Dashboard: React.FC<Props> = ({
   onTripNameChange,
   userProfiles,
   tripCoverImage,
-  onTripCoverImageChange
+  onTripCoverImageChange,
+  isTablet = false
 }) => {
   const [selectedMemberId, setSelectedMemberId] = useState<Participant | 'ALL' | null>(null);
   const [isEditingBudget, setIsEditingBudget] = useState(false);
@@ -273,7 +275,7 @@ const Dashboard: React.FC<Props> = ({
           <span className="text-lg">📊</span>
           <h3 className="text-[10px] font-bold text-ink-sub uppercase tracking-[0.2em]">支出サマリー</h3>
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className={`grid ${isTablet ? 'grid-cols-4' : 'grid-cols-2'} gap-3`}>
           <div className="glass p-4 rounded-2xl border-white/40">
             <p className="text-[8px] font-bold text-ink-light uppercase tracking-widest mb-1">合計支出額</p>
             <p className="text-lg font-sans font-bold text-ink leading-tight">{Math.round(totalJPY).toLocaleString()}<span className="text-[9px] ml-1 opacity-50">JPY</span></p>

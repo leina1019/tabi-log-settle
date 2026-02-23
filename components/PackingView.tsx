@@ -6,11 +6,12 @@ interface Props {
     items: PackingItem[];
     userProfiles: UserProfile[];
     onUpdate: (val: PackingItem[] | ((prev: PackingItem[]) => PackingItem[])) => void;
+    isTablet?: boolean;
 }
 
 const CATEGORIES = ['衣類', '洗面用具', '電子機器', '重要書類', '常備薬', 'その他'] as const;
 
-const PackingView: React.FC<Props> = ({ items, userProfiles, onUpdate }) => {
+const PackingView: React.FC<Props> = ({ items, userProfiles, onUpdate, isTablet = false }) => {
     const [newItemTitle, setNewItemTitle] = useState('');
     const [newItemCategory, setNewItemCategory] = useState<string>(CATEGORIES[0]);
     const [newItemParticipantId, setNewItemParticipantId] = useState<string | undefined>(undefined);
@@ -177,7 +178,7 @@ const PackingView: React.FC<Props> = ({ items, userProfiles, onUpdate }) => {
             )}
 
             {/* リスト表示 */}
-            <div className="space-y-8 px-1">
+            <div className={`px-1 ${isTablet ? 'grid grid-cols-2 gap-x-6 gap-y-0 items-start' : 'space-y-8'}`}>
                 {items.length === 0 ? (
                     <div className="text-center py-20 bg-white/50 rounded-[32px] border border-dashed border-surface-gray-mid">
                         <div className="text-4xl mb-3 opacity-30 text-ink">🎒</div>

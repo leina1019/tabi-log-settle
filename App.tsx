@@ -32,6 +32,9 @@ const App: React.FC = () => {
   const [packingList, setPackingList] = useState<PackingItem[]>([]);
 
   const [view, setView] = useState<ViewState>('home');
+  const [viewModeSize, setViewModeSize] = useState<'mobile' | 'tablet'>(() => {
+    return (localStorage.getItem('oz-wari-view-mode-size') as 'mobile' | 'tablet') || 'mobile';
+  });
   const [isAddMenuOpen, setIsAddMenuOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'success' | 'error'>('idle');
@@ -128,6 +131,10 @@ const App: React.FC = () => {
     const prefix = `oz-wari-${tripId}-`;
     localStorage.setItem(prefix + 'profiles', JSON.stringify(userProfiles));
   }, [userProfiles, tripId]);
+
+  useEffect(() => {
+    localStorage.setItem('oz-wari-view-mode-size', viewModeSize);
+  }, [viewModeSize]);
 
   useEffect(() => {
     if (!tripId) return;
@@ -513,289 +520,296 @@ const App: React.FC = () => {
   }, [expenses, userProfiles]);
 
   return (
-    <div className="max-w-md mx-auto h-screen bg-surface-gray flex flex-col text-ink relative overflow-hidden sm:border-x sm:border-surface-gray-mid">
+    <div className={`min-h-screen bg-ocean-light flex flex-col items-center antialiased font-sans select-none`}>
+      {/* Main Container */}
+      <div className={`${viewModeSize === 'tablet' ? 'max-w-2xl' : 'max-w-md'} w-full mx-auto min-h-screen h-screen bg-surface-gray flex flex-col text-ink relative overflow-hidden sm:border-x sm:border-surface-gray-mid transition-all duration-300 shadow-2xl shadow-ocean-dark/20`}>
 
-      {/* Header - ANAブルー帯 */}
-      <header className="bg-ocean-dark px-5 pt-2 pb-2 flex justify-between items-center z-20 safe-pt shadow-sm">
-        <h1 className="font-sans text-lg font-bold tracking-wide text-white flex items-center gap-2">
-          <span className="text-accent text-2xl">✈</span> たびログ精算
-        </h1>
-        <div className="flex items-center gap-2">
-          {syncStatus === 'syncing' && <span className="text-[10px] text-accent animate-pulse">SYNCING...</span>}
-          {tripId && <span className="text-xs text-white font-bold bg-white/20 px-2 py-1 rounded-full border border-white/30">● 同期中</span>}
-          <button
-            onClick={async () => {
-              if (tripId) {
-                // window.location.href ではなく、確実にIDを含めたURLを再構築する
-                const url = `${window.location.origin}${window.location.pathname}?trip=${tripId}`;
-                if (navigator.share) {
-                  try {
-                    await navigator.share({ title: 'たびログ精算', text: '旅行の精算をしよう！', url });
-                  } catch (e) {
-                    console.log('Share canceled', e);
-                  }
-                } else {
-                  navigator.clipboard.writeText(url).then(() => {
-                    alert("共有リンクをコピーしました！\nLINEなどで送ってください。\n\n" + url);
-                  }).catch(() => {
-                    prompt("リンクをコピーしてください", url);
-                  });
-                }
-              } else {
-                if (!window.confirm('新しい共有リンクを発行しますか？')) return;
-                setSyncStatus('syncing');
-                try {
-                  const newId = await createNewTrip({
-                    name: tripName,
-                    startDate: tripStartDate,
-                    endDate: tripEndDate,
-                    coverImage: tripCoverImage,
-                    expenses,
-                    itinerary,
-                    tickets,
-                    packingList: [],
-                    userProfiles,
-                    budget
-                  });
-                  setTripId(newId);
-                  const url = `${window.location.origin}${window.location.pathname}?trip=${newId}`;
-                  window.history.pushState({}, '', url);
-
+        {/* Header - ANAブルー帯 */}
+        <header className="bg-ocean-dark px-5 pt-2 pb-2 flex justify-between items-center z-20 safe-pt shadow-sm">
+          <h1 className="font-sans text-lg font-bold tracking-wide text-white flex items-center gap-2">
+            <span className="text-accent text-2xl">✈</span> たびログ精算
+          </h1>
+          <div className="flex items-center gap-2">
+            {syncStatus === 'syncing' && <span className="text-[10px] text-accent animate-pulse">SYNCING...</span>}
+            {tripId && <span className="text-xs text-white font-bold bg-white/20 px-2 py-1 rounded-full border border-white/30">● 同期中</span>}
+            <button
+              onClick={async () => {
+                if (tripId) {
+                  // window.location.href ではなく、確実にIDを含めたURLを再構築する
+                  const url = `${window.location.origin}${window.location.pathname}?trip=${tripId}`;
                   if (navigator.share) {
                     try {
                       await navigator.share({ title: 'たびログ精算', text: '旅行の精算をしよう！', url });
-                    } catch (e) { console.log('Share canceled', e); }
+                    } catch (e) {
+                      console.log('Share canceled', e);
+                    }
                   } else {
                     navigator.clipboard.writeText(url).then(() => {
-                      alert("共有リンクを作成・コピーしました！\n\n" + url);
+                      alert("共有リンクをコピーしました！\nLINEなどで送ってください。\n\n" + url);
                     }).catch(() => {
                       prompt("リンクをコピーしてください", url);
                     });
                   }
-                  setSyncStatus('success');
-                } catch (e) {
-                  console.error(e);
-                  alert("作成に失敗しました");
-                  setSyncStatus('error');
-                } finally {
-                  setTimeout(() => setSyncStatus('idle'), 2000);
+                } else {
+                  if (!window.confirm('新しい共有リンクを発行しますか？')) return;
+                  setSyncStatus('syncing');
+                  try {
+                    const newId = await createNewTrip({
+                      name: tripName,
+                      startDate: tripStartDate,
+                      endDate: tripEndDate,
+                      coverImage: tripCoverImage,
+                      expenses,
+                      itinerary,
+                      tickets,
+                      packingList: [],
+                      userProfiles,
+                      budget
+                    });
+                    setTripId(newId);
+                    const url = `${window.location.origin}${window.location.pathname}?trip=${newId}`;
+                    window.history.pushState({}, '', url);
+
+                    if (navigator.share) {
+                      try {
+                        await navigator.share({ title: 'たびログ精算', text: '旅行の精算をしよう！', url });
+                      } catch (e) { console.log('Share canceled', e); }
+                    } else {
+                      navigator.clipboard.writeText(url).then(() => {
+                        alert("共有リンクを作成・コピーしました！\n\n" + url);
+                      }).catch(() => {
+                        prompt("リンクをコピーしてください", url);
+                      });
+                    }
+                    setSyncStatus('success');
+                  } catch (e) {
+                    console.error(e);
+                    alert("作成に失敗しました");
+                    setSyncStatus('error');
+                  } finally {
+                    setTimeout(() => setSyncStatus('idle'), 2000);
+                  }
                 }
+              }}
+              className="bg-white/20 border border-white/30 text-white px-3 py-1.5 rounded-full text-xs font-bold hover:bg-white/30 transition"
+            >
+              {tripId ? '🔗 コピー' : '🔗 共有'}
+            </button>
+            <button
+              onClick={() => setView('settings')}
+              className="w-8 h-8 rounded-full border border-white/30 bg-white/20 flex items-center justify-center active:scale-95 transition-transform"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+            </button>
+          </div>
+        </header>
+
+        {/* Welcome / Onboarding View */}
+        {view === 'onboarding' && (
+          <WelcomeView
+            onDemoStart={handleLoadSampleData}
+            onStart={async (data) => {
+              setTripName(data.name);
+              setTripStartDate(data.startDate);
+              setTripEndDate(data.endDate);
+              setUserProfiles(data.userProfiles);
+              setTripCoverImage(data.coverImage);
+
+              setSyncStatus('syncing');
+              try {
+                const newId = await createNewTrip({
+                  name: data.name,
+                  startDate: data.startDate,
+                  endDate: data.endDate,
+                  coverImage: data.coverImage,
+                  userProfiles: data.userProfiles,
+                  expenses: [],
+                  itinerary: [],
+                  tickets: [],
+                  packingList: [],
+                  budget: 1000000 // Default 1M
+                });
+                setTripId(newId);
+                const url = `${window.location.origin}${window.location.pathname}?trip=${newId}`;
+                window.history.pushState({}, '', url);
+                setView('home');
+                setSyncStatus('success');
+              } catch (e) {
+                console.error(e);
+                alert("作成に失敗しました。オフラインモードで開始します。");
+                setView('home');
+              } finally {
+                setTimeout(() => setSyncStatus('idle'), 2000);
               }
             }}
-            className="bg-white/20 border border-white/30 text-white px-3 py-1.5 rounded-full text-xs font-bold hover:bg-white/30 transition"
-          >
-            {tripId ? '🔗 コピー' : '🔗 共有'}
-          </button>
-          <button
-            onClick={() => setView('settings')}
-            className="w-8 h-8 rounded-full border border-white/30 bg-white/20 flex items-center justify-center active:scale-95 transition-transform"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-          </button>
-        </div>
-      </header>
-
-      {/* Welcome / Onboarding View */}
-      {view === 'onboarding' && (
-        <WelcomeView
-          onDemoStart={handleLoadSampleData}
-          onStart={async (data) => {
-            setTripName(data.name);
-            setTripStartDate(data.startDate);
-            setTripEndDate(data.endDate);
-            setUserProfiles(data.userProfiles);
-            setTripCoverImage(data.coverImage);
-
-            setSyncStatus('syncing');
-            try {
-              const newId = await createNewTrip({
-                name: data.name,
-                startDate: data.startDate,
-                endDate: data.endDate,
-                coverImage: data.coverImage,
-                userProfiles: data.userProfiles,
-                expenses: [],
-                itinerary: [],
-                tickets: [],
-                packingList: [],
-                budget: 1000000 // Default 1M
-              });
-              setTripId(newId);
-              const url = `${window.location.origin}${window.location.pathname}?trip=${newId}`;
-              window.history.pushState({}, '', url);
-              setView('home');
-              setSyncStatus('success');
-            } catch (e) {
-              console.error(e);
-              alert("作成に失敗しました。オフラインモードで開始します。");
-              setView('home');
-            } finally {
-              setTimeout(() => setSyncStatus('idle'), 2000);
-            }
-          }}
-        />
-      )}
-
-      {/* Main Content Area */}
-      <main className="flex-1 overflow-y-auto px-4 pb-28 scrollbar-hide">
-        {view === 'history' && (
-          <ExpenseList
-            expenses={expenses}
-            onDelete={handleDeleteExpense}
-            onEdit={(expense) => {
-              setEditingExpense(expense);
-              setView('add_expense');
-            }}
-            onResetAll={handleResetAll}
-            userProfiles={userProfiles}
           />
         )}
 
-        {view === 'home' && (
-          <Dashboard
-            expenses={expenses}
-            settlements={settlements}
-            budget={budget}
-            onBudgetChange={updateBudget}
-            onOpenSettle={() => setView('settle')}
-            tripStartDate={tripStartDate}
-            tripEndDate={tripEndDate}
-            onTripDatesChange={updateTripDates}
-            tripName={tripName}
-            onTripNameChange={updateTripName}
-            userProfiles={userProfiles}
-            tripCoverImage={tripCoverImage}
-            onTripCoverImageChange={updateTripCoverImage}
-          />
-        )}
-
-        {view === 'settle' && (
-          <SettlementView
-            settlements={settlements}
-            expenses={expenses}
-            userProfiles={userProfiles}
-            onBack={() => setView('home')}
-          />
-        )}
-
-        {view === 'schedule' && (
-          <ItineraryView
-            items={itinerary}
-            userProfiles={userProfiles}
-            onSave={handleUpdateItinerary}
-            onDelete={handleDeleteItinerary}
-            tripStartDate={tripStartDate}
-            tripEndDate={tripEndDate}
-          />
-        )}
-
-        {view === 'tickets' && (
-          <TicketView
-            tickets={tickets}
-            userProfiles={userProfiles}
-            onSave={handleUpdateTicket}
-            onDelete={handleDeleteTicket}
-            tripStartDate={tripStartDate}
-            tripEndDate={tripEndDate}
-          />
-        )}
-
-        {view === 'packing' && (
-          <PackingView
-            items={packingList}
-            userProfiles={userProfiles}
-            onUpdate={updatePackingList}
-          />
-        )}
-        {view === 'add_expense' && (
-          <ExpenseForm
-            onAdd={handleAddOrUpdateExpense}
-            onCancel={() => setView('history')}
-            initialExpense={editingExpense}
-            userProfiles={userProfiles}
-          />
-        )}
-        {view === 'settings' && (
-          <SettingsView
-            userProfiles={userProfiles}
-            onUpdateProfile={updateProfile}
-            onLoadSampleData={handleLoadSampleData}
-            onRestoreData={handleRestoreData}
-            onBack={() => setView('home')}
-          />
-        )}
-      </main>
-
-      {/* Bottom Navigation - ホワイトカード */}
-      {view !== 'onboarding' && view !== 'add_expense' && view !== 'settle' && view !== 'settings' && (
-        <>
-          {/* 追加メニュー表示時のオーバーレイ */}
-          {isAddMenuOpen && (
-            <div
-              className="fixed inset-0 bg-ocean-dark/40 backdrop-blur-[2px] z-[35] animate-in fade-in duration-200"
-              onClick={() => setIsAddMenuOpen(false)}
+        {/* Main Content Area */}
+        <main className="flex-1 overflow-y-auto px-4 pb-28 scrollbar-hide">
+          {view === 'history' && (
+            <ExpenseList
+              expenses={expenses}
+              onDelete={handleDeleteExpense}
+              onEdit={(expense) => {
+                setEditingExpense(expense);
+                setView('add_expense');
+              }}
+              onResetAll={handleResetAll}
+              userProfiles={userProfiles}
             />
           )}
 
-          <nav className="fixed bottom-4 left-1/2 -translate-x-1/2 w-[92%] max-w-[400px] h-16 bg-white rounded-full flex justify-between items-center px-6 shadow-lg border border-surface-gray-mid z-[40] safe-pb">
-            <button onClick={() => { setView('home'); setIsAddMenuOpen(false); }} className={`flex flex-col items-center gap-1 transition-all ${view === 'home' ? 'text-primary -translate-y-1' : 'text-ink-light'}`}>
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
-              <span className="text-[9px] font-bold tracking-widest uppercase">HOME</span>
-            </button>
+          {view === 'home' && (
+            <Dashboard
+              expenses={expenses}
+              settlements={settlements}
+              budget={budget}
+              onBudgetChange={updateBudget}
+              onOpenSettle={() => setView('settle')}
+              tripStartDate={tripStartDate}
+              tripEndDate={tripEndDate}
+              onTripDatesChange={updateTripDates}
+              tripName={tripName}
+              onTripNameChange={updateTripName}
+              userProfiles={userProfiles}
+              onTripCoverImageChange={updateTripCoverImage}
+              isTablet={viewModeSize === 'tablet'}
+            />
+          )}
 
-            <button onClick={() => { setView('schedule'); setIsAddMenuOpen(false); }} className={`flex flex-col items-center gap-1 transition-all ${view === 'schedule' ? 'text-primary -translate-y-1' : 'text-ink-light'}`}>
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-              <span className="text-[9px] font-bold tracking-widest uppercase">PLAN</span>
-            </button>
+          {view === 'settle' && (
+            <SettlementView
+              settlements={settlements}
+              expenses={expenses}
+              userProfiles={userProfiles}
+              onBack={() => setView('home')}
+            />
+          )}
 
-            <div className="relative">
-              {/* スピードダイヤルメニュー */}
-              {isAddMenuOpen && (
-                <div className="absolute bottom-20 left-1/2 -translate-x-1/2 flex flex-col gap-3 items-center animate-in slide-in-from-bottom-4 fade-in duration-300">
-                  <button
-                    onClick={() => { setView('packing'); setIsAddMenuOpen(false); }}
-                    className="flex items-center gap-3 bg-white px-5 py-3 rounded-2xl shadow-xl border border-surface-gray-mid whitespace-nowrap active:scale-95 transition-transform"
-                  >
-                    <span className="text-lg">📦</span>
-                    <span className="text-xs font-bold text-ink">持ち物の追加</span>
-                  </button>
-                  <button
-                    onClick={() => { setView('schedule'); setIsAddMenuOpen(false); }}
-                    className="flex items-center gap-3 bg-white px-5 py-3 rounded-2xl shadow-xl border border-surface-gray-mid whitespace-nowrap active:scale-95 transition-transform"
-                  >
-                    <span className="text-lg">🗓️</span>
-                    <span className="text-xs font-bold text-ink">予定の追加</span>
-                  </button>
-                  <button
-                    onClick={() => { setEditingExpense(null); setView('add_expense'); setIsAddMenuOpen(false); }}
-                    className="flex items-center gap-3 bg-white px-5 py-3 rounded-2xl shadow-xl border border-surface-gray-mid whitespace-nowrap active:scale-95 transition-transform"
-                  >
-                    <span className="text-lg">💰</span>
-                    <span className="text-xs font-bold text-ink">支出の登録</span>
-                  </button>
-                </div>
-              )}
+          {view === 'schedule' && (
+            <ItineraryView
+              items={itinerary}
+              userProfiles={userProfiles}
+              onSave={handleUpdateItinerary}
+              onDelete={handleDeleteItinerary}
+              tripStartDate={tripStartDate}
+              tripEndDate={tripEndDate}
+            />
+          )}
 
-              <button
-                onClick={() => setIsAddMenuOpen(!isAddMenuOpen)}
-                className={`w-14 h-14 bg-primary rounded-full flex items-center justify-center text-white shadow-lg -translate-y-6 transition-all z-50 ${isAddMenuOpen ? 'rotate-45 scale-90 bg-ocean-dark' : 'active:scale-95'}`}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" /></svg>
+          {view === 'tickets' && (
+            <TicketView
+              tickets={tickets}
+              userProfiles={userProfiles}
+              onSave={handleUpdateTicket}
+              onDelete={handleDeleteTicket}
+              tripStartDate={tripStartDate}
+              tripEndDate={tripEndDate}
+              isTablet={viewModeSize === 'tablet'}
+            />
+          )}
+
+          {view === 'packing' && (
+            <PackingView
+              items={packingList}
+              userProfiles={userProfiles}
+              onUpdate={updatePackingList}
+              isTablet={viewModeSize === 'tablet'}
+            />
+          )}
+          {view === 'add_expense' && (
+            <ExpenseForm
+              onAdd={handleAddOrUpdateExpense}
+              onCancel={() => setView('history')}
+              initialExpense={editingExpense}
+              userProfiles={userProfiles}
+            />
+          )}
+          {view === 'settings' && (
+            <SettingsView
+              userProfiles={userProfiles}
+              onUpdateProfile={updateProfile}
+              onLoadSampleData={handleLoadSampleData}
+              onRestoreData={handleRestoreData}
+              onBack={() => setView('home')}
+              viewModeSize={viewModeSize}
+              onUpdateViewModeSize={setViewModeSize}
+            />
+          )}
+        </main>
+
+        {/* Bottom Navigation - ホワイトカード */}
+        {view !== 'onboarding' && view !== 'add_expense' && view !== 'settle' && view !== 'settings' && (
+          <>
+            {/* 追加メニュー表示時のオーバーレイ */}
+            {isAddMenuOpen && (
+              <div
+                className="fixed inset-0 bg-ocean-dark/40 backdrop-blur-[2px] z-[35] animate-in fade-in duration-200"
+                onClick={() => setIsAddMenuOpen(false)}
+              />
+            )}
+
+            <nav className="fixed bottom-4 left-1/2 -translate-x-1/2 w-[92%] max-w-[400px] h-16 bg-white rounded-full flex justify-between items-center px-6 shadow-lg border border-surface-gray-mid z-[40] safe-pb">
+              <button onClick={() => { setView('home'); setIsAddMenuOpen(false); }} className={`flex flex-col items-center gap-1 transition-all ${view === 'home' ? 'text-primary -translate-y-1' : 'text-ink-light'}`}>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
+                <span className="text-[9px] font-bold tracking-widest uppercase">HOME</span>
               </button>
-            </div>
 
-            <button onClick={() => { setView('tickets'); setIsAddMenuOpen(false); }} className={`flex flex-col items-center gap-1 transition-all ${view === 'tickets' ? 'text-primary -translate-y-1' : 'text-ink-light'}`}>
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" /></svg>
-              <span className="text-[9px] font-bold tracking-widest uppercase">TICKETS</span>
-            </button>
+              <button onClick={() => { setView('schedule'); setIsAddMenuOpen(false); }} className={`flex flex-col items-center gap-1 transition-all ${view === 'schedule' ? 'text-primary -translate-y-1' : 'text-ink-light'}`}>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                <span className="text-[9px] font-bold tracking-widest uppercase">PLAN</span>
+              </button>
 
-            <button onClick={() => { setView('packing'); setIsAddMenuOpen(false); }} className={`flex flex-col items-center gap-1 transition-all ${view === 'packing' ? 'text-primary -translate-y-1' : 'text-ink-light'}`}>
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
-              <span className="text-[9px] font-bold tracking-widest uppercase">PACKING</span>
-            </button>
-          </nav>
-        </>
-      )}
+              <div className="relative">
+                {/* スピードダイヤルメニュー */}
+                {isAddMenuOpen && (
+                  <div className="absolute bottom-20 left-1/2 -translate-x-1/2 flex flex-col gap-3 items-center animate-in slide-in-from-bottom-4 fade-in duration-300">
+                    <button
+                      onClick={() => { setView('packing'); setIsAddMenuOpen(false); }}
+                      className="flex items-center gap-3 bg-white px-5 py-3 rounded-2xl shadow-xl border border-surface-gray-mid whitespace-nowrap active:scale-95 transition-transform"
+                    >
+                      <span className="text-lg">📦</span>
+                      <span className="text-xs font-bold text-ink">持ち物の追加</span>
+                    </button>
+                    <button
+                      onClick={() => { setView('schedule'); setIsAddMenuOpen(false); }}
+                      className="flex items-center gap-3 bg-white px-5 py-3 rounded-2xl shadow-xl border border-surface-gray-mid whitespace-nowrap active:scale-95 transition-transform"
+                    >
+                      <span className="text-lg">🗓️</span>
+                      <span className="text-xs font-bold text-ink">予定の追加</span>
+                    </button>
+                    <button
+                      onClick={() => { setEditingExpense(null); setView('add_expense'); setIsAddMenuOpen(false); }}
+                      className="flex items-center gap-3 bg-white px-5 py-3 rounded-2xl shadow-xl border border-surface-gray-mid whitespace-nowrap active:scale-95 transition-transform"
+                    >
+                      <span className="text-lg">💰</span>
+                      <span className="text-xs font-bold text-ink">支出の登録</span>
+                    </button>
+                  </div>
+                )}
+
+                <button
+                  onClick={() => setIsAddMenuOpen(!isAddMenuOpen)}
+                  className={`w-14 h-14 bg-primary rounded-full flex items-center justify-center text-white shadow-lg -translate-y-6 transition-all z-50 ${isAddMenuOpen ? 'rotate-45 scale-90 bg-ocean-dark' : 'active:scale-95'}`}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" /></svg>
+                </button>
+              </div>
+
+              <button onClick={() => { setView('tickets'); setIsAddMenuOpen(false); }} className={`flex flex-col items-center gap-1 transition-all ${view === 'tickets' ? 'text-primary -translate-y-1' : 'text-ink-light'}`}>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" /></svg>
+                <span className="text-[9px] font-bold tracking-widest uppercase">TICKETS</span>
+              </button>
+
+              <button onClick={() => { setView('packing'); setIsAddMenuOpen(false); }} className={`flex flex-col items-center gap-1 transition-all ${view === 'packing' ? 'text-primary -translate-y-1' : 'text-ink-light'}`}>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
+                <span className="text-[9px] font-bold tracking-widest uppercase">PACKING</span>
+              </button>
+            </nav>
+          </>
+        )}
+      </div>
     </div>
   );
 };
