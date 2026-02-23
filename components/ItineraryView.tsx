@@ -392,145 +392,158 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
             {filteredItems.map((item) => {
               const typeInfo = getTypeInfo(item.type);
               return (
-                <div key={item.id} className="flex gap-4 mb-6 relative group">
-                  {/* 時刻 */}
-                  <div className="w-12 text-right pt-1 flex-shrink-0">
-                    <span className="text-sm font-bold text-ink block">{item.time}</span>
-                    {item.endTime && <span className="text-[10px] text-ink-light block whitespace-nowrap">～{item.endTime}</span>}
-                  </div>
+                <React.Fragment key={item.id}>
+                  <div className="flex gap-4 mb-6 relative group">
+                    {/* 時刻 */}
+                    <div className="w-12 text-right pt-1 flex-shrink-0">
+                      <span className="text-sm font-bold text-ink block">{item.time}</span>
+                      {item.endTime && <span className="text-[10px] text-ink-light block whitespace-nowrap">～{item.endTime}</span>}
+                    </div>
 
-                  {/* ドット */}
-                  <div className="relative z-10 pt-2 flex-shrink-0 flex flex-col items-center">
-                    <div className="w-3 h-3 bg-accent rounded-full ring-4 ring-white min-h-[12px]"></div>
-                    {gaps[item.id] && (
-                      <div className="absolute top-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 z-0">
-                        <div className="w-[1px] h-10 border-l border-dashed border-ink-light/30"></div>
-                        <div className="bg-white border border-surface-gray-mid rounded-full px-2 py-0.5 text-[8px] font-bold text-ink-light whitespace-nowrap shadow-sm">
-                          🕑 空き時間${gaps[item.id]}
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                    {/* ドット */}
+                    <div className="relative z-10 pt-2 flex-shrink-0 flex flex-col items-center">
+                      <div className="w-3 h-3 bg-accent rounded-full ring-4 ring-white min-h-[12px]"></div>
+                    </div>
 
-                  {/* カード */}
-                  <div className="flex-1 min-w-0">
-                    <div
-                      onClick={() => handleOpenEdit(item)}
-                      className="bg-white rounded-xl border border-surface-gray-mid hover:border-primary/30 hover:shadow-sm transition-all relative cursor-pointer active:scale-[0.98] overflow-hidden"
-                    >
-                      {/* 個人カラーインジケーター */}
-                      {item.participantId && (
-                        <div
-                          className="absolute left-0 top-0 bottom-0 w-1 z-30"
-                          style={{ backgroundColor: userProfiles.find(u => u.id === item.participantId)?.color }}
-                        />
-                      )}
-
-                      {/* OGP/タイプ別テンプレート画像 */}
-                      {(item.imageUrl || TYPE_IMAGES[item.type]) && (
-                        <div className="w-full h-28 overflow-hidden bg-surface-gray-mid/30 relative">
-                          <img
-                            src={item.imageUrl || TYPE_IMAGES[item.type]}
-                            alt={item.title}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              const img = e.target as HTMLImageElement;
-                              // もし個別画像が失敗して、テンプレート画像がまだ試されていないならテンプレートに切り替え
-                              if (item.imageUrl && img.src === item.imageUrl) {
-                                img.src = TYPE_IMAGES[item.type];
-                              } else {
-                                // テンプレート画像すら失敗した場合は非表示
-                                (img.parentElement as HTMLElement).style.display = 'none';
-                              }
-                            }}
+                    {/* カード */}
+                    <div className="flex-1 min-w-0">
+                      <div
+                        onClick={() => handleOpenEdit(item)}
+                        className="bg-white rounded-xl border border-surface-gray-mid hover:border-primary/30 hover:shadow-sm transition-all relative cursor-pointer active:scale-[0.98] overflow-hidden"
+                      >
+                        {/* 既存の予定カードの内容 (中略) */}
+                        {/* 個人カラーインジケーター */}
+                        {item.participantId && (
+                          <div
+                            className="absolute left-0 top-0 bottom-0 w-1 z-30"
+                            style={{ backgroundColor: userProfiles.find(u => u.id === item.participantId)?.color }}
                           />
-                          {/* ローディング中の背景色を少し濃くして枠線を分かりやすく */}
-                          <div className="absolute inset-0 bg-surface-gray-mid/10 -z-10"></div>
-                        </div>
-                      )}
+                        )}
 
-                      <div className="p-4">
-                        {/* 削除ボタン */}
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteClick(item.id);
-                          }}
-                          className="absolute top-1 right-1 w-10 h-10 flex items-center justify-center text-ink-light hover:text-rose-500 rounded-full hover:bg-surface-gray transition-colors z-40"
-                        >
-                          <span className="text-lg leading-none">×</span>
-                        </button>
-
-                        <div className="flex items-start gap-2 mb-2 pr-8">
-                          <span className="text-xl">{typeInfo.icon}</span>
-                          <div className="min-w-0">
-                            <span className="text-[10px] font-bold text-primary uppercase tracking-wider block mb-0.5">{typeInfo.label}</span>
-                            <h3 className="text-base font-bold text-ink leading-tight truncate">{item.title}</h3>
-                          </div>
-                        </div>
-
-                        {item.location && (
-                          <div className="flex items-center gap-1.5 mb-2 text-ink-sub">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                            </svg>
-                            <span className="text-xs truncate">{item.location}</span>
+                        {/* OGP/タイプ別テンプレート画像 */}
+                        {(item.imageUrl || TYPE_IMAGES[item.type]) && (
+                          <div className="w-full h-28 overflow-hidden bg-surface-gray-mid/30 relative">
+                            <img
+                              src={item.imageUrl || TYPE_IMAGES[item.type]}
+                              alt={item.title}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                const img = e.target as HTMLImageElement;
+                                if (item.imageUrl && img.src === item.imageUrl) {
+                                  img.src = TYPE_IMAGES[item.type];
+                                } else {
+                                  (img.parentElement as HTMLElement).style.display = 'none';
+                                }
+                              }}
+                            />
+                            <div className="absolute inset-0 bg-surface-gray-mid/10 -z-10"></div>
                           </div>
                         )}
 
-                        {item.memo && (
-                          <div className="text-xs text-ink-sub bg-surface-gray p-3 rounded-lg mb-2 relative">
-                            <div className="flex items-center justify-between mb-1.5 border-b border-surface-gray-mid/50 pb-1">
-                              <span className="text-[10px] font-bold text-ink-light tracking-widest">MEMO</span>
+                        <div className="p-4">
+                          {/* 削除ボタン */}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteClick(item.id);
+                            }}
+                            className="absolute top-1 right-1 w-10 h-10 flex items-center justify-center text-ink-light hover:text-rose-500 rounded-full hover:bg-surface-gray transition-colors z-40"
+                          >
+                            <span className="text-lg leading-none">×</span>
+                          </button>
+
+                          <div className="flex items-start gap-2 mb-2 pr-8">
+                            <span className="text-xl">{typeInfo.icon}</span>
+                            <div className="min-w-0">
+                              <span className="text-[10px] font-bold text-primary uppercase tracking-wider block mb-0.5">{typeInfo.label}</span>
+                              <h3 className="text-base font-bold text-ink leading-tight truncate">{item.title}</h3>
                             </div>
-                            <p className="whitespace-pre-wrap leading-relaxed">{item.memo}</p>
                           </div>
-                        )}
 
-                        {(item.mapUrl || item.link || (item.links && item.links.length > 0)) && (
-                          <div className="flex flex-wrap gap-2 mt-2">
-                            {item.mapUrl && (
-                              <a
-                                href={item.mapUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex-1 min-w-[120px] flex items-center justify-center gap-2 py-2 bg-rose-50 hover:bg-rose-100 rounded-lg text-xs font-bold text-rose-600 transition-colors relative z-20 border border-rose-200"
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                <span>📍 マップ</span>
-                              </a>
-                            )}
-                            {item.link && (
-                              <a
-                                href={item.link}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex-1 min-w-[120px] flex items-center justify-center gap-2 py-2 bg-primary-light hover:bg-primary/20 rounded-lg text-xs font-bold text-primary transition-colors relative z-20"
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                <span>🔗 Link</span>
-                              </a>
-                            )}
-                            {item.links?.map((lnk, idx) => (
-                              <a
-                                key={idx}
-                                href={lnk.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex-1 min-w-[120px] flex items-center justify-center gap-2 py-2 bg-ocean-light hover:bg-ocean-dark/20 rounded-lg text-xs font-bold text-ocean-dark transition-colors relative z-20"
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                <span>{lnk.label || 'Link'} 🔗</span>
-                              </a>
-                            ))}
-                          </div>
-                        )}
+                          {item.location && (
+                            <div className="flex items-center gap-1.5 mb-2 text-ink-sub">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                              </svg>
+                              <span className="text-xs truncate">{item.location}</span>
+                            </div>
+                          )}
+
+                          {item.memo && (
+                            <div className="text-xs text-ink-sub bg-surface-gray p-3 rounded-lg mb-2 relative">
+                              <div className="flex items-center justify-between mb-1.5 border-b border-surface-gray-mid/50 pb-1">
+                                <span className="text-[10px] font-bold text-ink-light tracking-widest">MEMO</span>
+                              </div>
+                              <p className="whitespace-pre-wrap leading-relaxed">{item.memo}</p>
+                            </div>
+                          )}
+
+                          {(item.mapUrl || item.link || (item.links && item.links.length > 0)) && (
+                            <div className="flex flex-wrap gap-2 mt-2">
+                              {item.mapUrl && (
+                                <a
+                                  href={item.mapUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="flex-1 min-w-[120px] flex items-center justify-center gap-2 py-2 bg-rose-50 hover:bg-rose-100 rounded-lg text-xs font-bold text-rose-600 transition-colors relative z-20 border border-rose-200"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <span>📍 マップ</span>
+                                </a>
+                              )}
+                              {item.link && (
+                                <a
+                                  href={item.link}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="flex-1 min-w-[120px] flex items-center justify-center gap-2 py-2 bg-primary-light hover:bg-primary/20 rounded-lg text-xs font-bold text-primary transition-colors relative z-20"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <span>🔗 Link</span>
+                                </a>
+                              )}
+                              {item.links?.map((lnk, idx) => (
+                                <a
+                                  key={idx}
+                                  href={lnk.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="flex-1 min-w-[120px] flex items-center justify-center gap-2 py-2 bg-ocean-light hover:bg-ocean-dark/20 rounded-lg text-xs font-bold text-ocean-dark transition-colors relative z-20"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <span>{lnk.label || 'Link'} 🔗</span>
+                                </a>
+                              ))}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
+
+                  {/* 空き時間カード */}
+                  {gaps[item.id] && (
+                    <div className="flex gap-4 mb-6 relative">
+                      <div className="w-12 flex-shrink-0"></div>
+                      <div className="relative z-0 flex-shrink-0 flex items-center justify-center">
+                        <div className="w-[2px] h-full bg-surface-gray-mid absolute left-1/2 -translate-x-1/2 -top-6 -bottom-6"></div>
+                      </div>
+                      <div className="flex-1">
+                        <div className="bg-ocean-light/10 border-2 border-dashed border-ocean-light/30 rounded-2xl p-4 flex items-center justify-center gap-3 animate-in fade-in duration-500">
+                          <span className="text-xl">🕑</span>
+                          <div className="text-center">
+                            <p className="text-[10px] font-bold text-ocean-dark/60 uppercase tracking-widest mb-0.5">Idle Time</p>
+                            <p className="text-sm font-bold text-ocean-dark">
+                              空き時間 {gaps[item.id]}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </React.Fragment>
               );
             })}
           </div>

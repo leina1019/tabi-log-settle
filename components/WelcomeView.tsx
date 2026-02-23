@@ -13,9 +13,10 @@ interface OnboardingData {
 
 interface Props {
     onStart: (data: OnboardingData) => void;
+    onDemoStart?: () => void;
 }
 
-const WelcomeView: React.FC<Props> = ({ onStart }) => {
+const WelcomeView: React.FC<Props> = ({ onStart, onDemoStart }) => {
     const [step, setStep] = useState<'welcome' | 'info' | 'members'>('welcome');
     const [name, setName] = useState('');
     const [startDate, setStartDate] = useState('');
@@ -94,6 +95,14 @@ const WelcomeView: React.FC<Props> = ({ onStart }) => {
                         >
                             旅を計画！始める ✨
                         </button>
+                        {onDemoStart && (
+                            <button
+                                onClick={onDemoStart}
+                                className="w-full mt-4 bg-white border-2 border-primary/20 text-primary py-4 rounded-3xl font-bold hover:bg-primary/5 active:scale-95 transition-all text-sm"
+                            >
+                                デモ版をひらく（検証用）
+                            </button>
+                        )}
                         <p className="mt-8 text-[10px] text-ink-light uppercase tracking-widest font-bold">Powered by Reina & Antigravity</p>
                     </div>
                 )}
