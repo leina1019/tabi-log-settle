@@ -4,7 +4,6 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { Expense, Settlement, Participant, UserProfile } from '../types';
 import { formatCurrency, convertToJPY } from '../utils/currency';
 import { PARTICIPANTS } from '../constants';
-import { evaluateBudget } from '../services/geminiService';
 
 interface Props {
   expenses: Expense[];
@@ -38,8 +37,6 @@ const Dashboard: React.FC<Props> = ({
   onTripCoverImageChange
 }) => {
   const [selectedMemberId, setSelectedMemberId] = useState<Participant | 'ALL' | null>(null);
-  const [evaluation, setEvaluation] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
   const [isEditingBudget, setIsEditingBudget] = useState(false);
   const [tempBudget, setTempBudget] = useState(budget.toString());
   const [isEditingTrip, setIsEditingTrip] = useState(false);
@@ -142,15 +139,7 @@ const Dashboard: React.FC<Props> = ({
 
   const COLORS = ['#00A1DE', '#CFA86E', '#FFFFFF', '#003780', '#555555', '#AAAAAA'];
 
-  const handleEvaluateBudget = async () => {
-    setIsLoading(true);
-    try {
-      const catSummary = (detailData?.categoryData || []).map(c => `${c.name}: ${formatCurrency(c.value, 'JPY')}`).join('\n');
-      const memberName = selectedMemberId === 'ALL' ? '全員' : (selectedMemberId ? getProfile(selectedMemberId as string).displayName : 'みなさん');
-      const result = await evaluateBudget(totalJPY, budget, catSummary, memberName);
-      setEvaluation(result);
-    } catch (err) { console.error(err); } finally { setIsLoading(false); }
-  };
+
 
   const saveBudget = () => {
     const val = parseInt(tempBudget, 10);
@@ -426,28 +415,6 @@ const Dashboard: React.FC<Props> = ({
         </div>
       </div>
 
-      {/* AI Assistant (Glass Dark) */}
-      <div className="glass-dark p-6 rounded-3xl relative overflow-hidden">
-        <div className="flex items-center gap-3 mb-3">
-          <div className="w-2 h-2 rounded-full bg-ocean-light animate-pulse"></div>
-          <h3 className="text-[10px] font-bold text-primary uppercase tracking-[0.2em]">AIコンシェルジュ</h3>
-        </div>
-        {evaluation ? (
-          <div>
-            <p className="text-xs leading-relaxed text-ink-sub font-medium italic mb-3">"{evaluation}"</p>
-            <button type="button" onClick={() => setEvaluation(null)} className="text-[10px] text-ink-light hover:text-ink">閉じる</button>
-          </div>
-        ) : (
-          <button
-            type="button"
-            onClick={handleEvaluateBudget}
-            disabled={isLoading}
-            className="w-full py-3 rounded-xl border border-primary/20 bg-primary-light hover:bg-primary/10 text-xs font-bold tracking-widest text-primary transition-all"
-          >
-            {isLoading ? "分析中..." : "支出を分析する"}
-          </button>
-        )}
-      </div>
 
       {/* Modal (Full Screen Glass) */}
       {selectedMemberId && detailData && (

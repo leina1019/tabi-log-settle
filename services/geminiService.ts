@@ -95,64 +95,7 @@ export async function getExchangeRate(date: string, currency: string = 'AUD') {
   }
 }
 
-/**
- * 支出状況を分析し、パーソナライズされたアドバイスを生成します
- * @param totalSpent - 総支出額（円）
- * @param budget - 予算（円）
- * @param categories - カテゴリ別内訳の文字列
- * @param memberName - メンバー名（オプション）
- */
-export async function evaluateBudget(
-  totalSpent: number,
-  budget: number,
-  categories: string,
-  memberName: string = 'みなさん'
-) {
-  // APIキー未設定の場合は早期リターン
-  if (!isApiKeyValid()) {
-    return `APIキーが設定されていないため、AI分析を利用できません。`;
-  }
 
-  const usageRate = budget > 0 ? ((totalSpent / budget) * 100).toFixed(1) : '0';
-  const remaining = budget - totalSpent;
-
-  try {
-    const ai = new GoogleGenAI({ apiKey: API_KEY! });
-
-    const prompt = `あなたは旅行の財務アドバイザーです。
-
-【旅行支出データ】
-予算: ${budget.toLocaleString()}円
-現在の総支出: ${totalSpent.toLocaleString()}円
-予算消化率: ${usageRate}%
-残り予算: ${remaining.toLocaleString()}円
-カテゴリ別内訳:
-${categories || '（支出データなし）'}
-
-${memberName}に向けて、日本語で150文字以内の具体的なアドバイスをください。
-予算オーバーなら警告、余裕があれば安心感を与えてください。
-特に多いカテゴリを1つ具体的に挙げてください。`;
-
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.0-flash',
-      contents: prompt,
-    });
-
-    const result = (response.text || '').trim() || '現在の支出は把握されています。この調子で管理を続けましょう。';
-    console.log('[AI Evaluate] result:', result);
-    return result;
-
-  } catch (error: any) {
-    console.error('[AI Evaluate] 分析に失敗:', error?.message || error);
-    if (error?.message?.includes('API_KEY') || error?.message?.includes('apiKey') || error?.message?.includes('INVALID_ARGUMENT')) {
-      return 'APIキーが無効です。.env.local の GEMINI_API_KEY を確認してください。';
-    }
-    if (error?.message?.includes('quota') || error?.message?.includes('RESOURCE_EXHAUSTED')) {
-      return 'APIの利用制限に達しました。しばらく時間をおいてから再試行してください。';
-    }
-    return '分析が一時的に利用できませんが、記録は正常に保存されています。';
-  }
-}
 
 /**
  * APIキーの設定状態を確認する（デバッグ用）
