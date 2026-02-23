@@ -19,70 +19,22 @@ type ViewState = 'home' | 'schedule' | 'tickets' | 'history' | 'add_expense' | '
 
 const App: React.FC = () => {
   // --- State Management ---
-  const [expenses, setExpenses] = useState<Expense[]>(() => {
-    const saved = localStorage.getItem('oz-wari-expenses');
-    return saved ? JSON.parse(saved) : [];
-  });
-
-  const [budget, setBudget] = useState<number>(() => {
-    const saved = localStorage.getItem('oz-wari-budget');
-    return saved ? parseInt(saved, 10) : 1000000;
-  });
-
-  // User Profiles (Icons & Display Names)
-  const [userProfiles, setUserProfiles] = useState<UserProfile[]>(() => {
-    const saved = localStorage.getItem('oz-wari-profiles');
-    let profiles: any[] = saved ? JSON.parse(saved) : [];
-
-    // Migration: Ensure all PARTICIPANTS have a profile entry with new structure
-    const initializedProfiles = PARTICIPANTS.map(pId => {
-      const existing = profiles.find(p => p.id === pId || p.name === pId);
-      if (existing) {
-        return {
-          id: pId,
-          displayName: existing.displayName || existing.name || pId,
-          avatarUrl: existing.avatarUrl || '',
-          updatedAt: existing.updatedAt || new Date().toISOString()
-        };
-      }
-      return { id: pId, displayName: pId, avatarUrl: '', updatedAt: new Date().toISOString() };
-    });
-
-    return initializedProfiles;
-  });
-
-  // Trip Dates & Info
-  const [tripStartDate, setTripStartDate] = useState<string>(() => {
-    return localStorage.getItem('oz-wari-trip-start') || '';
-  });
-
-  const [tripEndDate, setTripEndDate] = useState<string>(() => {
-    return localStorage.getItem('oz-wari-trip-end') || '';
-  });
-
-  const [tripName, setTripName] = useState<string>(() => {
-    return localStorage.getItem('oz-wari-trip-name') || 'Australia';
-  });
-
-  const [tripCoverImage, setTripCoverImage] = useState<string>(() => {
-    return localStorage.getItem('oz-wari-trip-cover') || 'https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?q=80&w=800&auto=format&fit=crop';
-  });
-
-  const [itinerary, setItinerary] = useState<ItineraryItem[]>(() => {
-    const saved = localStorage.getItem('oz-wari-itinerary');
-    return saved ? JSON.parse(saved) : [];
-  });
-
-  const [tickets, setTickets] = useState<Ticket[]>(() => {
-    const saved = localStorage.getItem('oz-wari-tickets');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [budget, setBudget] = useState<number>(1000000);
+  const [userProfiles, setUserProfiles] = useState<UserProfile[]>(() =>
+    PARTICIPANTS.map(pId => ({ id: pId, displayName: pId, avatarUrl: '', updatedAt: new Date().toISOString() }))
+  );
+  const [tripStartDate, setTripStartDate] = useState<string>('');
+  const [tripEndDate, setTripEndDate] = useState<string>('');
+  const [tripName, setTripName] = useState<string>('Australia');
+  const [tripCoverImage, setTripCoverImage] = useState<string>('https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?q=80&w=800&auto=format&fit=crop');
+  const [itinerary, setItinerary] = useState<ItineraryItem[]>([]);
+  const [tickets, setTickets] = useState<Ticket[]>([]);
 
   const [view, setView] = useState<ViewState>('home');
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'success' | 'error'>('idle');
   const [tripId, setTripId] = useState<string | null>(null);
-
   // 削除済みIDを一時的に保持して、同期時のゾンビ復活を防ぐ
   const deletedIdsRef = useRef<Set<string>>(new Set());
 
@@ -90,7 +42,50 @@ const App: React.FC = () => {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const id = params.get('trip');
-    if (id) setTripId(id);
+    if (id) {
+      setTripId(id);
+
+      // Load from LocalStorage only if tripId exists (editing existing trip)
+      const prefix = `oz-wari-${id}-`;
+      const sBudget = localStorage.getItem(prefix + 'budget');
+      if (sBudget) setBudget(parseInt(sBudget, 10));
+
+      const sProfiles = localStorage.getItem(prefix + 'profiles');
+      if (sProfiles) setUserProfiles(JSON.parse(sProfiles));
+
+      const sStart = localStorage.getItem(prefix + 'trip-start');
+      if (sStart) setTripStartDate(sStart);
+
+      const sEnd = localStorage.getItem(prefix + 'trip-end');
+      if (sEnd) setTripEndDate(sEnd);
+
+      const sName = localStorage.getItem(prefix + 'trip-name');
+      if (sName) setTripName(sName);
+
+      const sCover = localStorage.getItem(prefix + 'trip-cover');
+      if (sCover) setTripCoverImage(sCover);
+
+      const sExpenses = localStorage.getItem(prefix + 'expenses');
+      if (sExpenses) setExpenses(JSON.parse(sExpenses));
+
+      const sItinerary = localStorage.getItem(prefix + 'itinerary');
+      if (sItinerary) setItinerary(JSON.parse(sItinerary));
+
+      const sTickets = localStorage.getItem(prefix + 'tickets');
+      if (sTickets) setTickets(JSON.parse(sTickets));
+    } else {
+      // BASE URL: Reset to templates
+      setTripId(null);
+      setExpenses([]);
+      setBudget(1000000);
+      setTripName('Australia');
+      setTripStartDate('');
+      setTripEndDate('');
+      setTripCoverImage('https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?q=80&w=800&auto=format&fit=crop');
+      setItinerary([]);
+      setTickets([]);
+      setUserProfiles(PARTICIPANTS.map(pId => ({ id: pId, displayName: pId, avatarUrl: '', updatedAt: new Date().toISOString() })));
+    }
   }, []);
 
   useEffect(() => {
@@ -125,44 +120,66 @@ const App: React.FC = () => {
 
   // --- Effects (Local Storage) ---
   useEffect(() => {
-    localStorage.setItem('oz-wari-budget', budget.toString());
-  }, [budget]);
+    if (!tripId) return;
+    const prefix = `oz-wari-${tripId}-`;
+    localStorage.setItem(prefix + 'budget', budget.toString());
+  }, [budget, tripId]);
 
   useEffect(() => {
-    localStorage.setItem('oz-wari-profiles', JSON.stringify(userProfiles));
-  }, [userProfiles]);
+    if (!tripId) return;
+    const prefix = `oz-wari-${tripId}-`;
+    localStorage.setItem(prefix + 'profiles', JSON.stringify(userProfiles));
+  }, [userProfiles, tripId]);
 
   useEffect(() => {
-    localStorage.setItem('oz-wari-trip-start', tripStartDate);
-  }, [tripStartDate]);
+    if (!tripId) return;
+    const prefix = `oz-wari-${tripId}-`;
+    localStorage.setItem(prefix + 'trip-start', tripStartDate);
+  }, [tripStartDate, tripId]);
 
   useEffect(() => {
-    localStorage.setItem('oz-wari-trip-end', tripEndDate);
-  }, [tripEndDate]);
+    if (!tripId) return;
+    const prefix = `oz-wari-${tripId}-`;
+    localStorage.setItem(prefix + 'trip-end', tripEndDate);
+  }, [tripEndDate, tripId]);
 
   useEffect(() => {
-    localStorage.setItem('oz-wari-trip-name', tripName);
-  }, [tripName]);
+    if (!tripId) return;
+    const prefix = `oz-wari-${tripId}-`;
+    localStorage.setItem(prefix + 'trip-name', tripName);
+  }, [tripName, tripId]);
 
   useEffect(() => {
-    localStorage.setItem('oz-wari-trip-cover', tripCoverImage);
-  }, [tripCoverImage]);
+    if (!tripId) return;
+    const prefix = `oz-wari-${tripId}-`;
+    localStorage.setItem(prefix + 'trip-cover', tripCoverImage);
+  }, [tripCoverImage, tripId]);
 
   useEffect(() => {
+    if (!tripId) return;
+    const prefix = `oz-wari-${tripId}-`;
     try {
-      localStorage.setItem('oz-wari-itinerary', JSON.stringify(itinerary));
+      localStorage.setItem(prefix + 'itinerary', JSON.stringify(itinerary));
     } catch (e) {
       console.error('Failed to save itinerary to localStorage', e);
     }
-  }, [itinerary]);
+  }, [itinerary, tripId]);
 
   useEffect(() => {
+    if (!tripId) return;
+    const prefix = `oz-wari-${tripId}-`;
     try {
-      localStorage.setItem('oz-wari-tickets', JSON.stringify(tickets));
+      localStorage.setItem(prefix + 'tickets', JSON.stringify(tickets));
     } catch (e) {
       console.error('Failed to save tickets to localStorage', e);
     }
-  }, [tickets]);
+  }, [tickets, tripId]);
+
+  useEffect(() => {
+    if (!tripId) return;
+    const prefix = `oz-wari-${tripId}-`;
+    localStorage.setItem(prefix + 'expenses', JSON.stringify(expenses));
+  }, [expenses, tripId]);
 
   // NOTE: syncWithCloud (Google Sheets) は Firebase 移行後は不要のため削除。
   // Firebase の onSnapshot リスナーがリアルタイム同期を担当する。
