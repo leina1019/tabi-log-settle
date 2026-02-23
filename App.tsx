@@ -608,6 +608,7 @@ const App: React.FC = () => {
         {view === 'tickets' && (
           <TicketView
             tickets={tickets}
+            userProfiles={userProfiles}
             onSave={handleUpdateTicket}
             onDelete={handleDeleteTicket}
           />

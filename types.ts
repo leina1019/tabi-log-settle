@@ -63,5 +63,6 @@ export interface Ticket {
   referenceNumber?: string; // 予約番号など
   notes?: string;
   link?: string; // Drive link or e-ticket URL
+  participantId?: string; // 特定メンバーのチケット。undefinedの場合は「全員」
   updatedAt?: string; // For sync
 }
