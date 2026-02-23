@@ -133,12 +133,19 @@ const Dashboard: React.FC<Props> = ({
       stats,
       categoryData,
       memberPayments: [],
-      iPaidForOthers: userProfiles.filter(p => p.id !== selectedMemberId).map(p => ({ id: p.id, value: iPaidForOthers[p.id] || 0 })),
-      othersPaidForMe: userProfiles.filter(p => p.id !== selectedMemberId).map(p => ({ id: p.id, value: othersPaidForMe[p.id] || 0 }))
+      // 0円の項目を除外するフィルタリングを追加
+      iPaidForOthers: userProfiles
+        .filter(p => p.id !== selectedMemberId)
+        .map(p => ({ id: p.id, value: iPaidForOthers[p.id] || 0 }))
+        .filter(item => item.value > 0.1), // 誤差考慮
+      othersPaidForMe: userProfiles
+        .filter(p => p.id !== selectedMemberId)
+        .map(p => ({ id: p.id, value: othersPaidForMe[p.id] || 0 }))
+        .filter(item => item.value > 0.1) // 誤差考慮
     };
   }, [selectedMemberId, expenses, memberStats, totalJPY, userProfiles]);
 
-  const COLORS = ['#00A1DE', '#CFA86E', '#FFFFFF', '#003780', '#555555', '#AAAAAA'];
+  const COLORS = ['#00A1DE', '#CFA86E', '#003780', '#555555', '#AAAAAA', '#E5CCA0'];
 
 
 
@@ -244,7 +251,7 @@ const Dashboard: React.FC<Props> = ({
   }, [tripStartDate, tripEndDate]);
 
   return (
-    <div className="space-y-6 pt-6 pb-24">
+    <div className="space-y-6 pt-2 pb-24">
       {/* Hero Trip Card */}
       <button
         onClick={() => {
@@ -254,7 +261,7 @@ const Dashboard: React.FC<Props> = ({
           setTempCoverImage(tripCoverImage);
           setIsEditingTrip(true);
         }}
-        className="relative w-full h-48 rounded-[32px] overflow-hidden shadow-2xl group text-left transition-transform active:scale-[0.99]"
+        className="relative w-full aspect-[21/9] sm:h-48 rounded-[32px] overflow-hidden shadow-2xl group text-left transition-transform active:scale-[0.99]"
       >
         <img
           src={tripCoverImage}
@@ -265,18 +272,18 @@ const Dashboard: React.FC<Props> = ({
         <div className="absolute top-4 right-4 bg-black/20 backdrop-blur-md p-2 rounded-full border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity">
           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
         </div>
-        <div className="absolute bottom-5 left-6 right-6 text-white">
-          <p className="text-[10px] font-bold tracking-[0.3em] uppercase text-premium-gold mb-1">{tripStatus.sub}</p>
+        <div className="absolute bottom-4 left-6 right-6 text-white">
+          <p className="text-[9px] font-bold tracking-[0.3em] uppercase text-premium-gold mb-1">{tripStatus.sub}</p>
           <div className="flex justify-between items-end">
             <div>
-              <h2 className="text-3xl font-sans font-bold tracking-wide mb-1 leading-tight">{tripName}</h2>
-              <p className="text-2xl font-bold text-white/90">{tripStatus.text}</p>
+              <h2 className="text-xl sm:text-2xl font-sans font-bold tracking-wide mb-0.5 leading-tight">{tripName}</h2>
+              <p className="text-lg sm:text-2xl font-bold text-white/90">{tripStatus.text}</p>
             </div>
             <div className="flex flex-col items-end gap-1">
-              <div className="flex gap-2 text-[10px] font-medium opacity-80">
-                <span className="px-2 py-0.5 border border-white/30 rounded-full bg-black/20 backdrop-blur-sm">{formattedDateRange}</span>
+              <div className="flex gap-2 text-[8px] sm:text-[10px] font-medium opacity-80">
+                <span className="px-2 py-0.5 border border-white/30 rounded-full bg-black/20 backdrop-blur-sm whitespace-nowrap">{formattedDateRange}</span>
               </div>
-              <span className="text-[10px] font-medium opacity-60">{userProfiles.length} Travelers</span>
+              <span className="text-[8px] sm:text-[10px] font-medium opacity-60 whitespace-nowrap">{userProfiles.length} Travelers</span>
             </div>
           </div>
         </div>
@@ -420,138 +427,239 @@ const Dashboard: React.FC<Props> = ({
       </div>
 
 
-      {/* Modal (Full Screen Glass) */}
+      {/* Modal (Full Screen Glass with Premium Ocean Design) */}
       {selectedMemberId && detailData && (
-        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-primary/80 backdrop-blur-md" onClick={() => setSelectedMemberId(null)}>
-          <div className="bg-white w-full max-w-md h-[85vh] sm:h-auto sm:rounded-[32px] rounded-t-[32px] p-8 shadow-2xl overflow-y-auto border-t border-surface-gray-mid" onClick={e => e.stopPropagation()}>
-            <div className="flex justify-between items-start mb-8">
-              <div>
-                <h3 className="text-2xl font-sans font-bold text-ink">
-                  {selectedMemberId === 'ALL' ? '全員の支出概要' : getProfile(selectedMemberId).displayName}
-                </h3>
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-primary/40 backdrop-blur-md overflow-hidden" onClick={() => setSelectedMemberId(null)}>
+          <div
+            className="bg-white w-full max-w-md h-[92vh] sm:h-auto sm:max-h-[85vh] sm:rounded-[40px] rounded-t-[40px] shadow-2xl overflow-y-auto border-t border-surface-gray-mid flex flex-col relative"
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Header Sticky Area */}
+            <div className="sticky top-0 z-20 bg-white/80 backdrop-blur-md px-6 py-5 border-b border-surface-gray-mid flex justify-between items-start">
+              <div className="flex items-center gap-4">
                 {selectedMemberId !== 'ALL' && (
-                  <div className="flex items-center gap-2 mt-1">
-                    <p className="text-[10px] font-bold text-ink-light uppercase tracking-widest">収支バランス</p>
-                    <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${detailData.stats!.balance >= 0 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'}`}>
-                      {detailData.stats!.balance >= 0 ? '+' : ''}{Math.round(detailData.stats!.balance).toLocaleString()} JPY
-                    </span>
+                  <div
+                    className="w-12 h-12 rounded-full flex items-center justify-center border-2 border-white shadow-inner overflow-hidden"
+                    style={{ backgroundColor: getProfile(selectedMemberId).color }}
+                  >
+                    {getProfile(selectedMemberId).avatarUrl ? (
+                      <img src={getProfile(selectedMemberId).avatarUrl} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-white font-bold">{getProfile(selectedMemberId).displayName[0]}</span>
+                    )}
                   </div>
                 )}
+                <div>
+                  <h3 className="text-xl sm:text-2xl font-sans font-black text-ink leading-tight">
+                    {selectedMemberId === 'ALL' ? '全員の支出概要' : getProfile(selectedMemberId).displayName}
+                  </h3>
+                  <p className="text-[8px] font-bold text-ink-light uppercase tracking-[0.2em] mt-0.5">Analytics & Settlement</p>
+                </div>
               </div>
-              <button type="button" onClick={() => setSelectedMemberId(null)} className="p-2 text-ink-light hover:text-ink rounded-full bg-surface-gray">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+              <button
+                type="button"
+                onClick={() => setSelectedMemberId(null)}
+                className="p-2 text-ink-light hover:text-ink hover:bg-surface-gray rounded-full transition-all active:scale-90"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
               </button>
             </div>
 
-            <div className="space-y-8">
-              {/* Logic Explanation */}
-              {selectedMemberId === 'ALL' ? (
-                <div className="p-4 rounded-2xl bg-surface-gray border border-surface-gray-mid">
-                  <div className="flex justify-between text-xs text-ink-sub mb-2">
-                    <span>総支出</span>
-                    <span className="text-ink text-lg font-bold">{Math.round(detailData.stats!.paid).toLocaleString()} JPY</span>
-                  </div>
-                  <div className="w-full bg-surface-gray-mid h-1.5 rounded-full overflow-hidden">
-                    <div className={`h-full transition-all duration-1000 ${totalJPY > budget ? 'bg-red-400' : 'bg-ocean-light'}`} style={{ width: `${budgetPercentage}%` }} />
-                  </div>
-                  <p className="text-[10px] text-right mt-1 text-ink-light">予算 {budget.toLocaleString()} JPY に対して {budgetPercentage.toFixed(0)}%</p>
+            <div className="p-6 space-y-8">
+              {/* Summary Balance Card */}
+              <div className="relative group">
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-ocean-light/20 to-premium-gold/20 rounded-3xl blur opacity-75"></div>
+                <div className="relative p-5 rounded-2xl bg-white border border-surface-gray-mid shadow-sm space-y-4">
+                  {selectedMemberId === 'ALL' ? (
+                    <>
+                      <div className="flex justify-between items-end">
+                        <div>
+                          <p className="text-[9px] font-bold text-ink-sub uppercase tracking-widest mb-1">Total Spending</p>
+                          <h4 className="text-2xl font-sans font-black text-ink">{Math.round(detailData.stats!.paid).toLocaleString()}<span className="text-xs font-bold ml-1 opacity-50">JPY</span></h4>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-[9px] font-bold text-ink-sub uppercase tracking-widest mb-1">Budget Use</p>
+                          <span className={`text-xs font-black ${budgetPercentage > 100 ? 'text-rose-500' : 'text-ocean-dark'}`}>{budgetPercentage.toFixed(1)}%</span>
+                        </div>
+                      </div>
+                      <div className="w-full bg-surface-gray-mid h-2 rounded-full overflow-hidden">
+                        <div className={`h-full transition-all duration-1000 ${totalJPY > budget ? 'bg-gradient-to-r from-rose-400 to-rose-600' : 'bg-gradient-to-r from-ocean-light to-ocean-dark'}`} style={{ width: `${budgetPercentage}%` }} />
+                      </div>
+                    </>
+                  ) : (
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-0.5">
+                          <p className="text-[8px] font-bold text-ink-sub uppercase tracking-widest">実際に支払った合計</p>
+                          <p className="text-lg font-sans font-black text-ink">{Math.round(detailData.stats!.paid).toLocaleString()}</p>
+                        </div>
+                        <div className="space-y-0.5 text-right">
+                          <p className="text-[8px] font-bold text-ink-sub uppercase tracking-widest">本来負担すべき額</p>
+                          <p className="text-lg font-sans font-bold text-ink-sub">- {Math.round(detailData.stats!.cost).toLocaleString()}</p>
+                        </div>
+                      </div>
+                      <div className="pt-3 border-t border-surface-gray-mid flex justify-between items-center">
+                        <span className="text-[10px] font-bold text-ink-sub uppercase tracking-[0.2em]">差引残高</span>
+                        <div className="text-right">
+                          <span className={`text-xl font-sans font-black ${detailData.stats!.balance >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                            {detailData.stats!.balance >= 0 ? '+' : ''}{Math.round(detailData.stats!.balance).toLocaleString()}
+                          </span>
+                          <p className="text-[8px] font-bold text-ink-light mt-0.5">
+                            {detailData.stats!.balance >= 0 ? '清算時に返金されます' : '清算時に支払いが必要です'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              ) : (
-                <div className="p-4 rounded-2xl bg-surface-gray border border-surface-gray-mid">
-                  <div className="flex justify-between text-xs text-ink-sub mb-1">
-                    <span>実際に支払った額</span>
-                    <span className="text-ink">{Math.round(detailData.stats!.paid).toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between text-xs text-ink-sub mb-2">
-                    <span>本来負担すべき額</span>
-                    <span className="text-ink">- {Math.round(detailData.stats!.cost).toLocaleString()}</span>
-                  </div>
-                  <div className="border-t border-surface-gray-mid pt-2 flex justify-between text-sm font-bold text-accent">
-                    <span>差引残高</span>
-                    <span>{detailData.stats!.balance >= 0 ? '+' : ''}{Math.round(detailData.stats!.balance).toLocaleString()}</span>
-                  </div>
-                </div>
-              )}
+              </div>
 
-              {/* Charts & Lists */}
-              <section>
-                <h4 className="text-[10px] font-bold text-ink-light uppercase tracking-[0.2em] mb-4">カテゴリー別内訳</h4>
-                <div className="h-[220px] w-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={detailData.categoryData}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={60}
-                        outerRadius={85}
-                        paddingAngle={5}
-                        dataKey="value"
-                        stroke="none"
-                        animationBegin={0}
-                        animationDuration={1000}
-                      >
-                        {detailData.categoryData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
-                      </Pie>
-                      <Tooltip
-                        contentStyle={{ background: 'rgba(255,255,255,0.9)', border: 'none', borderRadius: '16px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', color: '#1a1a1a', fontSize: '11px', fontWeight: 'bold' }}
-                        formatter={(v: number) => `${v.toLocaleString()}円`}
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-              </section>
+              {/* Data Visualization */}
+              <div className="space-y-10">
+                {/* Category Pie Chart */}
+                <section>
+                  <div className="flex items-center gap-2 mb-4">
+                    <span className="w-1.5 h-4 bg-premium-gold rounded-full"></span>
+                    <h4 className="text-[10px] font-bold text-ink uppercase tracking-[0.3em]">支出カテゴリー分布</h4>
+                  </div>
+                  <div className="h-[200px] w-full relative">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={detailData.categoryData}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={55}
+                          outerRadius={80}
+                          paddingAngle={6}
+                          dataKey="value"
+                          stroke="none"
+                          animationDuration={1500}
+                        >
+                          {detailData.categoryData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
+                        </Pie>
+                        <Tooltip
+                          content={({ active, payload }) => {
+                            if (active && payload && payload.length) {
+                              return (
+                                <div className="bg-white/95 backdrop-blur-md px-3 py-1.5 shadow-xl border border-surface-gray-mid rounded-xl">
+                                  <p className="text-[8px] font-bold text-ink-sub uppercase tracking-wider">{payload[0].name}</p>
+                                  <p className="text-xs font-black text-ink">{payload[0].value?.toLocaleString()}円</p>
+                                </div>
+                              );
+                            }
+                            return null;
+                          }}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                </section>
 
-              <section>
-                <h4 className="text-[10px] font-bold text-ink-light uppercase tracking-[0.2em] mb-4">推移・ボリューム分析</h4>
-                <div className="h-[200px] w-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={detailData.categoryData} layout="vertical" margin={{ left: -20, right: 20 }}>
-                      <XAxis type="number" hide />
-                      <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#666', fontWeight: 'bold' }} width={80} />
-                      <Tooltip
-                        cursor={{ fill: 'rgba(0,0,0,0.05)' }}
-                        contentStyle={{ background: 'rgba(255,255,255,0.9)', border: 'none', borderRadius: '12px', boxShadow: '0 5px 15px rgba(0,0,0,0.05)', fontSize: '11px' }}
-                        formatter={(v: number) => `${v.toLocaleString()}円`}
-                      />
-                      <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={12}>
-                        {detailData.categoryData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                {/* Vertical Bar Chart */}
+                <section>
+                  <div className="flex items-center gap-2 mb-4">
+                    <span className="w-1.5 h-4 bg-ocean-light rounded-full"></span>
+                    <h4 className="text-[10px] font-bold text-ink uppercase tracking-[0.3em]">ボリューム分析</h4>
+                  </div>
+                  <div className="h-[180px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={detailData.categoryData} layout="vertical" margin={{ left: -15, right: 30 }}>
+                        <XAxis type="number" hide />
+                        <YAxis
+                          dataKey="name"
+                          type="category"
+                          axisLine={false}
+                          tickLine={false}
+                          tick={{ fontSize: 9, fill: '#5A7184', fontWeight: '800' }}
+                          width={75}
+                        />
+                        <Tooltip
+                          cursor={{ fill: 'rgba(0,0,0,0.02)' }}
+                          contentStyle={{ background: 'rgba(255,255,255,0.95)', border: 'none', borderRadius: '12px', boxShadow: '0 10px 30px rgba(0,0,0,0.1)', fontSize: '10px' }}
+                          formatter={(v: number) => [`${v.toLocaleString()}円`, '合計']}
+                        />
+                        <Bar dataKey="value" radius={[0, 6, 6, 0]} barSize={14}>
+                          {detailData.categoryData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} fillOpacity={0.8} />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </section>
+
+                {/* Individual Settlement Breakdown */}
+                <section className="space-y-6">
+                  {selectedMemberId === 'ALL' ? (
+                    <div>
+                      <h4 className="text-[9px] font-bold text-ocean-dark uppercase tracking-[0.3em] mb-3 flex items-center gap-2">
+                        <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                        支払いランキング
+                      </h4>
+                      <div className="grid gap-2">
+                        {detailData.memberPayments?.map(item => (
+                          <div key={item.id} className="flex justify-between items-center p-3.5 rounded-2xl bg-surface-gray border border-white hover:border-premium-gold/30 transition-all shadow-sm">
+                            <div className="flex items-center gap-3">
+                              <div className="w-7 h-7 rounded-full flex items-center justify-center text-[9px] font-black text-white shadow-sm" style={{ backgroundColor: getProfile(item.id).color }}>
+                                {getProfile(item.id).displayName[0]}
+                              </div>
+                              <span className="text-xs font-bold text-ink">{getProfile(item.id).displayName}</span>
+                            </div>
+                            <span className="text-xs font-black text-ink">{Math.round(item.value).toLocaleString()} <span className="text-[8px] opacity-40">JPY</span></span>
+                          </div>
                         ))}
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </section>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      {detailData.iPaidForOthers.length > 0 && (
+                        <div>
+                          <h4 className="text-[9px] font-bold text-emerald-600 uppercase tracking-[0.3em] mb-3 flex items-center gap-2">
+                            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4"></path></svg>
+                            あなたが建て替えた分（返金対象）
+                          </h4>
+                          <div className="grid gap-2">
+                            {detailData.iPaidForOthers.map(item => (
+                              <div key={item.id} className="flex justify-between items-center p-3.5 rounded-xl bg-emerald-50/50 border border-emerald-100/50">
+                                <span className="text-xs font-bold text-ink-sub">{getProfile(item.id).displayName} さんの分</span>
+                                <span className="text-xs font-black text-emerald-600">+{Math.round(item.value).toLocaleString()}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
 
-              <section>
-                {selectedMemberId === 'ALL' ? (
-                  <>
-                    <h4 className="text-[10px] font-bold text-primary uppercase tracking-[0.2em] mb-3">支払いランキング</h4>
-                    <div className="space-y-2">
-                      {detailData.memberPayments?.map(item => (
-                        <div key={item.id} className="flex justify-between items-center p-3 rounded-xl bg-surface-gray border border-surface-gray-mid">
-                          <span className="text-xs font-bold text-ink-sub">{getProfile(item.id).displayName}</span>
-                          <span className="text-xs font-bold text-ink">{Math.round(item.value).toLocaleString()} JPY</span>
+                      {detailData.othersPaidForMe.length > 0 && (
+                        <div>
+                          <h4 className="text-[9px] font-bold text-rose-500 uppercase tracking-[0.3em] mb-3 flex items-center gap-2">
+                            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M20 12H4"></path></svg>
+                            他人に建て替えてもらった分（未精算）
+                          </h4>
+                          <div className="grid gap-2">
+                            {detailData.othersPaidForMe.map(item => (
+                              <div key={item.id} className="flex justify-between items-center p-3.5 rounded-xl bg-rose-50/50 border border-rose-100/50">
+                                <span className="text-xs font-bold text-ink-sub">{getProfile(item.id).displayName} さんが支出</span>
+                                <span className="text-xs font-black text-rose-500">-{Math.round(item.value).toLocaleString()}</span>
+                              </div>
+                            ))}
+                          </div>
                         </div>
-                      ))}
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <h4 className="text-[10px] font-bold text-primary uppercase tracking-[0.2em] mb-3">建て替えた分</h4>
-                    <div className="space-y-2">
-                      {detailData.iPaidForOthers.map(item => (
-                        <div key={item.id} className="flex justify-between items-center p-3 rounded-xl bg-surface-gray border border-surface-gray-mid">
-                          <span className="text-xs font-bold text-ink-sub">{getProfile(item.id).displayName} さんの分</span>
-                          <span className="text-xs font-bold text-ink">{Math.round(item.value).toLocaleString()}</span>
+                      )}
+
+                      {detailData.iPaidForOthers.length === 0 && detailData.othersPaidForMe.length === 0 && (
+                        <div className="p-8 text-center bg-surface-gray rounded-3xl border-2 border-dashed border-surface-gray-mid">
+                          <p className="text-[9px] font-bold text-ink-light uppercase tracking-widest">個別精算の必要はありません</p>
                         </div>
-                      ))}
-                    </div>
-                  </>
-                )}
-              </section>
+                      )}
+                    </>
+                  )}
+                </section>
+              </div>
             </div>
+
+            {/* Bottom Safe Area Spacer */}
+            <div className="h-8 flex-shrink-0"></div>
           </div>
         </div>
       )
