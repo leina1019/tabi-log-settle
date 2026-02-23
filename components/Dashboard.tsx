@@ -390,11 +390,14 @@ const Dashboard: React.FC<Props> = ({
                 className="w-full text-left glass p-5 rounded-2xl flex items-center justify-between active:scale-[0.98] transition-all hover:shadow-md group"
               >
                 <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center bg-primary-light border border-primary/20 group-hover:border-accent/50 transition-colors overflow-hidden">
+                  <div
+                    className="w-10 h-10 rounded-full flex items-center justify-center border transition-colors overflow-hidden"
+                    style={{ backgroundColor: profile.color, borderColor: `${profile.color}40` }}
+                  >
                     {profile.avatarUrl ? (
                       <img src={profile.avatarUrl} alt={profile.displayName} className="w-full h-full object-cover" />
                     ) : (
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-ink-light" viewBox="0 0 20 20" fill="currentColor">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" viewBox="0 0 20 20" fill="currentColor">
                         <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
                       </svg>
                     )}

@@ -149,86 +149,104 @@ const TicketView: React.FC<Props> = ({ tickets, userProfiles, onSave, onDelete }
           const profile = getProfile(ticket.participantId);
           return (
             <div key={ticket.id} className="relative group perspective">
-              <div className="bg-white rounded-[24px] overflow-hidden shadow-sm border border-surface-gray-mid relative">
-                {/* メンバーインジケーター */}
+              <div className="bg-gradient-to-br from-white to-slate-50 rounded-[28px] overflow-hidden shadow-xl shadow-ocean-dark/5 border border-surface-gray-mid relative">
+                {/* メンバーラベル - フローティング */}
                 {profile && (
-                  <div className="absolute top-0 left-0 w-full h-1" style={{ backgroundColor: profile.color }}></div>
+                  <div className="absolute top-4 left-4 z-20 flex items-center gap-1.5 px-2 py-1 rounded-full bg-white/90 backdrop-blur-sm shadow-sm border border-surface-gray-mid">
+                    <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: profile.color }}></div>
+                    <span className="text-[8px] font-bold text-ink uppercase tracking-wider">{profile.displayName}</span>
+                  </div>
                 )}
 
-                <div className="p-5">
-                  <div className="flex justify-between items-start mb-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-2xl bg-surface-gray flex items-center justify-center text-2xl shadow-inner uppercase">
+                {/* 装飾的な円 - 切り取り線用 */}
+                <div className="absolute top-1/2 -left-3 w-6 h-6 bg-surface-gray rounded-full border border-surface-gray-mid z-10 -translate-y-1/2"></div>
+                <div className="absolute top-1/2 -right-3 w-6 h-6 bg-surface-gray rounded-full border border-surface-gray-mid z-10 -translate-y-1/2"></div>
+
+                {/* 背景の装飾 */}
+                <div className="absolute -right-8 -top-8 w-24 h-24 bg-ocean-light/5 rounded-full pointer-events-none"></div>
+
+                <div className="p-6 relative">
+                  <div className="flex justify-between items-start mb-6">
+                    <div className="flex items-center gap-4">
+                      <div className="w-14 h-14 rounded-3xl bg-white flex items-center justify-center text-3xl shadow-lg shadow-ocean-dark/5 border border-surface-gray-mid uppercase">
                         {getTypeIcon(ticket.type)}
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="text-[9px] font-bold text-ink-sub uppercase tracking-widest">{ticket.type}</span>
-                          {profile && (
-                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded text-white" style={{ backgroundColor: profile.color }}>
-                              {profile.displayName}
-                            </span>
-                          )}
+                          <span className="text-[9px] font-bold text-ocean-light uppercase tracking-[0.2em]">{ticket.type}</span>
+                          <span className="w-1 h-1 rounded-full bg-surface-gray-mid"></span>
+                          <span className="text-[9px] font-bold text-ink-sub tracking-wider uppercase">{ticket.provider}</span>
                         </div>
-                        <h3 className="font-bold text-ink text-lg leading-tight">{ticket.title}</h3>
-                        <p className="text-xs font-bold text-primary mt-0.5">{ticket.provider}</p>
+                        <h3 className="font-bold text-ink text-xl leading-tight">{ticket.title}</h3>
                       </div>
                     </div>
-                    <div className="flex gap-1">
+                    <div className="flex gap-1.5">
                       <button
                         type="button"
                         onClick={() => handleOpenEdit(ticket)}
-                        className="p-2 hover:bg-surface-gray rounded-full transition-colors text-ink-sub"
+                        className="w-9 h-9 flex items-center justify-center bg-white hover:bg-surface-gray rounded-full border border-surface-gray-mid transition-all text-ink-sub active:scale-95 shadow-sm"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
                       </button>
                       <button
                         type="button"
                         onClick={() => handleDeleteClick(ticket.id)}
-                        className="p-2 hover:bg-red-50 rounded-full transition-colors text-red-400"
+                        className="w-9 h-9 flex items-center justify-center bg-white hover:bg-rose-50 rounded-full border border-surface-gray-mid transition-all text-rose-400 active:scale-95 shadow-sm"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                       </button>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4 mb-5">
-                    <div className="bg-surface-gray rounded-2xl p-3 border border-surface-gray-mid/50">
-                      <p className="text-[9px] font-bold text-ink-sub uppercase tracking-widest mb-1">Date</p>
-                      <p className="text-sm font-bold text-ink">{ticket.date}</p>
-                      {ticket.time && <p className="text-xs font-bold text-primary">{ticket.time}</p>}
+                  {/* 中間の切り取り線 */}
+                  <div className="absolute left-0 right-0 top-1/2 border-t border-dashed border-surface-gray-mid pointer-events-none -translate-y-1/2"></div>
+
+                  <div className="grid grid-cols-2 gap-4 mt-8">
+                    <div className="flex flex-col gap-4">
+                      <div>
+                        <p className="text-[9px] font-bold text-ink-light uppercase tracking-[0.2em] mb-1">Schedule</p>
+                        <p className="text-base font-bold text-ink">{ticket.date}</p>
+                        {ticket.time && <p className="text-sm font-bold text-ocean-light">{ticket.time}</p>}
+                      </div>
+                      <div
+                        className={`rounded-2xl p-4 transition-all cursor-pointer relative overflow-hidden active:scale-95 border ${copyFeedback === ticket.referenceNumber ? 'bg-emerald-50 border-emerald-200' : 'bg-white border-surface-gray-mid shadow-sm'}`}
+                        onClick={() => ticket.referenceNumber && handleCopy(ticket.referenceNumber)}
+                      >
+                        <p className="text-[9px] font-bold text-ink-sub uppercase tracking-widest mb-1 flex justify-between">
+                          Ref No.
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h6a2 2 0 002-2v-2" /></svg>
+                        </p>
+                        <p className="text-sm font-mono font-black text-ink tracking-widest truncate">{ticket.referenceNumber || '---'}</p>
+                        {copyFeedback === ticket.referenceNumber && (
+                          <div className="absolute inset-0 bg-emerald-500/10 flex items-center justify-center backdrop-blur-[1px]">
+                            <span className="text-[10px] font-black text-emerald-600 uppercase tracking-tighter animate-bounce">Success!</span>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    <div
-                      className={`rounded-2xl p-3 border border-surface-gray-mid/50 transition-all cursor-pointer relative overflow-hidden active:scale-95 ${copyFeedback === ticket.referenceNumber ? 'bg-emerald-50 border-emerald-200' : 'bg-surface-gray'}`}
-                      onClick={() => ticket.referenceNumber && handleCopy(ticket.referenceNumber)}
-                    >
-                      <p className="text-[9px] font-bold text-ink-sub uppercase tracking-widest mb-1 flex justify-between">
-                        Reference
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-2.5 w-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h6a2 2 0 002-2v-2" /></svg>
-                      </p>
-                      <p className="text-sm font-mono font-bold text-ink truncate">{ticket.referenceNumber || '---'}</p>
-                      {copyFeedback === ticket.referenceNumber && (
-                        <div className="absolute inset-0 bg-emerald-500/10 flex items-center justify-center backdrop-blur-[1px]">
-                          <span className="text-[8px] font-bold text-emerald-600 uppercase tracking-tighter">Copied!</span>
-                        </div>
+
+                    <div className="flex flex-col justify-between">
+                      <div className="bg-slate-100/50 rounded-2xl p-3 border border-slate-200/50">
+                        <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-1 text-center">Ticket Status</p>
+                        <div className="flex justify-center text-xs font-black text-slate-800">VALID VOUCHER</div>
+                      </div>
+
+                      {ticket.link && (
+                        <a
+                          href={ticket.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center justify-center gap-2 w-full py-4 bg-ink text-white rounded-[20px] text-[10px] font-bold uppercase tracking-widest hover:bg-ocean-dark transition-all shadow-lg shadow-ink/20 active:scale-[0.98] mt-4"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                          </svg>
+                          Boarding
+                        </a>
                       )}
                     </div>
                   </div>
-
-                  {ticket.link && (
-                    <a
-                      href={ticket.link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center justify-center gap-2 w-full py-4 bg-ink text-white rounded-2xl text-[10px] font-bold uppercase tracking-widest hover:bg-ink/90 transition-all shadow-lg active:scale-[0.98]"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                      </svg>
-                      Open Ticket
-                    </a>
-                  )}
                 </div>
               </div>
             </div>
