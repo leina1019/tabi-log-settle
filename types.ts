@@ -66,3 +66,12 @@ export interface Ticket {
   participantId?: string; // 特定メンバーのチケット。undefinedの場合は「全員」
   updatedAt?: string; // For sync
 }
+
+export interface PackingItem {
+  id: string;
+  category: string; // '衣服', '洗面用具', '電子機器', '重要書類' など
+  title: string;
+  isPacked: boolean;
+  participantId?: string; // 担当者、undefinedの場合は「全員共通」
+  updatedAt?: string;
+}

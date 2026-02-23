@@ -4,7 +4,7 @@ import {
     getFirestore, doc, onSnapshot, setDoc, updateDoc,
     collection, addDoc, getDoc, serverTimestamp
 } from "firebase/firestore";
-import { Expense, ItineraryItem, Ticket, UserProfile } from "../types";
+import { Expense, ItineraryItem, Ticket, UserProfile, PackingItem } from "../types";
 
 // Firebase設定 (環境変数から読み込み)
 const firebaseConfig = {
@@ -31,6 +31,7 @@ export interface TripData {
     tickets: Ticket[];
     userProfiles: UserProfile[];
     budget: number;
+    packingList: PackingItem[];
     createdAt: any;
     updatedAt: any;
 }

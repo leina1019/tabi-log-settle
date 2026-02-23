@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { Expense, Participant, Settlement, ItineraryItem, Ticket, UserProfile } from './types';
+import { Expense, Participant, Settlement, ItineraryItem, Ticket, UserProfile, PackingItem } from './types';
 import { MEMBER_COLORS } from './constants';
 import { convertToJPY } from './utils/currency';
 import ExpenseForm from './components/ExpenseForm';
@@ -10,12 +10,13 @@ import SettlementView from './components/SettlementView';
 import ItineraryView from './components/ItineraryView';
 import TicketView from './components/TicketView';
 import SettingsView from './components/SettingsView';
+import PackingView from './components/PackingView';
 import { createNewTrip, subscribeToTrip, updateTripData, TripData } from './services/firebaseService';
 // import { fetchAllData, syncExpenseToSheet, ... } from './services/googleSheetService';
 import { SAMPLE_PROFILES, SAMPLE_ITINERARY, SAMPLE_EXPENSES, SAMPLE_TICKETS } from './utils/sampleData';
 import WelcomeView from './components/WelcomeView';
 
-type ViewState = 'onboarding' | 'home' | 'schedule' | 'tickets' | 'history' | 'add_expense' | 'settle' | 'settings';
+type ViewState = 'onboarding' | 'home' | 'schedule' | 'tickets' | 'packing' | 'history' | 'add_expense' | 'settle' | 'settings';
 
 const App: React.FC = () => {
   // --- State Management ---
@@ -28,6 +29,7 @@ const App: React.FC = () => {
   const [tripCoverImage, setTripCoverImage] = useState<string>('');
   const [itinerary, setItinerary] = useState<ItineraryItem[]>([]);
   const [tickets, setTickets] = useState<Ticket[]>([]);
+  const [packingList, setPackingList] = useState<PackingItem[]>([]);
 
   const [view, setView] = useState<ViewState>('home');
   const [isAddMenuOpen, setIsAddMenuOpen] = useState(false);
@@ -72,6 +74,9 @@ const App: React.FC = () => {
 
       const sTickets = localStorage.getItem(prefix + 'tickets');
       if (sTickets) setTickets(JSON.parse(sTickets));
+
+      const sPacking = localStorage.getItem(prefix + 'packing');
+      if (sPacking) setPackingList(JSON.parse(sPacking));
     } else {
       // BASE URL: No tripId. Check if we have any data to show, otherwise show onboarding.
       // If we want to support a "default" local-only trip without ID, we can do it here,
@@ -95,6 +100,7 @@ const App: React.FC = () => {
       if (data.startDate) setTripStartDate(data.startDate);
       if (data.endDate) setTripEndDate(data.endDate);
       if (data.coverImage) setTripCoverImage(data.coverImage);
+      if (data.packingList) setPackingList(data.packingList);
     });
     return () => unsubscribe();
   }, [tripId]);
@@ -173,6 +179,16 @@ const App: React.FC = () => {
     localStorage.setItem(prefix + 'expenses', JSON.stringify(expenses));
   }, [expenses, tripId]);
 
+  useEffect(() => {
+    if (!tripId) return;
+    const prefix = `oz-wari-${tripId}-`;
+    try {
+      localStorage.setItem(prefix + 'packing', JSON.stringify(packingList));
+    } catch (e) {
+      console.error('Failed to save packing list to localStorage', e);
+    }
+  }, [packingList, tripId]);
+
   // NOTE: syncWithCloud (Google Sheets) は Firebase 移行後は不要のため削除。
   // Firebase の onSnapshot リスナーがリアルタイム同期を担当する。
 
@@ -241,12 +257,20 @@ const App: React.FC = () => {
     });
   };
 
+  const updatePackingList = (val: PackingItem[] | ((prev: PackingItem[]) => PackingItem[])) => {
+    setPackingList(prev => {
+      const newVal = typeof val === 'function' ? val(prev) : val;
+      pushUpdate({ packingList: newVal });
+      return newVal;
+    });
+  };
+
   const handleLoadSampleData = async () => {
     if (!window.confirm('サンプルデータを読み込みますか？現在のデータは一時的にバックアップされ、後で戻すことができます。')) return;
 
     // 現在のデータをバックアップ
     const backupKey = `oz-wari-backup-${new Date().getTime()}`;
-    const currentData = { expenses, itinerary, tickets, userProfiles, budget, tripName, tripStartDate, tripEndDate, tripCoverImage };
+    const currentData = { expenses, itinerary, tickets, packingList, userProfiles, budget, tripName, tripStartDate, tripEndDate, tripCoverImage };
     localStorage.setItem(backupKey, JSON.stringify(currentData));
     localStorage.setItem('oz-wari-last-backup-key', backupKey); // 最新のバックアップキーを保存
     console.log(`Backup saved to ${backupKey}`);
@@ -302,6 +326,7 @@ const App: React.FC = () => {
       setExpenses(data.expenses || []);
       setItinerary(data.itinerary || []);
       setTickets(data.tickets || []);
+      setPackingList(data.packingList || []);
       setUserProfiles(data.userProfiles || []);
       setBudget(data.budget || 0);
       setTripName(data.tripName || '無題の旅行');
@@ -315,6 +340,7 @@ const App: React.FC = () => {
           expenses: data.expenses,
           itinerary: data.itinerary,
           tickets: data.tickets,
+          packingList: data.packingList,
           userProfiles: data.userProfiles,
           budget: data.budget,
           name: data.tripName,
@@ -525,6 +551,7 @@ const App: React.FC = () => {
                     expenses,
                     itinerary,
                     tickets,
+                    packingList: [],
                     userProfiles,
                     budget
                   });
@@ -587,6 +614,7 @@ const App: React.FC = () => {
                 expenses: [],
                 itinerary: [],
                 tickets: [],
+                packingList: [],
                 budget: 1000000 // Default 1M
               });
               setTripId(newId);
@@ -666,6 +694,14 @@ const App: React.FC = () => {
             onDelete={handleDeleteTicket}
           />
         )}
+
+        {view === 'packing' && (
+          <PackingView
+            items={packingList}
+            userProfiles={userProfiles}
+            onUpdate={updatePackingList}
+          />
+        )}
         {view === 'add_expense' && (
           <ExpenseForm
             onAdd={handleAddOrUpdateExpense}
@@ -741,9 +777,14 @@ const App: React.FC = () => {
               <span className="text-[9px] font-bold tracking-widest uppercase">Ticket</span>
             </button>
 
-            <button onClick={() => { setView('history'); setIsAddMenuOpen(false); }} className={`flex flex-col items-center gap-1 transition-all ${view === 'history' ? 'text-primary -translate-y-1' : 'text-ink-light'}`}>
+            <button onClick={() => { setView('packing'); setIsAddMenuOpen(false); }} className={`flex flex-col items-center gap-1 transition-all ${view === 'packing' ? 'text-primary -translate-y-1' : 'text-ink-light'}`}>
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
-              <span className="text-[9px] font-bold tracking-widest uppercase">List</span>
+              <span className="text-[9px] font-bold tracking-widest uppercase">Packing</span>
+            </button>
+
+            <button onClick={() => { setView('history'); setIsAddMenuOpen(false); }} className={`flex flex-col items-center gap-1 transition-all ${view === 'history' ? 'text-primary -translate-y-1' : 'text-ink-light'}`}>
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
+              <span className="text-[9px] font-bold tracking-widest uppercase">History</span>
             </button>
           </nav>
         </>

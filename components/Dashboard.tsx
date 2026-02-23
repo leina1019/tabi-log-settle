@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo, useRef } from 'react';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { Expense, Settlement, Participant, UserProfile } from '../types';
 import { formatCurrency, convertToJPY } from '../utils/currency';
 // PARTICIPANTS is removed to support dynamic members
@@ -476,14 +476,50 @@ const Dashboard: React.FC<Props> = ({
               {/* Charts & Lists */}
               <section>
                 <h4 className="text-[10px] font-bold text-ink-light uppercase tracking-[0.2em] mb-4">カテゴリー別内訳</h4>
-                <div className="h-[180px] w-full">
+                <div className="h-[220px] w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
-                      <Pie data={detailData.categoryData} cx="50%" cy="50%" innerRadius={50} outerRadius={70} paddingAngle={5} dataKey="value" stroke="none">
+                      <Pie
+                        data={detailData.categoryData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={60}
+                        outerRadius={85}
+                        paddingAngle={5}
+                        dataKey="value"
+                        stroke="none"
+                        animationBegin={0}
+                        animationDuration={1000}
+                      >
                         {detailData.categoryData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
                       </Pie>
-                      <Tooltip contentStyle={{ background: 'rgba(0,0,0,0.8)', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '12px' }} formatter={(v: number) => `${v.toLocaleString()}円`} />
+                      <Tooltip
+                        contentStyle={{ background: 'rgba(255,255,255,0.9)', border: 'none', borderRadius: '16px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', color: '#1a1a1a', fontSize: '11px', fontWeight: 'bold' }}
+                        formatter={(v: number) => `${v.toLocaleString()}円`}
+                      />
                     </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              </section>
+
+              <section>
+                <h4 className="text-[10px] font-bold text-ink-light uppercase tracking-[0.2em] mb-4">推移・ボリューム分析</h4>
+                <div className="h-[200px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={detailData.categoryData} layout="vertical" margin={{ left: -20, right: 20 }}>
+                      <XAxis type="number" hide />
+                      <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#666', fontWeight: 'bold' }} width={80} />
+                      <Tooltip
+                        cursor={{ fill: 'rgba(0,0,0,0.05)' }}
+                        contentStyle={{ background: 'rgba(255,255,255,0.9)', border: 'none', borderRadius: '12px', boxShadow: '0 5px 15px rgba(0,0,0,0.05)', fontSize: '11px' }}
+                        formatter={(v: number) => `${v.toLocaleString()}円`}
+                      />
+                      <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={12}>
+                        {detailData.categoryData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Bar>
+                    </BarChart>
                   </ResponsiveContainer>
                 </div>
               </section>
@@ -518,8 +554,9 @@ const Dashboard: React.FC<Props> = ({
             </div>
           </div>
         </div>
-      )}
-    </div>
+      )
+      }
+    </div >
   );
 };
 

@@ -45,6 +45,7 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
   const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
   const [visibleMemberIds, setVisibleMemberIds] = useState<string[]>(() => userProfiles.map(u => u.id));
   const [formData, setFormData] = useState<Partial<ItineraryItem>>({ type: 'activity', links: [] });
+  const [isCopying, setIsCopying] = useState(false);
   const [isFetchingOgp, setIsFetchingOgp] = useState(false);
   const [validationError, setValidationError] = useState('');
   const imageInputRef = useRef<HTMLInputElement>(null);
@@ -212,6 +213,26 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
     reader.readAsDataURL(file);
   };
 
+  const handleCopySchedule = () => {
+    if (filteredItems.length === 0) return;
+
+    const date = new Date(selectedDate);
+    const dateStr = `${date.getMonth() + 1}/${date.getDate()}(${['日', '月', '火', '水', '木', '金', '土'][date.getDay()]})`;
+
+    let text = `【${dateStr}の予定】\n`;
+    filteredItems.forEach(item => {
+      text += `\n⏰ ${item.time}${item.endTime ? `～${item.endTime}` : ''}\n📍 ${item.title}`;
+      if (item.location) text += ` @ ${item.location}`;
+      if (item.memo) text += `\n📝 ${item.memo}`;
+      text += `\n`;
+    });
+
+    navigator.clipboard.writeText(text).then(() => {
+      setIsCopying(true);
+      setTimeout(() => setIsCopying(false), 2000);
+    });
+  };
+
   // URL入力後にOGPを自動取得（0.8秒のデバウンス）
   useEffect(() => {
     // 互換性維持のためのformData.link、または複数リンクの最初の1件
@@ -260,12 +281,22 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
     <div className="flex flex-col h-full pt-2">
       <div className="flex justify-between items-center px-4 mb-4">
         <h2 className="text-xl font-sans font-bold tracking-wide text-ink">スケジュール</h2>
-        <button
-          onClick={handleOpenAdd}
-          className="text-[10px] font-bold text-primary uppercase tracking-widest border border-primary/40 px-3 py-1.5 rounded-full hover:bg-primary hover:text-white transition-colors"
-        >
-          + 予定を追加
-        </button>
+        <div className="flex gap-2">
+          {filteredItems.length > 0 && (
+            <button
+              onClick={handleCopySchedule}
+              className={`text-[10px] font-bold uppercase tracking-widest border px-3 py-1.5 rounded-full transition-all ${isCopying ? 'bg-emerald-500 border-emerald-500 text-white' : 'text-emerald-600 border-emerald-600/40 hover:bg-emerald-50'}`}
+            >
+              {isCopying ? '✅ Copied' : '📝 予定をコピー'}
+            </button>
+          )}
+          <button
+            onClick={handleOpenAdd}
+            className="text-[10px] font-bold text-primary uppercase tracking-widest border border-primary/40 px-3 py-1.5 rounded-full hover:bg-primary hover:text-white transition-colors"
+          >
+            + 予定を追加
+          </button>
+        </div>
       </div>
 
       {/* メンバー選択（階層ナビゲーション） */}
