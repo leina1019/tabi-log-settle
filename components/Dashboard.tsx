@@ -275,23 +275,23 @@ const Dashboard: React.FC<Props> = ({
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="glass p-4 rounded-2xl border-white/40">
-            <p className="text-[8px] font-bold text-ink-light uppercase tracking-widest mb-1">Total Amount</p>
+            <p className="text-[8px] font-bold text-ink-light uppercase tracking-widest mb-1">合計支出額</p>
             <p className="text-lg font-sans font-bold text-ink leading-tight">{Math.round(totalJPY).toLocaleString()}<span className="text-[9px] ml-1 opacity-50">JPY</span></p>
           </div>
           <div className="glass p-4 rounded-2xl border-white/40">
-            <p className="text-[8px] font-bold text-ink-light uppercase tracking-widest mb-1">Transactions</p>
-            <p className="text-lg font-sans font-bold text-ink leading-tight">{summaryData.totalCount}<span className="text-[9px] ml-1 opacity-50">PTS</span></p>
+            <p className="text-[8px] font-bold text-ink-light uppercase tracking-widest mb-1">決済件数</p>
+            <p className="text-lg font-sans font-bold text-ink leading-tight">{summaryData.totalCount}<span className="text-[9px] ml-1 opacity-50">回</span></p>
           </div>
           <div className="glass p-4 rounded-2xl border-white/40">
-            <p className="text-[8px] font-bold text-ink-light uppercase tracking-widest mb-1">Per Traveler</p>
+            <p className="text-[8px] font-bold text-ink-light uppercase tracking-widest mb-1">1人あたりの負担</p>
             <p className="text-lg font-sans font-bold text-ink leading-tight">{Math.round(summaryData.averagePerPerson).toLocaleString()}<span className="text-[9px] ml-1 opacity-50">JPY</span></p>
           </div>
           <div className="glass p-4 rounded-2xl border-white/40 bg-gradient-to-br from-white/40 to-premium-gold/5">
-            <p className="text-[8px] font-bold text-ink-light uppercase tracking-widest mb-1">Foreign Cash</p>
+            <p className="text-[8px] font-bold text-ink-light uppercase tracking-widest mb-1">外貨での支出</p>
             <div className="flex flex-col gap-0.5">
               {summaryData.foreignCurrencies.length > 0 ? summaryData.foreignCurrencies.map(fc => (
                 <p key={fc.currency} className="text-xs font-sans font-bold text-ink">{fc.currency} {fc.amount.toLocaleString()}</p>
-              )) : <p className="text-xs font-bold text-ink-light">No foreign exp</p>}
+              )) : <p className="text-xs font-bold text-ink-light">外貨の支出なし</p>}
             </div>
           </div>
         </div>
@@ -300,7 +300,7 @@ const Dashboard: React.FC<Props> = ({
           <div>
             <div className="flex justify-between items-center mb-4">
               <h4 className="text-[9px] font-bold text-ink uppercase tracking-wider flex items-center gap-1.5"><span className="w-1.5 h-3 bg-ocean-light rounded-full"></span>日別・ユーザー別の支出</h4>
-              <p className="text-[8px] text-ink-light font-bold">DAILY STACKED</p>
+              <p className="text-[8px] text-ink-light font-bold">日別積上グラフ</p>
             </div>
             <div className="h-[200px] w-full">
               <ResponsiveContainer width="100%" height="100%">
@@ -316,7 +316,7 @@ const Dashboard: React.FC<Props> = ({
           <div className="border-t border-surface-gray-mid/50 pt-6">
             <div className="flex justify-between items-center mb-4">
               <h4 className="text-[9px] font-bold text-ink uppercase tracking-wider flex items-center gap-1.5"><span className="w-1.5 h-3 bg-premium-gold rounded-full"></span>支払い者別の負担比率</h4>
-              <p className="text-[8px] text-ink-light font-bold">MEMBER SHARE</p>
+              <p className="text-[8px] text-ink-light font-bold">メンバー別の支出金額</p>
             </div>
             <div className="h-[140px] w-full">
               <ResponsiveContainer width="100%" height="100%">
@@ -338,7 +338,97 @@ const Dashboard: React.FC<Props> = ({
         </div>
       </section>
 
-      {/* Modal */}
+      {/* Modal - Budget Edit */}
+      {isEditingBudget && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-primary/20 backdrop-blur-sm" onClick={() => setIsEditingBudget(false)}>
+          <div className="bg-white w-full max-w-xs rounded-3xl p-6 shadow-2xl border border-surface-gray-mid" onClick={e => e.stopPropagation()}>
+            <h3 className="text-lg font-bold text-ink mb-4">予算を編集</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">目標予算 (JPY)</label>
+                <input
+                  type="number"
+                  className="w-full bg-surface-gray border border-surface-gray-mid rounded-xl p-3 text-sm text-ink outline-none focus:border-primary"
+                  value={tempBudget}
+                  onChange={e => setTempBudget(e.target.value)}
+                  autoFocus
+                />
+              </div>
+              <div className="flex gap-3">
+                <button onClick={() => setIsEditingBudget(false)} className="flex-1 py-3 rounded-xl text-xs font-bold text-ink-sub hover:bg-surface-gray transition-colors">キャンセル</button>
+                <button onClick={saveBudget} className="flex-1 py-3 rounded-xl bg-primary text-white text-xs font-bold shadow-lg hover:bg-primary/90 active:scale-95 transition-all">保存</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal - Trip Settings Edit (Restore) */}
+      {isEditingTrip && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-ocean-dark/40 backdrop-blur-md" onClick={() => { setIsEditingTrip(false); setError(null); }}>
+          <div className="bg-white w-full max-w-sm rounded-[32px] p-6 shadow-2xl border border-surface-gray-mid overflow-y-auto max-h-[90vh]" onClick={e => e.stopPropagation()}>
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-sans font-bold text-ink">旅行の設定</h3>
+              <button onClick={() => { setIsEditingTrip(false); setError(null); }} className="p-2 text-ink-light hover:text-ink hover:bg-surface-gray rounded-full">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+              </button>
+            </div>
+
+            <div className="space-y-5">
+              {/* Cover Image Preview & Edit */}
+              <div className="relative aspect-[21/9] rounded-2xl overflow-hidden shadow-md group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
+                <img src={tempCoverImage || tripCoverImage} className="w-full h-full object-cover" alt="" />
+                <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <span className="bg-white/20 backdrop-blur-md border border-white/40 text-white px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest">画像を編集 📷</span>
+                </div>
+                <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageChange} />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">旅行先 / タイトル</label>
+                <input
+                  type="text"
+                  placeholder="例: オーストラリア 2026"
+                  className="w-full bg-surface-gray border border-surface-gray-mid rounded-xl p-3 text-sm text-ink outline-none focus:border-primary"
+                  value={tempTripName}
+                  onChange={e => { setTempTripName(e.target.value); setError(null); }}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">出発日</label>
+                  <input
+                    type="date"
+                    className="w-full bg-surface-gray border border-surface-gray-mid rounded-xl p-3 text-sm text-ink outline-none"
+                    value={tempStart}
+                    onChange={e => setTempStart(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">最終日</label>
+                  <input
+                    type="date"
+                    className="w-full bg-surface-gray border border-surface-gray-mid rounded-xl p-3 text-sm text-ink outline-none"
+                    value={tempEnd}
+                    onChange={e => setTempEnd(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              {error && <p className="text-xs text-rose-500 font-bold">{error}</p>}
+
+              <div className="pt-2">
+                <button onClick={handleSaveTripSettings} className="w-full py-4 rounded-2xl bg-primary text-white text-sm font-bold shadow-lg shadow-primary/30 hover:bg-primary/90 active:scale-95 transition-all">
+                  設定を保存する
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal - Member Detail */}
       {selectedMemberId && detailData && (
         <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-primary/40 backdrop-blur-md overflow-hidden" onClick={() => setSelectedMemberId(null)}>
           <div className="bg-white w-full max-w-md h-[92vh] sm:h-auto sm:max-h-[85vh] sm:rounded-[40px] rounded-t-[40px] shadow-2xl overflow-y-auto border-t border-surface-gray-mid flex flex-col relative" onClick={e => e.stopPropagation()}>
