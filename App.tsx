@@ -385,13 +385,13 @@ const App: React.FC = () => {
           <button
             onClick={async () => {
               if (tripId) {
-                const url = window.location.href;
+                // window.location.href ではなく、確実にIDを含めたURLを再構築する
+                const url = `${window.location.origin}${window.location.pathname}?trip=${tripId}`;
                 if (navigator.share) {
                   try {
                     await navigator.share({ title: 'たびログ精算', text: '旅行の精算をしよう！', url });
                   } catch (e) {
                     console.log('Share canceled', e);
-                    // シェアキャンセルの場合は何もしないが、エラー時はクリップボードへ
                   }
                 } else {
                   navigator.clipboard.writeText(url).then(() => {
