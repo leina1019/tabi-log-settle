@@ -12,7 +12,7 @@ import TicketView from './components/TicketView';
 import SettingsView from './components/SettingsView';
 import { createNewTrip, subscribeToTrip, updateTripData, TripData } from './services/firebaseService';
 // import { fetchAllData, syncExpenseToSheet, ... } from './services/googleSheetService';
-import { SAMPLE_PROFILES, SAMPLE_ITINERARY, SAMPLE_EXPENSES } from './utils/sampleData';
+import { SAMPLE_PROFILES, SAMPLE_ITINERARY, SAMPLE_EXPENSES, SAMPLE_TICKETS } from './utils/sampleData';
 
 type ViewState = 'home' | 'schedule' | 'tickets' | 'history' | 'add_expense' | 'settle' | 'settings';
 
@@ -273,6 +273,7 @@ const App: React.FC = () => {
     // サンプルデータをセット
     setExpenses(SAMPLE_EXPENSES);
     setItinerary(SAMPLE_ITINERARY);
+    setTickets(SAMPLE_TICKETS);
     setUserProfiles(SAMPLE_PROFILES);
     setTripName('東京 3Days Demo');
     setTripStartDate(new Date().toISOString().split('T')[0]);
@@ -286,6 +287,7 @@ const App: React.FC = () => {
       pushUpdate({
         expenses: SAMPLE_EXPENSES,
         itinerary: SAMPLE_ITINERARY,
+        tickets: SAMPLE_TICKETS,
         userProfiles: SAMPLE_PROFILES,
         name: '東京 3Days Demo',
         startDate: new Date().toISOString().split('T')[0],

@@ -1,5 +1,5 @@
 
-import { Expense, ItineraryItem, UserProfile } from '../types';
+import { Expense, ItineraryItem, UserProfile, Ticket } from '../types';
 import { MEMBER_COLORS } from '../constants';
 
 // 今日の日付をベースに3日間の旅行データを生成
@@ -120,8 +120,21 @@ export const SAMPLE_EXPENSES: Expense[] = [
     },
     {
         id: 'exp-2',
+        date: d1,
+        title: '新宿〜都庁 移動費',
+        amount: 600,
+        currency: 'JPY',
+        exchangeRate: 1,
+        paidBy: 'Ken',
+        splitWith: ['Reina', 'Ken', 'Yumi'],
+        category: '交通費',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+    },
+    {
+        id: 'exp-3',
         date: d2,
-        title: '浅草食べ歩き',
+        title: '浅草食べ歩きセット',
         amount: 4500,
         currency: 'JPY',
         exchangeRate: 1,
@@ -130,5 +143,68 @@ export const SAMPLE_EXPENSES: Expense[] = [
         category: '食事',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
+    },
+    {
+        id: 'exp-4',
+        date: d2,
+        title: '蔵前カフェ（女子会）',
+        amount: 3200,
+        currency: 'JPY',
+        exchangeRate: 1,
+        paidBy: 'Yumi',
+        splitWith: ['Reina', 'Yumi'],
+        category: '食事',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+    },
+    {
+        id: 'exp-5',
+        date: d2,
+        title: 'お土産（雷おこし）',
+        amount: 1500,
+        currency: 'JPY',
+        exchangeRate: 1,
+        paidBy: 'Reina',
+        splitWith: ['Reina'],
+        category: '買い物',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+    },
+    {
+        id: 'exp-6',
+        date: d3,
+        title: '東京駅ラストランチ',
+        amount: 8000,
+        currency: 'JPY',
+        exchangeRate: 1,
+        paidBy: 'Yumi',
+        splitWith: ['Reina', 'Ken', 'Yumi'],
+        category: '食事',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+    }
+];
+
+export const SAMPLE_TICKETS: Ticket[] = [
+    {
+        id: 'tix-1',
+        type: 'flight',
+        title: '羽田空港 往復便',
+        provider: 'ANA',
+        date: d1,
+        time: '08:00',
+        referenceNumber: 'ABC12345',
+        notes: 'オンラインチェックイン済み',
+        link: 'https://www.ana.co.jp/'
+    },
+    {
+        id: 'tix-2',
+        type: 'hotel',
+        title: '新宿プリンスホテル',
+        provider: '新宿プリンスホテル',
+        date: d1,
+        referenceNumber: 'RES-998877',
+        notes: '朝食付きプラン',
+        link: 'https://www.princehotels.co.jp/shinjuku/'
     }
 ];
