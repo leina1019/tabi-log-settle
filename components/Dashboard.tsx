@@ -285,10 +285,54 @@ const Dashboard: React.FC<Props> = ({
 
       {/* 📊 Spending Summary Section */}
       <section className="space-y-4">
-        <div className="flex items-center gap-2 px-2">
-          <span className="text-lg">📊</span>
-          <h3 className="text-[10px] font-bold text-ink-sub uppercase tracking-[0.2em]">支出サマリー</h3>
+        <div className="flex justify-between items-end px-2">
+          <div className="flex items-center gap-2">
+            <span className="text-lg">📊</span>
+            <h3 className="text-[10px] font-bold text-ink-sub uppercase tracking-[0.2em]">予算と支出状況</h3>
+          </div>
+          <button
+            onClick={() => { setTempBudget(budget.toString()); setIsEditingBudget(true); }}
+            className="text-[10px] font-bold text-primary flex items-center gap-1 hover:opacity-70 transition-opacity"
+          >
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+            予算を変更
+          </button>
         </div>
+
+        <div className="glass p-6 rounded-[32px] border-white/40 shadow-sm space-y-4 relative overflow-hidden">
+          {/* 背景の装飾 */}
+          <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 blur-3xl"></div>
+
+          <div className="flex justify-between items-end relative z-10">
+            <div>
+              <p className="text-[10px] font-bold text-ink-sub uppercase tracking-widest mb-1">現在の支出合計</p>
+              <h4 className="text-3xl font-sans font-black text-ink flex items-baseline gap-1">
+                {Math.round(totalJPY).toLocaleString()}
+                <span className="text-xs font-bold text-ink-light">JPY</span>
+              </h4>
+            </div>
+            <div className="text-right">
+              <p className="text-[10px] font-bold text-ink-sub uppercase tracking-widest mb-1">予算達成率</p>
+              <span className={`text-lg font-sans font-black ${budgetPercentage > 100 ? 'text-rose-500' : 'text-primary'}`}>
+                {budgetPercentage.toFixed(1)}<span className="text-xs ml-0.5">%</span>
+              </span>
+            </div>
+          </div>
+
+          <div className="space-y-2 relative z-10">
+            <div className="w-full bg-surface-gray-mid h-3 rounded-full overflow-hidden shadow-inner">
+              <div
+                className={`h-full transition-all duration-1000 ease-out ${budgetPercentage > 100 ? 'bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.4)]' : 'bg-gradient-to-r from-primary to-ocean-light shadow-[0_0_10px_rgba(0,161,222,0.3)]'}`}
+                style={{ width: `${budgetPercentage}%` }}
+              />
+            </div>
+            <div className="flex justify-between text-[10px] font-bold text-ink-light">
+              <span>¥0</span>
+              <span className="text-ink-sub">目標予算: ¥{budget.toLocaleString()}</span>
+            </div>
+          </div>
+        </div>
+
         <div className={`grid ${isTablet ? 'grid-cols-4' : 'grid-cols-2'} gap-3`}>
           <div className="glass p-4 rounded-2xl border-white/40">
             <p className="text-[8px] font-bold text-ink-light uppercase tracking-widest mb-1">合計支出額</p>
