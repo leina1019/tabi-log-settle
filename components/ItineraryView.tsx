@@ -224,6 +224,18 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
       text += `\n⏰ ${item.time}${item.endTime ? `～${item.endTime}` : ''}\n📍 ${item.title}`;
       if (item.location) text += ` @ ${item.location}`;
       if (item.memo) text += `\n📝 ${item.memo}`;
+
+      // リンク情報の追加
+      if (item.link) {
+        text += `\n🔗 リンク: ${item.link}`;
+      }
+      if (item.links && item.links.length > 0) {
+        item.links.forEach(lnk => {
+          const label = lnk.label || '関連リンク';
+          const icon = (label.includes('マップ') || label.includes('地図') || label.toLowerCase().includes('map')) ? '📍' : '🔗';
+          text += `\n${icon} ${label}: ${lnk.url}`;
+        });
+      }
       text += `\n`;
     });
 

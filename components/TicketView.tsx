@@ -8,13 +8,40 @@ interface Props {
   userProfiles: UserProfile[];
   onSave: (ticket: Ticket) => void;
   onDelete: (id: string) => void;
+  tripStartDate: string;
+  tripEndDate: string;
 }
 
-const TicketView: React.FC<Props> = ({ tickets, userProfiles, onSave, onDelete }) => {
+const TicketView: React.FC<Props> = ({ tickets, userProfiles, onSave, onDelete, tripStartDate, tripEndDate }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState<Partial<Ticket>>({ type: 'flight' });
+  const [selectedDate, setSelectedDate] = useState<string>('');
   const [viewMode, setViewMode] = useState<'overall' | 'personal'>('overall');
   const [selectedMemberId, setSelectedMemberId] = useState<string>(userProfiles[0]?.id || '');
+
+  // 旅行期間の日付配列を生成 (ItineraryViewと共通)
+  const dateRange = React.useMemo(() => {
+    if (!tripStartDate) return [];
+    const dates: string[] = [];
+    const start = new Date(tripStartDate);
+    const end = tripEndDate ? new Date(tripEndDate) : new Date(tripStartDate);
+    let current = new Date(start);
+    let count = 0;
+    while (current <= end && count * 1000 * 60 * 60 * 24 < (30 * 1000 * 60 * 60 * 24)) { // 安全装置
+      dates.push(current.toISOString().split('T')[0]);
+      current.setDate(current.getDate() + 1);
+      count++;
+      if (count > 31) break;
+    }
+    return dates;
+  }, [tripStartDate, tripEndDate]);
+
+  // 選択日の初期化
+  React.useEffect(() => {
+    if (dateRange.length > 0 && !selectedDate) {
+      setSelectedDate(dateRange[0]);
+    }
+  }, [dateRange, selectedDate]);
   const [error, setError] = useState<string | null>(null);
   const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
 
@@ -86,7 +113,20 @@ const TicketView: React.FC<Props> = ({ tickets, userProfiles, onSave, onDelete }
     }
   };
 
+  const getDayLabel = (dateStr: string, index: number) => {
+    const d = new Date(dateStr);
+    const weekDays = ['日', '月', '火', '水', '木', '金', '土'];
+    return {
+      day: `DAY ${index + 1}`,
+      date: `${d.getDate()}`,
+      week: weekDays[d.getDay()],
+    };
+  };
+
   const filteredTickets = tickets.filter(t => {
+    const isDateMatch = !selectedDate || t.date === selectedDate;
+    if (!isDateMatch) return false;
+
     if (viewMode === 'overall') return !t.participantId;
     return t.participantId === selectedMemberId;
   });
@@ -134,6 +174,30 @@ const TicketView: React.FC<Props> = ({ tickets, userProfiles, onSave, onDelete }
             ))}
           </div>
         )}
+
+        {/* 日付タブ (ItineraryViewとデザインを統一) */}
+        <div className="overflow-x-auto scrollbar-hide -mx-4 px-4 pb-2">
+          <div className="flex gap-2 min-w-min">
+            {dateRange.map((d, i) => {
+              const label = getDayLabel(d, i);
+              const isSelected = selectedDate === d;
+              return (
+                <button
+                  key={d}
+                  onClick={() => setSelectedDate(d)}
+                  className={`flex-shrink-0 flex flex-col items-center justify-center w-14 h-16 rounded-xl border transition-all ${isSelected
+                    ? 'bg-primary border-primary shadow-sm'
+                    : 'bg-white border-surface-gray-mid text-ink-light'
+                    }`}
+                >
+                  <span className={`text-[7px] font-bold uppercase tracking-tighter mb-0.5 ${isSelected ? 'text-white/80' : 'text-ink-sub'}`}>{label.day}</span>
+                  <span className={`text-base font-black leading-none ${isSelected ? 'text-white' : 'text-ink'}`}>{label.date}</span>
+                  <span className={`text-[8px] font-bold ${isSelected ? 'text-white/60' : 'text-ink-sub/50'}`}>{label.week}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
       </div>
 
       <div className="space-y-4">

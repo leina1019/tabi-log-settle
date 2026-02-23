@@ -692,6 +692,8 @@ const App: React.FC = () => {
             userProfiles={userProfiles}
             onSave={handleUpdateTicket}
             onDelete={handleDeleteTicket}
+            tripStartDate={tripStartDate}
+            tripEndDate={tripEndDate}
           />
         )}
 
@@ -748,6 +750,13 @@ const App: React.FC = () => {
               {isAddMenuOpen && (
                 <div className="absolute bottom-20 left-1/2 -translate-x-1/2 flex flex-col gap-3 items-center animate-in slide-in-from-bottom-4 fade-in duration-300">
                   <button
+                    onClick={() => { setView('packing'); setIsAddMenuOpen(false); }}
+                    className="flex items-center gap-3 bg-white px-5 py-3 rounded-2xl shadow-xl border border-surface-gray-mid whitespace-nowrap active:scale-95 transition-transform"
+                  >
+                    <span className="text-lg">📦</span>
+                    <span className="text-xs font-bold text-ink">持ち物の追加</span>
+                  </button>
+                  <button
                     onClick={() => { setView('schedule'); setIsAddMenuOpen(false); }}
                     className="flex items-center gap-3 bg-white px-5 py-3 rounded-2xl shadow-xl border border-surface-gray-mid whitespace-nowrap active:scale-95 transition-transform"
                   >
@@ -780,11 +789,6 @@ const App: React.FC = () => {
             <button onClick={() => { setView('packing'); setIsAddMenuOpen(false); }} className={`flex flex-col items-center gap-1 transition-all ${view === 'packing' ? 'text-primary -translate-y-1' : 'text-ink-light'}`}>
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
               <span className="text-[9px] font-bold tracking-widest uppercase">Packing</span>
-            </button>
-
-            <button onClick={() => { setView('history'); setIsAddMenuOpen(false); }} className={`flex flex-col items-center gap-1 transition-all ${view === 'history' ? 'text-primary -translate-y-1' : 'text-ink-light'}`}>
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
-              <span className="text-[9px] font-bold tracking-widest uppercase">History</span>
             </button>
           </nav>
         </>
