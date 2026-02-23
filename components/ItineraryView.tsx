@@ -84,33 +84,41 @@ const ItineraryView: React.FC<Props> = ({ items, onSave, onDelete, tripStartDate
   };
 
   // フォーム保存：バリデーションを弱めにして保存しやすく
-  const handleSubmit = () => {
+  // フォーム保存：バリデーションを弱めにして保存しやすく
+  const handleSubmit = (e?: React.FormEvent) => {
+    e?.preventDefault(); // formタグがなくても念のため
+
     if (!formData.title?.trim()) {
       setValidationError('タイトルを入力してください');
       return;
     }
 
-    // time が空なら現在時刻をセット
-    const time = formData.time || (() => {
-      const now = new Date();
-      return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-    })();
+    try {
+      // time が空なら現在時刻をセット
+      const time = formData.time || (() => {
+        const now = new Date();
+        return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      })();
 
-    const now = new Date().toISOString();
-    const itemToSave: ItineraryItem = {
-      ...formData,
-      id: formData.id || crypto.randomUUID(),
-      title: formData.title.trim(),
-      date: formData.date || selectedDate,
-      time,
-      type: formData.type || 'activity',
-      updatedAt: now,
-    } as ItineraryItem;
+      const now = new Date().toISOString();
+      const itemToSave: ItineraryItem = {
+        ...formData,
+        id: formData.id || crypto.randomUUID(),
+        title: formData.title.trim(),
+        date: formData.date || selectedDate,
+        time,
+        type: formData.type || 'activity',
+        updatedAt: now,
+      } as ItineraryItem;
 
-    onSave(itemToSave);
-    setIsModalOpen(false);
-    setFormData({ type: 'activity', date: selectedDate });
-    setValidationError('');
+      onSave(itemToSave);
+      setIsModalOpen(false);
+      setFormData({ type: 'activity', date: selectedDate });
+      setValidationError('');
+    } catch (err) {
+      console.error(err);
+      alert('保存中にエラーが発生しました');
+    }
   };
 
   const handleDeleteClick = (id: string) => {
@@ -461,7 +469,7 @@ const ItineraryView: React.FC<Props> = ({ items, onSave, onDelete, tripStartDate
                 </button>
                 <button
                   type="button"
-                  onClick={handleSubmit}
+                  onClick={(e) => { e.stopPropagation(); handleSubmit(); }}
                   className="flex-1 py-3 rounded-xl bg-primary text-white text-xs font-bold shadow-lg hover:bg-primary/90 active:scale-95 transition-all"
                 >
                   保存

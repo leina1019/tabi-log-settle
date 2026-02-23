@@ -207,7 +207,7 @@ const TicketView: React.FC<Props> = ({ tickets, onSave, onDelete }) => {
 
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-3 rounded-xl text-xs font-bold text-ink-sub hover:bg-surface-gray border border-surface-gray-mid">キャンセル</button>
-                <button type="button" onClick={handleSubmit} className="flex-1 py-3 rounded-xl bg-primary text-white text-xs font-bold shadow-lg hover:bg-primary/90 active:scale-95 transition-all">保存</button>
+                <button type="button" onClick={(e) => { e.stopPropagation(); handleSubmit(e); }} className="flex-1 py-3 rounded-xl bg-primary text-white text-xs font-bold shadow-lg hover:bg-primary/90 active:scale-95 transition-all">保存</button>
               </div>
             </div>
           </div>

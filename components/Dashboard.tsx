@@ -341,7 +341,7 @@ const Dashboard: React.FC<Props> = ({
               </div>
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={() => setIsEditingTrip(false)} className="flex-1 py-3 rounded-xl text-xs font-bold text-ink-sub hover:bg-surface-gray border border-surface-gray-mid">キャンセル</button>
-                <button type="button" onClick={handleSaveTripSettings} className="flex-1 py-3 rounded-xl bg-premium-gold text-ocean-dark text-xs font-bold shadow-lg hover:opacity-90 active:scale-95 transition-all">保存</button>
+                <button type="button" onClick={(e) => { e.stopPropagation(); handleSaveTripSettings(); }} className="flex-1 py-3 rounded-xl bg-premium-gold text-ocean-dark text-xs font-bold shadow-lg hover:opacity-90 active:scale-95 transition-all">保存</button>
               </div>
             </div>
           </div>
