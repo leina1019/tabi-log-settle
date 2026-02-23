@@ -675,6 +675,7 @@ const App: React.FC = () => {
               tripName={tripName}
               onTripNameChange={updateTripName}
               userProfiles={userProfiles}
+              tripCoverImage={tripCoverImage}
               onTripCoverImageChange={updateTripCoverImage}
               isTablet={viewModeSize.startsWith('tablet')}
             />
