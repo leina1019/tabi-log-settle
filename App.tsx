@@ -294,7 +294,7 @@ const App: React.FC = () => {
     // 6日間（5泊）
     const endDate = new Date(new Date().getTime() + 5 * 86400000).toISOString().split('T')[0];
     setTripEndDate(endDate);
-    setTripCoverImage('https://images.unsplash.com/photo-1523413651479-797eb2c384d6?q=80&w=1200&auto=format&fit=crop');
+    setTripCoverImage('https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?q=80&w=1200&auto=format&fit=crop');
 
     // Firebaseへ同期
     if (tripId) {
@@ -307,7 +307,7 @@ const App: React.FC = () => {
         name: 'オーストラリア 6Days Demo',
         startDate: startDate,
         endDate: endDate,
-        coverImage: 'https://images.unsplash.com/photo-1523413651479-797eb2c384d6?q=80&w=1200&auto=format&fit=crop'
+        coverImage: 'https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?q=80&w=1200&auto=format&fit=crop'
       });
     }
 
