@@ -46,6 +46,7 @@ export interface ItineraryItem {
   location?: string;
   memo?: string;
   link?: string; // 互換性維持のための既存リンク
+  mapUrl?: string; // 📍 Google Maps専用リンク
   links?: ItineraryLink[]; // 複数リンク対応
   participantId?: string; // 特定メンバーの予定。undefinedの場合は「全体」
   imageUrl?: string; // アップロード画像 or OGP取得画像
@@ -63,6 +64,7 @@ export interface Ticket {
   referenceNumber?: string; // 予約番号など
   notes?: string;
   link?: string; // Drive link or e-ticket URL
+  mapUrl?: string; // 📍 関連マップリンク
   participantId?: string; // 特定メンバーのチケット。undefinedの場合は「全員」
   updatedAt?: string; // For sync
 }

@@ -226,14 +226,16 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
       if (item.memo) text += `\n📝 ${item.memo}`;
 
       // リンク情報の追加
+      if (item.mapUrl) {
+        text += `\n📍 マップ🔗: ${item.mapUrl}`;
+      }
       if (item.link) {
         text += `\n🔗 リンク: ${item.link}`;
       }
       if (item.links && item.links.length > 0) {
         item.links.forEach(lnk => {
           const label = lnk.label || '関連リンク';
-          const icon = (label.includes('マップ') || label.includes('地図') || label.toLowerCase().includes('map')) ? '📍' : '🔗';
-          text += `\n${icon} ${label}: ${lnk.url}`;
+          text += `\n[${label}]🔗: ${lnk.url}`;
         });
       }
       text += `\n`;
@@ -273,7 +275,7 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
     const d = new Date(dateStr);
     const weekDays = ['日', '月', '火', '水', '木', '金', '土'];
     return {
-      day: `DAY ${index + 1}`,
+      day: `${index + 1}日目`,
       date: `${d.getDate()}`,
       week: weekDays[d.getDay()],
     };
@@ -404,7 +406,7 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
                       <div className="absolute top-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 z-0">
                         <div className="w-[1px] h-10 border-l border-dashed border-ink-light/30"></div>
                         <div className="bg-white border border-surface-gray-mid rounded-full px-2 py-0.5 text-[8px] font-bold text-ink-light whitespace-nowrap shadow-sm">
-                          ⏳ {gaps[item.id]}
+                          🕑 空き時間${gaps[item.id]}
                         </div>
                       </div>
                     )}
@@ -487,8 +489,19 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
                           </div>
                         )}
 
-                        {(item.link || (item.links && item.links.length > 0)) && (
+                        {(item.mapUrl || item.link || (item.links && item.links.length > 0)) && (
                           <div className="flex flex-wrap gap-2 mt-2">
+                            {item.mapUrl && (
+                              <a
+                                href={item.mapUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex-1 min-w-[120px] flex items-center justify-center gap-2 py-2 bg-rose-50 hover:bg-rose-100 rounded-lg text-xs font-bold text-rose-600 transition-colors relative z-20 border border-rose-200"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <span>📍 マップ</span>
+                              </a>
+                            )}
                             {item.link && (
                               <a
                                 href={item.link}
@@ -509,7 +522,7 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
                                 className="flex-1 min-w-[120px] flex items-center justify-center gap-2 py-2 bg-ocean-light hover:bg-ocean-dark/20 rounded-lg text-xs font-bold text-ocean-dark transition-colors relative z-20"
                                 onClick={(e) => e.stopPropagation()}
                               >
-                                <span>🔗 {lnk.label || 'Link'}</span>
+                                <span>{lnk.label || 'Link'} 🔗</span>
                               </a>
                             ))}
                           </div>
@@ -621,16 +634,28 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
                 </select>
               </div>
 
-              {/* 場所名 */}
-              <div>
-                <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">場所名</label>
-                <input
-                  type="text"
-                  placeholder="例: 浅草寺、新宿駅"
-                  className="w-full bg-surface-gray border border-surface-gray-mid rounded-xl p-3 text-sm text-ink outline-none"
-                  value={formData.location || ''}
-                  onChange={e => setFormData({ ...formData, location: e.target.value })}
-                />
+              {/* 場所名 + Googleマップ */}
+              <div className="grid grid-cols-1 gap-3">
+                <div>
+                  <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">場所名</label>
+                  <input
+                    type="text"
+                    placeholder="例: 浅草寺、新宿駅"
+                    className="w-full bg-surface-gray border border-surface-gray-mid rounded-xl p-3 text-sm text-ink outline-none"
+                    value={formData.location || ''}
+                    onChange={e => setFormData({ ...formData, location: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest text-rose-500">📍 GoogleマップURL</label>
+                  <input
+                    type="url"
+                    placeholder="https://maps.app.goo.gl/..."
+                    className="w-full bg-rose-50 border border-rose-200 rounded-xl p-3 text-sm text-ink outline-none focus:border-rose-400"
+                    value={formData.mapUrl || ''}
+                    onChange={e => setFormData({ ...formData, mapUrl: e.target.value })}
+                  />
+                </div>
               </div>
 
               {/* Links (複数対応) */}

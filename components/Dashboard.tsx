@@ -238,6 +238,35 @@ const Dashboard: React.FC<Props> = ({
         </div>
       </button>
 
+      {/* Member Cards */}
+      <div className="space-y-4">
+        <div className="flex justify-between items-end px-2">
+          <h3 className="text-[10px] font-bold text-ink-sub uppercase tracking-[0.2em]">メンバー</h3>
+          <button onClick={onOpenSettle} className="text-[10px] font-bold text-primary uppercase tracking-widest hover:text-primary-dark transition-colors">合計と清算を確認 &gt;</button>
+        </div>
+        <div className="grid grid-cols-1 gap-3">
+          {memberStats.map(m => {
+            const profile = getProfile(m.id);
+            return (
+              <button key={m.id} onClick={() => setSelectedMemberId(m.id)} className="w-full text-left glass p-5 rounded-2xl flex items-center justify-between active:scale-[0.98] transition-all hover:shadow-md group">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center border transition-colors overflow-hidden" style={{ backgroundColor: profile.color, borderColor: `${profile.color}40` }}>
+                    {profile.avatarUrl ? <img src={profile.avatarUrl} alt="" className="w-full h-full object-cover" /> : <svg className="h-6 w-6 text-white" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" /></svg>}
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-ink text-sm tracking-wide">{profile.displayName}</h4>
+                    <p className="text-[9px] font-bold text-ink-light uppercase tracking-tighter">支払総額</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-xl font-sans font-bold text-ink leading-none">{Math.round(m.paid).toLocaleString()}<span className="text-[10px] ml-1 font-sans font-normal opacity-60">JPY</span></p>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* 📊 Spending Summary Section */}
       <section className="space-y-4">
         <div className="flex items-center gap-2 px-2">
@@ -308,35 +337,6 @@ const Dashboard: React.FC<Props> = ({
           </button>
         </div>
       </section>
-
-      {/* Member Cards */}
-      <div className="space-y-4">
-        <div className="flex justify-between items-end px-2">
-          <h3 className="text-[10px] font-bold text-ink-sub uppercase tracking-[0.2em]">メンバー</h3>
-          <button onClick={onOpenSettle} className="text-[10px] font-bold text-primary uppercase tracking-widest hover:text-primary-dark transition-colors">合計と清算を確認 &gt;</button>
-        </div>
-        <div className="grid grid-cols-1 gap-3">
-          {memberStats.map(m => {
-            const profile = getProfile(m.id);
-            return (
-              <button key={m.id} onClick={() => setSelectedMemberId(m.id)} className="w-full text-left glass p-5 rounded-2xl flex items-center justify-between active:scale-[0.98] transition-all hover:shadow-md group">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center border transition-colors overflow-hidden" style={{ backgroundColor: profile.color, borderColor: `${profile.color}40` }}>
-                    {profile.avatarUrl ? <img src={profile.avatarUrl} alt="" className="w-full h-full object-cover" /> : <svg className="h-6 w-6 text-white" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" /></svg>}
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-ink text-sm tracking-wide">{profile.displayName}</h4>
-                    <p className="text-[9px] font-bold text-ink-light uppercase tracking-tighter">支払総額</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-xl font-sans font-bold text-ink leading-none">{Math.round(m.paid).toLocaleString()}<span className="text-[10px] ml-1 font-sans font-normal opacity-60">JPY</span></p>
-                </div>
-              </button>
-            );
-          })}
-        </div>
-      </div>
 
       {/* Modal */}
       {selectedMemberId && detailData && (

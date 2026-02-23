@@ -117,7 +117,7 @@ const TicketView: React.FC<Props> = ({ tickets, userProfiles, onSave, onDelete, 
     const d = new Date(dateStr);
     const weekDays = ['日', '月', '火', '水', '木', '金', '土'];
     return {
-      day: `DAY ${index + 1}`,
+      day: `${index + 1}日目`,
       date: `${d.getDate()}`,
       week: weekDays[d.getDay()],
     };
@@ -147,13 +147,13 @@ const TicketView: React.FC<Props> = ({ tickets, userProfiles, onSave, onDelete, 
             onClick={() => setViewMode('overall')}
             className={`flex-1 py-2 text-[10px] font-bold uppercase tracking-widest rounded-lg transition-all ${viewMode === 'overall' ? 'bg-primary text-white shadow-sm' : 'text-ink-sub hover:bg-surface-gray'}`}
           >
-            Overall
+            全体
           </button>
           <button
             onClick={() => setViewMode('personal')}
             className={`flex-1 py-2 text-[10px] font-bold uppercase tracking-widest rounded-lg transition-all ${viewMode === 'personal' ? 'bg-accent text-white shadow-sm' : 'text-ink-sub hover:bg-surface-gray'}`}
           >
-            Personal
+            個人
           </button>
         </div>
 
