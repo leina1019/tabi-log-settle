@@ -77,8 +77,22 @@ const Dashboard: React.FC<Props> = ({
     });
 
     const dailyMap: Record<string, Record<string, number>> = {};
+
+    // 旅行の全日程を初期化
+    if (tripStartDate && tripEndDate) {
+      const start = new Date(tripStartDate);
+      const end = new Date(tripEndDate);
+      // 安全のため最大31日分に制限
+      for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+        const dateStr = d.toISOString().split('T')[0];
+        dailyMap[dateStr] = {};
+        if (Object.keys(dailyMap).length > 31) break;
+      }
+    }
+
     expenses.forEach(e => {
       const date = e.date || '未設定';
+      // 旅行期間外のデータも一応保持するが、マップがない場合は作成
       if (!dailyMap[date]) dailyMap[date] = {};
       const jpy = convertToJPY(e.amount, e.currency, e.exchangeRate);
       dailyMap[date][e.paidBy] = (dailyMap[date][e.paidBy] || 0) + jpy;
@@ -97,7 +111,7 @@ const Dashboard: React.FC<Props> = ({
       foreignCurrencies: Object.entries(foreignCurrencyMap).map(([currency, amount]) => ({ currency, amount })),
       dailyChartData
     };
-  }, [expenses, totalJPY, userProfiles]);
+  }, [expenses, totalJPY, userProfiles, tripStartDate, tripEndDate]);
 
   const getProfile = (id: string) => {
     return userProfiles.find(p => p.id === id) || { id, displayName: id, avatarUrl: '' };

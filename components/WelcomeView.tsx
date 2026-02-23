@@ -85,7 +85,7 @@ const WelcomeView: React.FC<Props> = ({ onStart, onDemoStart }) => {
                 {step === 'welcome' && (
                     <div className="flex-1 flex flex-col items-center justify-center text-center animate-in fade-in zoom-in duration-500">
                         <div className="w-24 h-24 bg-primary-light rounded-[32px] flex items-center justify-center text-5xl mb-8 shadow-inner">✈️</div>
-                        <h2 className="text-3xl font-bold text-ink mb-4 leading-tight">たびログ精算へ<br />ようこそ！</h2>
+                        <h2 className="text-3xl font-bold text-ink mb-4 leading-tight">たびログくんへ<br />ようこそ！</h2>
                         <p className="text-ink-sub text-sm mb-12 leading-relaxed px-4">
                             旅行のスケジュール管理から、面倒な割り勘の計算まで。みんなで共有して最高の旅を作りましょう。
                         </p>

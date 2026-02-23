@@ -527,7 +527,7 @@ const App: React.FC = () => {
         {/* Header - ANAブルー帯 */}
         <header className="bg-ocean-dark px-5 pt-2 pb-2 flex justify-between items-center z-20 safe-pt shadow-sm">
           <h1 className="font-sans text-lg font-bold tracking-wide text-white flex items-center gap-2">
-            <span className="text-accent text-2xl">✈</span> たびログ精算
+            <span className="text-accent text-2xl">✈</span> たびログくん
           </h1>
           <div className="flex items-center gap-2">
             {syncStatus === 'syncing' && <span className="text-[10px] text-accent animate-pulse">SYNCING...</span>}
@@ -539,7 +539,7 @@ const App: React.FC = () => {
                   const url = `${window.location.origin}${window.location.pathname}?trip=${tripId}`;
                   if (navigator.share) {
                     try {
-                      await navigator.share({ title: 'たびログ精算', text: '旅行の精算をしよう！', url });
+                      await navigator.share({ title: 'たびログくん', text: '旅行の計画を立てよう！', url });
                     } catch (e) {
                       console.log('Share canceled', e);
                     }
@@ -572,7 +572,7 @@ const App: React.FC = () => {
 
                     if (navigator.share) {
                       try {
-                        await navigator.share({ title: 'たびログ精算', text: '旅行の精算をしよう！', url });
+                        await navigator.share({ title: 'たびログくん', text: '旅行の計画を立てよう！', url });
                       } catch (e) { console.log('Share canceled', e); }
                     } else {
                       navigator.clipboard.writeText(url).then(() => {
