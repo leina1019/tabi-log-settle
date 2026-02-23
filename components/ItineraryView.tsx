@@ -16,10 +16,10 @@ const ITEM_TYPES: { value: ItineraryItem['type']; label: string; icon: string }[
 ];
 
 const TYPE_IMAGES: Record<string, string> = {
-  activity: 'https://images.unsplash.com/photo-1530521954074-e64f6810b32d?q=80&w=800&auto=format&fit=crop',
+  activity: 'https://images.unsplash.com/photo-1540206276207-39257e7aade0?q=80&w=800&auto=format&fit=crop',
   sightseeing: 'https://images.unsplash.com/photo-1542931287-023b922fa89b?q=80&w=800&auto=format&fit=crop',
   meal: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=800&auto=format&fit=crop',
-  shopping: 'https://images.unsplash.com/photo-1567401893424-734898ec1564?q=80&w=800&auto=format&fit=crop',
+  shopping: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=800&auto=format&fit=crop',
   move: 'https://images.unsplash.com/photo-1436491865332-7a61a109c0f3?q=80&w=800&auto=format&fit=crop',
   stay: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=800&auto=format&fit=crop',
   other: 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?q=80&w=800&auto=format&fit=crop',
@@ -383,13 +383,24 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
 
                       {/* OGP/タイプ別テンプレート画像 */}
                       {(item.imageUrl || TYPE_IMAGES[item.type]) && (
-                        <div className="w-full h-28 overflow-hidden bg-surface-gray">
+                        <div className="w-full h-28 overflow-hidden bg-surface-gray-mid/30 relative">
                           <img
                             src={item.imageUrl || TYPE_IMAGES[item.type]}
                             alt={item.title}
                             className="w-full h-full object-cover"
-                            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                            onError={(e) => {
+                              const img = e.target as HTMLImageElement;
+                              // もし個別画像が失敗して、テンプレート画像がまだ試されていないならテンプレートに切り替え
+                              if (item.imageUrl && img.src === item.imageUrl) {
+                                img.src = TYPE_IMAGES[item.type];
+                              } else {
+                                // テンプレート画像すら失敗した場合は非表示
+                                (img.parentElement as HTMLElement).style.display = 'none';
+                              }
+                            }}
                           />
+                          {/* ローディング中の背景色を少し濃くして枠線を分かりやすく */}
+                          <div className="absolute inset-0 bg-surface-gray-mid/10 -z-10"></div>
                         </div>
                       )}
 
