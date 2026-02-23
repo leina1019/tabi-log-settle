@@ -127,13 +127,42 @@ const ItineraryView: React.FC<Props> = ({ items, onSave, onDelete, tripStartDate
     }
   };
 
-  // 写真ファイルをBase64に変換してformDataにセット
+  // 写真ファイルをCanvasでリサイズ・圧縮してformDataにセット
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
     const reader = new FileReader();
-    reader.onload = (ev) => {
-      setFormData(prev => ({ ...prev, imageUrl: ev.target?.result as string }));
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const maxSize = 800; // 長辺を800pxに制限
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > maxSize) {
+            height *= maxSize / width;
+            width = maxSize;
+          }
+        } else {
+          if (height > maxSize) {
+            width *= maxSize / height;
+            height = maxSize;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        ctx?.drawImage(img, 0, 0, width, height);
+
+        // JPEG 75% 圧縮で品質と容量のバランスをとる
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.75);
+        setFormData(prev => ({ ...prev, imageUrl: dataUrl }));
+      };
+      img.src = event.target?.result as string;
     };
     reader.readAsDataURL(file);
   };

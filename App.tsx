@@ -149,11 +149,19 @@ const App: React.FC = () => {
   }, [tripCoverImage]);
 
   useEffect(() => {
-    localStorage.setItem('oz-wari-itinerary', JSON.stringify(itinerary));
+    try {
+      localStorage.setItem('oz-wari-itinerary', JSON.stringify(itinerary));
+    } catch (e) {
+      console.error('Failed to save itinerary to localStorage', e);
+    }
   }, [itinerary]);
 
   useEffect(() => {
-    localStorage.setItem('oz-wari-tickets', JSON.stringify(tickets));
+    try {
+      localStorage.setItem('oz-wari-tickets', JSON.stringify(tickets));
+    } catch (e) {
+      console.error('Failed to save tickets to localStorage', e);
+    }
   }, [tickets]);
 
   // NOTE: syncWithCloud (Google Sheets) は Firebase 移行後は不要のため削除。
