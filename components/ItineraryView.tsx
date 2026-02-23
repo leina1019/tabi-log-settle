@@ -1,7 +1,8 @@
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { ItineraryItem } from '../types';
+import { ItineraryItem, UserProfile, Participant } from '../types';
 import { fetchOgpData } from '../services/ogpService';
+import { MEMBER_COLORS, PARTICIPANTS } from '../constants';
 
 // 予定種類の定義（ラベル + アイコン）
 const ITEM_TYPES: { value: ItineraryItem['type']; label: string; icon: string }[] = [
@@ -20,18 +21,23 @@ const getTypeInfo = (type: string) => {
 
 interface Props {
   items: ItineraryItem[];
+  userProfiles: UserProfile[];
   onSave: (item: ItineraryItem) => void;
   onDelete: (id: string) => void;
   tripStartDate: string;
   tripEndDate: string;
 }
 
-const ItineraryView: React.FC<Props> = ({ items, onSave, onDelete, tripStartDate, tripEndDate }) => {
+const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete, tripStartDate, tripEndDate }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string>('');
-  const [formData, setFormData] = useState<Partial<ItineraryItem>>({ type: 'activity' });
+  const [viewMode, setViewMode] = useState<'overall' | 'individual'>('overall');
+  const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
+  const [visibleMemberIds, setVisibleMemberIds] = useState<string[]>(() => userProfiles.map(u => u.id));
+  const [formData, setFormData] = useState<Partial<ItineraryItem>>({ type: 'activity', links: [] });
   const [isFetchingOgp, setIsFetchingOgp] = useState(false);
   const [validationError, setValidationError] = useState('');
+  const [showMemoId, setShowMemoId] = useState<string | null>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
 
   // 旅行期間の日付配列を生成
@@ -63,10 +69,39 @@ const ItineraryView: React.FC<Props> = ({ items, onSave, onDelete, tripStartDate
   // 選択日の予定を時刻順に並べる
   const filteredItems = useMemo(() => {
     if (!selectedDate) return [];
-    return items
-      .filter(i => i.date === selectedDate)
-      .sort((a, b) => a.time.localeCompare(b.time));
-  }, [items, selectedDate]);
+    let list = items.filter(i => i.date === selectedDate);
+
+    if (viewMode === 'individual' && selectedMemberId) {
+      // 個人表示：全体(participantId undefined) + 自分専用
+      list = list.filter(i => !i.participantId || i.participantId === selectedMemberId);
+    } else if (viewMode === 'overall') {
+      // 全体表示：全体(participantId undefined) + 表示設定された個人予定
+      list = list.filter(i => !i.participantId || visibleMemberIds.includes(i.participantId));
+    }
+
+    return list.sort((a, b) => a.time.localeCompare(b.time));
+  }, [items, selectedDate, viewMode, selectedMemberId]);
+
+  // 空き時間計算
+  const gaps = useMemo(() => {
+    const res: Record<string, string> = {};
+    for (let i = 0; i < filteredItems.length - 1; i++) {
+      const cur = filteredItems[i];
+      const next = filteredItems[i + 1];
+
+      const curEnd = cur.endTime || cur.time;
+      const [h1, m1] = curEnd.split(':').map(Number);
+      const [h2, m2] = next.time.split(':').map(Number);
+
+      const diffMin = (h2 * 60 + m2) - (h1 * 60 + m1);
+      if (diffMin > 0) {
+        const h = Math.floor(diffMin / 60);
+        const m = diffMin % 60;
+        res[cur.id] = h > 0 ? `${h}時間${m}分` : `${m}分`;
+      }
+    }
+    return res;
+  }, [filteredItems]);
 
   const handleOpenAdd = () => {
     // 現在時刻をデフォルト（HH:MM形式）
@@ -104,16 +139,17 @@ const ItineraryView: React.FC<Props> = ({ items, onSave, onDelete, tripStartDate
       const itemToSave: ItineraryItem = {
         ...formData,
         id: formData.id || crypto.randomUUID(),
-        title: formData.title.trim(),
+        title: (formData.title || '').trim(),
         date: formData.date || selectedDate,
         time,
         type: formData.type || 'activity',
+        links: formData.links || [],
         updatedAt: now,
       } as ItineraryItem;
 
       onSave(itemToSave);
       setIsModalOpen(false);
-      setFormData({ type: 'activity', date: selectedDate });
+      setFormData({ type: 'activity', date: selectedDate, links: [] });
       setValidationError('');
     } catch (err) {
       console.error(err);
@@ -221,6 +257,47 @@ const ItineraryView: React.FC<Props> = ({ items, onSave, onDelete, tripStartDate
         </button>
       </div>
 
+      {/* メンバー選択（階層ナビゲーション） */}
+      <div className="px-4 mb-4 overflow-x-auto scrollbar-hide">
+        <div className="flex gap-2 min-w-min">
+          <button
+            onClick={() => { setViewMode('overall'); setSelectedMemberId(null); }}
+            className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-bold transition-all border ${viewMode === 'overall' ? 'bg-ink text-white border-ink' : 'bg-white text-ink-light border-surface-gray-mid'}`}
+          >
+            🌎 全体
+          </button>
+          {userProfiles.map(profile => {
+            const isVisible = viewMode === 'overall' ? visibleMemberIds.includes(profile.id) : selectedMemberId === profile.id;
+            return (
+              <button
+                key={profile.id}
+                onClick={() => {
+                  if (viewMode === 'overall') {
+                    setVisibleMemberIds(prev =>
+                      prev.includes(profile.id) ? prev.filter(id => id !== profile.id) : [...prev, profile.id]
+                    );
+                  } else {
+                    setSelectedMemberId(profile.id);
+                  }
+                }}
+                className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-bold transition-all border flex items-center gap-1.5 ${isVisible ? 'text-white border-transparent' : 'bg-white text-ink-light border-surface-gray-mid'}`}
+                style={isVisible ? { backgroundColor: profile.color } : {}}
+              >
+                <div className="w-4 h-4 rounded-full overflow-hidden bg-white/20 flex items-center justify-center">
+                  {profile.avatarUrl ? <img src={profile.avatarUrl} className="w-full h-full object-cover" /> : <span>👤</span>}
+                </div>
+                {profile.displayName}
+                {viewMode === 'overall' && (
+                  <div className={`ml-1 w-3 h-3 rounded-sm border border-white/30 flex items-center justify-center ${isVisible ? 'bg-white/20' : 'bg-transparent'}`}>
+                    {isVisible && <div className="w-1.5 h-1.5 bg-white rounded-full"></div>}
+                  </div>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* 日付タブ */}
       <div className="overflow-x-auto scrollbar-hide mb-2 px-4">
         <div className="flex gap-3 pb-2 min-w-min">
@@ -261,13 +338,22 @@ const ItineraryView: React.FC<Props> = ({ items, onSave, onDelete, tripStartDate
               return (
                 <div key={item.id} className="flex gap-4 mb-6 relative group">
                   {/* 時刻 */}
-                  <div className="w-10 text-right pt-1 flex-shrink-0">
+                  <div className="w-12 text-right pt-1 flex-shrink-0">
                     <span className="text-sm font-bold text-ink block">{item.time}</span>
+                    {item.endTime && <span className="text-[10px] text-ink-light block whitespace-nowrap">～{item.endTime}</span>}
                   </div>
 
                   {/* ドット */}
-                  <div className="relative z-10 pt-2 flex-shrink-0">
-                    <div className="w-3 h-3 bg-accent rounded-full ring-4 ring-surface-gray"></div>
+                  <div className="relative z-10 pt-2 flex-shrink-0 flex flex-col items-center">
+                    <div className="w-3 h-3 bg-accent rounded-full ring-4 ring-white min-h-[12px]"></div>
+                    {gaps[item.id] && (
+                      <div className="absolute top-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 z-0">
+                        <div className="w-[1px] h-10 border-l border-dashed border-ink-light/30"></div>
+                        <div className="bg-white border border-surface-gray-mid rounded-full px-2 py-0.5 text-[8px] font-bold text-ink-light whitespace-nowrap shadow-sm">
+                          ⏳ {gaps[item.id]}
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* カード */}
@@ -276,6 +362,14 @@ const ItineraryView: React.FC<Props> = ({ items, onSave, onDelete, tripStartDate
                       onClick={() => handleOpenEdit(item)}
                       className="bg-white rounded-xl border border-surface-gray-mid hover:border-primary/30 hover:shadow-sm transition-all relative cursor-pointer active:scale-[0.98] overflow-hidden"
                     >
+                      {/* 個人カラーインジケーター */}
+                      {item.participantId && (
+                        <div
+                          className="absolute left-0 top-0 bottom-0 w-1 z-30"
+                          style={{ backgroundColor: userProfiles.find(u => u.id === item.participantId)?.color }}
+                        />
+                      )}
+
                       {/* OGP/アップロード画像サムネイル */}
                       {item.imageUrl && (
                         <div className="w-full h-28 overflow-hidden bg-surface-gray">
@@ -320,22 +414,48 @@ const ItineraryView: React.FC<Props> = ({ items, onSave, onDelete, tripStartDate
                         )}
 
                         {item.memo && (
-                          <p className="text-xs text-ink-sub bg-surface-gray p-2 rounded-lg mb-2">{item.memo}</p>
+                          <div
+                            onClick={(e) => { e.stopPropagation(); setShowMemoId(showMemoId === item.id ? null : item.id); }}
+                            className="text-xs text-ink-sub bg-surface-gray p-2 rounded-lg mb-2 relative group-item"
+                          >
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-[10px] font-bold text-ink-light">MEMO</span>
+                              <span className="text-[10px]">{showMemoId === item.id ? '🔼' : '🔽'}</span>
+                            </div>
+                            {showMemoId === item.id ? (
+                              <p className="whitespace-pre-wrap">{item.memo}</p>
+                            ) : (
+                              <p className="truncate italic">タップして内容を表示...</p>
+                            )}
+                          </div>
                         )}
 
-                        {item.link && (
-                          <a
-                            href={item.link}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center justify-center gap-2 w-full py-2 bg-primary-light hover:bg-primary/20 rounded-lg text-xs font-bold text-primary transition-colors mt-2 relative z-20"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <span>Map / リンクを開く</span>
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                            </svg>
-                          </a>
+                        {(item.link || (item.links && item.links.length > 0)) && (
+                          <div className="flex flex-wrap gap-2 mt-2">
+                            {item.link && (
+                              <a
+                                href={item.link}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex-1 min-w-[120px] flex items-center justify-center gap-2 py-2 bg-primary-light hover:bg-primary/20 rounded-lg text-xs font-bold text-primary transition-colors relative z-20"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <span>🔗 Link</span>
+                              </a>
+                            )}
+                            {item.links?.map((lnk, idx) => (
+                              <a
+                                key={idx}
+                                href={lnk.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex-1 min-w-[120px] flex items-center justify-center gap-2 py-2 bg-ocean-light hover:bg-ocean-dark/20 rounded-lg text-xs font-bold text-ocean-dark transition-colors relative z-20"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <span>🔗 {lnk.label || 'Link'}</span>
+                              </a>
+                            ))}
+                          </div>
                         )}
                       </div>
                     </div>
@@ -374,9 +494,34 @@ const ItineraryView: React.FC<Props> = ({ items, onSave, onDelete, tripStartDate
                 )}
               </div>
 
+              {/* 誰の予定か */}
+              <div>
+                <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">担当メンバー</label>
+                <div className="flex flex-wrap gap-2 mt-1">
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, participantId: undefined })}
+                    className={`px-3 py-1.5 rounded-full text-[10px] font-bold transition-all border ${!formData.participantId ? 'bg-ink text-white border-ink' : 'bg-surface-gray text-ink-light border-surface-gray-mid'}`}
+                  >
+                    🌎 全員
+                  </button>
+                  {userProfiles.map(p => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => setFormData({ ...formData, participantId: p.id })}
+                      className={`px-3 py-1.5 rounded-full text-[10px] font-bold transition-all border ${formData.participantId === p.id ? 'text-white border-transparent' : 'bg-surface-gray text-ink-light border-surface-gray-mid'}`}
+                      style={formData.participantId === p.id ? { backgroundColor: p.color } : {}}
+                    >
+                      {p.displayName}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               {/* 日付 + 時間 */}
               <div className="grid grid-cols-2 gap-3">
-                <div>
+                <div className="col-span-2">
                   <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">日付</label>
                   <input
                     type="date"
@@ -386,12 +531,21 @@ const ItineraryView: React.FC<Props> = ({ items, onSave, onDelete, tripStartDate
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">時間</label>
+                  <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">開始時間</label>
                   <input
                     type="time"
                     className="w-full bg-surface-gray border border-surface-gray-mid rounded-xl p-2.5 text-sm text-ink outline-none"
                     value={formData.time || ''}
                     onChange={e => setFormData({ ...formData, time: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">終了時間</label>
+                  <input
+                    type="time"
+                    className="w-full bg-surface-gray border border-surface-gray-mid rounded-xl p-2.5 text-sm text-ink outline-none"
+                    value={formData.endTime || ''}
+                    onChange={e => setFormData({ ...formData, endTime: e.target.value })}
                   />
                 </div>
               </div>
@@ -422,19 +576,55 @@ const ItineraryView: React.FC<Props> = ({ items, onSave, onDelete, tripStartDate
                 />
               </div>
 
-              {/* Map / URL（OGP自動取得） */}
+              {/* Links (複数対応) */}
               <div>
                 <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">
-                  Map / サイト URL
-                  {isFetchingOgp && <span className="ml-2 text-primary animate-pulse">画像取得中...</span>}
+                  関連リンク
                 </label>
-                <input
-                  type="url"
-                  placeholder="https://maps.google.com/... ← 画像を自動取得します"
-                  className="w-full bg-surface-gray border border-surface-gray-mid rounded-xl p-3 text-sm text-ink outline-none"
-                  value={formData.link || ''}
-                  onChange={e => setFormData({ ...formData, link: e.target.value })}
-                />
+                <div className="space-y-2">
+                  {formData.links?.map((lnk, i) => (
+                    <div key={i} className="flex gap-2">
+                      <input
+                        type="text"
+                        placeholder="ラベル (例: Web)"
+                        className="w-20 bg-surface-gray border border-surface-gray-mid rounded-lg p-2 text-xs text-ink outline-none"
+                        value={lnk.label}
+                        onChange={e => {
+                          const newLinks = [...(formData.links || [])];
+                          newLinks[i].label = e.target.value;
+                          setFormData({ ...formData, links: newLinks });
+                        }}
+                      />
+                      <input
+                        type="url"
+                        placeholder="https://..."
+                        className="flex-1 bg-surface-gray border border-surface-gray-mid rounded-lg p-2 text-xs text-ink outline-none"
+                        value={lnk.url}
+                        onChange={e => {
+                          const newLinks = [...(formData.links || [])];
+                          newLinks[i].url = e.target.value;
+                          setFormData({ ...formData, links: newLinks });
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFormData({ ...formData, links: formData.links?.filter((_, idx) => idx !== i) });
+                        }}
+                        className="text-rose-500 font-bold px-2"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, links: [...(formData.links || []), { label: '', url: '' }] })}
+                    className="w-full py-2 border-2 border-dashed border-surface-gray-mid rounded-xl text-[10px] font-bold text-ink-light hover:border-primary/40 hover:text-primary transition-all"
+                  >
+                    + リンクを追加
+                  </button>
+                </div>
               </div>
 
               {/* 画像アップロード／OGP取得プレビュー */}

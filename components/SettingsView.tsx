@@ -1,7 +1,7 @@
 
 import React, { useRef } from 'react';
 import { Participant, UserProfile } from '../types';
-import { PARTICIPANTS } from '../constants';
+import { PARTICIPANTS, MEMBER_COLORS } from '../constants';
 
 interface Props {
   userProfiles: UserProfile[];
@@ -96,6 +96,21 @@ const SettingsView: React.FC<Props> = ({ userProfiles, onUpdateProfile, onBack }
                 onClick={(e) => { (e.target as HTMLInputElement).value = ''; }}
                 onChange={(e) => handleFileChange(e, pId)}
               />
+
+              <div className="mt-4 pt-4 border-t border-surface-gray-mid/50">
+                <label className="text-[9px] font-bold text-ink-light uppercase tracking-wider mb-2 block">メンバーカラー</label>
+                <div className="flex flex-wrap gap-2">
+                  {MEMBER_COLORS.map(color => (
+                    <button
+                      key={color}
+                      type="button"
+                      onClick={() => onUpdateProfile(pId, { color })}
+                      className={`w-7 h-7 rounded-sm border-2 transition-all ${profile.color === color ? 'border-ink scale-110 shadow-sm' : 'border-white/50'}`}
+                      style={{ backgroundColor: color }}
+                    />
+                  ))}
+                </div>
+              </div>
 
               <div className="flex justify-end gap-3 mt-1">
                 <button

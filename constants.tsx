@@ -1,6 +1,14 @@
-
 // PARTICIPANTSはアプリ全体で使用するメンバーリスト
 export const PARTICIPANTS = ['リョウスケさん', '玲奈さん', '岡ちゃん'] as const;
+
+export const MEMBER_COLORS = [
+  '#006699', // Ocean Blue
+  '#FF6B6B', // Coral Pink
+  '#2ECC71', // Emerald Green
+  '#E67E22', // Sunset Orange
+  '#9B59B6', // Lavender Purple
+  '#F1C40F', // Gold Yellow
+];
 
 export const CATEGORIES = [
   '食事',

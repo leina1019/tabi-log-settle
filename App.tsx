@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Expense, Participant, Settlement, ItineraryItem, Ticket, UserProfile } from './types';
-import { PARTICIPANTS } from './constants';
+import { PARTICIPANTS, MEMBER_COLORS } from './constants';
 import { convertToJPY } from './utils/currency';
 import ExpenseForm from './components/ExpenseForm';
 import ExpenseList from './components/ExpenseList';
@@ -22,7 +22,13 @@ const App: React.FC = () => {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [budget, setBudget] = useState<number>(1000000);
   const [userProfiles, setUserProfiles] = useState<UserProfile[]>(() =>
-    PARTICIPANTS.map(pId => ({ id: pId, displayName: pId, avatarUrl: '', updatedAt: new Date().toISOString() }))
+    PARTICIPANTS.map((pId, idx) => ({
+      id: pId,
+      displayName: pId,
+      avatarUrl: '',
+      color: MEMBER_COLORS[idx % MEMBER_COLORS.length],
+      updatedAt: new Date().toISOString()
+    }))
   );
   const [tripStartDate, setTripStartDate] = useState<string>('');
   const [tripEndDate, setTripEndDate] = useState<string>('');
@@ -32,6 +38,7 @@ const App: React.FC = () => {
   const [tickets, setTickets] = useState<Ticket[]>([]);
 
   const [view, setView] = useState<ViewState>('home');
+  const [isAddMenuOpen, setIsAddMenuOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'success' | 'error'>('idle');
   const [tripId, setTripId] = useState<string | null>(null);
@@ -84,7 +91,13 @@ const App: React.FC = () => {
       setTripCoverImage('https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?q=80&w=800&auto=format&fit=crop');
       setItinerary([]);
       setTickets([]);
-      setUserProfiles(PARTICIPANTS.map(pId => ({ id: pId, displayName: pId, avatarUrl: '', updatedAt: new Date().toISOString() })));
+      setUserProfiles(PARTICIPANTS.map((pId, idx) => ({
+        id: pId,
+        displayName: pId,
+        avatarUrl: '',
+        color: MEMBER_COLORS[idx % MEMBER_COLORS.length],
+        updatedAt: new Date().toISOString()
+      })));
     }
   }, []);
 
@@ -523,6 +536,7 @@ const App: React.FC = () => {
         {view === 'schedule' && (
           <ItineraryView
             items={itinerary}
+            userProfiles={userProfiles}
             onSave={handleUpdateItinerary}
             onDelete={handleDeleteItinerary}
             tripStartDate={tripStartDate}
@@ -556,34 +570,66 @@ const App: React.FC = () => {
 
       {/* Bottom Navigation - ホワイトカード */}
       {view !== 'add_expense' && view !== 'settle' && view !== 'settings' && (
-        <nav className="fixed bottom-4 left-1/2 -translate-x-1/2 w-[92%] max-w-[400px] h-16 bg-white rounded-full flex justify-between items-center px-6 shadow-lg border border-surface-gray-mid z-[40] safe-pb">
-          <button onClick={() => setView('home')} className={`flex flex-col items-center gap-1 transition-all ${view === 'home' ? 'text-primary -translate-y-1' : 'text-ink-light'}`}>
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
-            <span className="text-[9px] font-bold tracking-widest uppercase">Home</span>
-          </button>
+        <>
+          {/* 追加メニュー表示時のオーバーレイ */}
+          {isAddMenuOpen && (
+            <div
+              className="fixed inset-0 bg-ocean-dark/40 backdrop-blur-[2px] z-[35] animate-in fade-in duration-200"
+              onClick={() => setIsAddMenuOpen(false)}
+            />
+          )}
 
-          <button onClick={() => setView('schedule')} className={`flex flex-col items-center gap-1 transition-all ${view === 'schedule' ? 'text-primary -translate-y-1' : 'text-ink-light'}`}>
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-            <span className="text-[9px] font-bold tracking-widest uppercase">Plan</span>
-          </button>
+          <nav className="fixed bottom-4 left-1/2 -translate-x-1/2 w-[92%] max-w-[400px] h-16 bg-white rounded-full flex justify-between items-center px-6 shadow-lg border border-surface-gray-mid z-[40] safe-pb">
+            <button onClick={() => { setView('home'); setIsAddMenuOpen(false); }} className={`flex flex-col items-center gap-1 transition-all ${view === 'home' ? 'text-primary -translate-y-1' : 'text-ink-light'}`}>
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
+              <span className="text-[9px] font-bold tracking-widest uppercase">Home</span>
+            </button>
 
-          <button
-            onClick={() => { setEditingExpense(null); setView('add_expense'); }}
-            className="w-14 h-14 bg-primary rounded-full flex items-center justify-center text-white shadow-lg -translate-y-6 active:scale-95 transition-transform"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" /></svg>
-          </button>
+            <button onClick={() => { setView('schedule'); setIsAddMenuOpen(false); }} className={`flex flex-col items-center gap-1 transition-all ${view === 'schedule' ? 'text-primary -translate-y-1' : 'text-ink-light'}`}>
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              <span className="text-[9px] font-bold tracking-widest uppercase">Plan</span>
+            </button>
 
-          <button onClick={() => setView('tickets')} className={`flex flex-col items-center gap-1 transition-all ${view === 'tickets' ? 'text-primary -translate-y-1' : 'text-ink-light'}`}>
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" /></svg>
-            <span className="text-[9px] font-bold tracking-widest uppercase">Ticket</span>
-          </button>
+            <div className="relative">
+              {/* スピードダイヤルメニュー */}
+              {isAddMenuOpen && (
+                <div className="absolute bottom-20 left-1/2 -translate-x-1/2 flex flex-col gap-3 items-center animate-in slide-in-from-bottom-4 fade-in duration-300">
+                  <button
+                    onClick={() => { setView('schedule'); setIsAddMenuOpen(false); }}
+                    className="flex items-center gap-3 bg-white px-5 py-3 rounded-2xl shadow-xl border border-surface-gray-mid whitespace-nowrap active:scale-95 transition-transform"
+                  >
+                    <span className="text-lg">🗓️</span>
+                    <span className="text-xs font-bold text-ink">予定の追加</span>
+                  </button>
+                  <button
+                    onClick={() => { setEditingExpense(null); setView('add_expense'); setIsAddMenuOpen(false); }}
+                    className="flex items-center gap-3 bg-white px-5 py-3 rounded-2xl shadow-xl border border-surface-gray-mid whitespace-nowrap active:scale-95 transition-transform"
+                  >
+                    <span className="text-lg">💰</span>
+                    <span className="text-xs font-bold text-ink">支出の登録</span>
+                  </button>
+                </div>
+              )}
 
-          <button onClick={() => setView('history')} className={`flex flex-col items-center gap-1 transition-all ${view === 'history' ? 'text-primary -translate-y-1' : 'text-ink-light'}`}>
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
-            <span className="text-[9px] font-bold tracking-widest uppercase">List</span>
-          </button>
-        </nav>
+              <button
+                onClick={() => setIsAddMenuOpen(!isAddMenuOpen)}
+                className={`w-14 h-14 bg-primary rounded-full flex items-center justify-center text-white shadow-lg -translate-y-6 transition-all z-50 ${isAddMenuOpen ? 'rotate-45 scale-90 bg-ocean-dark' : 'active:scale-95'}`}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" /></svg>
+              </button>
+            </div>
+
+            <button onClick={() => { setView('tickets'); setIsAddMenuOpen(false); }} className={`flex flex-col items-center gap-1 transition-all ${view === 'tickets' ? 'text-primary -translate-y-1' : 'text-ink-light'}`}>
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" /></svg>
+              <span className="text-[9px] font-bold tracking-widest uppercase">Ticket</span>
+            </button>
+
+            <button onClick={() => { setView('history'); setIsAddMenuOpen(false); }} className={`flex flex-col items-center gap-1 transition-all ${view === 'history' ? 'text-primary -translate-y-1' : 'text-ink-light'}`}>
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
+              <span className="text-[9px] font-bold tracking-widest uppercase">List</span>
+            </button>
+          </nav>
+        </>
       )}
     </div>
   );

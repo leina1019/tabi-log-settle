@@ -5,6 +5,7 @@ export interface UserProfile {
   id: string;        // 内部識別子（初期のPARTICIPANTSの値、不変）
   displayName: string; // ユーザーが設定可能な表示名
   avatarUrl?: string; // Base64 string or URL
+  color: string;      // メンバーカラー (HEX)
   updatedAt?: string; // For sync
 }
 
@@ -31,14 +32,22 @@ export interface Settlement {
   amount: number;
 }
 
+export interface ItineraryLink {
+  label: string;
+  url: string;
+}
+
 export interface ItineraryItem {
   id: string;
   date: string;
   time: string;
+  endTime?: string;  // 終了時刻
   title: string;
   location?: string;
   memo?: string;
-  link?: string; // URL for maps or restaurant info
+  link?: string; // 互換性維持のための既存リンク
+  links?: ItineraryLink[]; // 複数リンク対応
+  participantId?: string; // 特定メンバーの予定。undefinedの場合は「全体」
   imageUrl?: string; // アップロード画像 or OGP取得画像
   type: 'move' | 'activity' | 'meal' | 'stay' | 'shopping' | 'sightseeing' | 'other';
   updatedAt?: string; // For sync
