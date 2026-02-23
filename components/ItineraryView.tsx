@@ -15,6 +15,16 @@ const ITEM_TYPES: { value: ItineraryItem['type']; label: string; icon: string }[
   { value: 'other', label: 'その他', icon: '✨' },
 ];
 
+const TYPE_IMAGES: Record<string, string> = {
+  activity: 'https://images.unsplash.com/photo-1530521954074-e64f6810b32d?q=80&w=800&auto=format&fit=crop',
+  sightseeing: 'https://images.unsplash.com/photo-1542931287-023b922fa89b?q=80&w=800&auto=format&fit=crop',
+  meal: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=800&auto=format&fit=crop',
+  shopping: 'https://images.unsplash.com/photo-1567401893424-734898ec1564?q=80&w=800&auto=format&fit=crop',
+  move: 'https://images.unsplash.com/photo-1436491865332-7a61a109c0f3?q=80&w=800&auto=format&fit=crop',
+  stay: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=800&auto=format&fit=crop',
+  other: 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?q=80&w=800&auto=format&fit=crop',
+};
+
 const getTypeInfo = (type: string) => {
   return ITEM_TYPES.find(t => t.value === type) ?? ITEM_TYPES[0];
 };
@@ -37,7 +47,6 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
   const [formData, setFormData] = useState<Partial<ItineraryItem>>({ type: 'activity', links: [] });
   const [isFetchingOgp, setIsFetchingOgp] = useState(false);
   const [validationError, setValidationError] = useState('');
-  const [showMemoId, setShowMemoId] = useState<string | null>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
 
   // 旅行期間の日付配列を生成
@@ -80,7 +89,7 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
     }
 
     return list.sort((a, b) => a.time.localeCompare(b.time));
-  }, [items, selectedDate, viewMode, selectedMemberId]);
+  }, [items, selectedDate, viewMode, selectedMemberId, visibleMemberIds]);
 
   // 空き時間計算
   const gaps = useMemo(() => {
@@ -205,7 +214,9 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
 
   // URL入力後にOGPを自動取得（0.8秒のデバウンス）
   useEffect(() => {
-    const url = formData.link;
+    // 互換性維持のためのformData.link、または複数リンクの最初の1件
+    const url = formData.link || (formData.links && formData.links.length > 0 ? formData.links[0].url : '');
+
     if (!url || !url.startsWith('http') || formData.imageUrl) return; // 既に画像あれば取得しない
 
     const timer = setTimeout(async () => {
@@ -222,7 +233,7 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
 
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formData.link]);
+  }, [formData.link, formData.links]);
 
   // 日付タブのラベル生成
   const getDayLabel = (dateStr: string, index: number) => {
@@ -370,11 +381,11 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
                         />
                       )}
 
-                      {/* OGP/アップロード画像サムネイル */}
-                      {item.imageUrl && (
+                      {/* OGP/タイプ別テンプレート画像 */}
+                      {(item.imageUrl || TYPE_IMAGES[item.type]) && (
                         <div className="w-full h-28 overflow-hidden bg-surface-gray">
                           <img
-                            src={item.imageUrl}
+                            src={item.imageUrl || TYPE_IMAGES[item.type]}
                             alt={item.title}
                             className="w-full h-full object-cover"
                             onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
@@ -414,19 +425,11 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
                         )}
 
                         {item.memo && (
-                          <div
-                            onClick={(e) => { e.stopPropagation(); setShowMemoId(showMemoId === item.id ? null : item.id); }}
-                            className="text-xs text-ink-sub bg-surface-gray p-2 rounded-lg mb-2 relative group-item"
-                          >
-                            <div className="flex items-center justify-between mb-1">
-                              <span className="text-[10px] font-bold text-ink-light">MEMO</span>
-                              <span className="text-[10px]">{showMemoId === item.id ? '🔼' : '🔽'}</span>
+                          <div className="text-xs text-ink-sub bg-surface-gray p-3 rounded-lg mb-2 relative">
+                            <div className="flex items-center justify-between mb-1.5 border-b border-surface-gray-mid/50 pb-1">
+                              <span className="text-[10px] font-bold text-ink-light tracking-widest">MEMO</span>
                             </div>
-                            {showMemoId === item.id ? (
-                              <p className="whitespace-pre-wrap">{item.memo}</p>
-                            ) : (
-                              <p className="truncate italic">タップして内容を表示...</p>
-                            )}
+                            <p className="whitespace-pre-wrap leading-relaxed">{item.memo}</p>
                           </div>
                         )}
 
@@ -625,44 +628,6 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
                     + リンクを追加
                   </button>
                 </div>
-              </div>
-
-              {/* 画像アップロード／OGP取得プレビュー */}
-              <div>
-                <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">写真</label>
-                {formData.imageUrl ? (
-                  <div className="relative w-full h-32 rounded-xl overflow-hidden bg-surface-gray border border-surface-gray-mid">
-                    <img
-                      src={formData.imageUrl}
-                      alt="プレビュー"
-                      className="w-full h-full object-cover"
-                      onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setFormData({ ...formData, imageUrl: undefined })}
-                      className="absolute top-2 right-2 bg-black/50 text-white rounded-full w-7 h-7 flex items-center justify-center text-xs font-bold hover:bg-black/70"
-                    >
-                      ×
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => imageInputRef.current?.click()}
-                    className="w-full h-20 border-2 border-dashed border-surface-gray-mid rounded-xl flex flex-col items-center justify-center gap-1 text-ink-light hover:border-primary/40 hover:text-primary transition-colors"
-                  >
-                    <span className="text-2xl">📷</span>
-                    <span className="text-xs">タップして写真を追加</span>
-                  </button>
-                )}
-                <input
-                  ref={imageInputRef}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleImageChange}
-                />
               </div>
 
               {/* メモ */}
