@@ -1,7 +1,7 @@
 
 import React, { useRef } from 'react';
 import { Participant, UserProfile } from '../types';
-import { PARTICIPANTS, MEMBER_COLORS } from '../constants';
+import { MEMBER_COLORS } from '../constants';
 
 interface Props {
   userProfiles: UserProfile[];
@@ -57,8 +57,8 @@ const SettingsView: React.FC<Props> = ({ userProfiles, onUpdateProfile, onLoadSa
       <div className="bg-white p-6 rounded-3xl space-y-6 shadow-sm border border-surface-gray-mid">
         <p className="text-[10px] text-ink-light font-bold uppercase tracking-widest">プロフィール編集</p>
 
-        {PARTICIPANTS.map(pId => {
-          const profile = getProfile(pId);
+        {userProfiles.map(profile => {
+          const pId = profile.id;
           return (
             <div key={pId} className="flex flex-col gap-3 p-4 bg-surface-gray rounded-2xl border border-surface-gray-mid">
               <div className="flex items-center gap-4">

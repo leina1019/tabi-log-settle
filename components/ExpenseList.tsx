@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Expense, UserProfile } from '../types';
 import { formatCurrency, convertToJPY } from '../utils/currency';
-import { CATEGORIES, PARTICIPANTS } from '../constants';
+import { CATEGORIES } from '../constants';
 
 interface Props {
   expenses: Expense[];
@@ -78,10 +78,28 @@ const ExpenseList: React.FC<Props> = ({ expenses, onDelete, onEdit, onResetAll, 
         <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
           <button
             type="button"
+            onClick={() => setSelectedPayer('All')}
+            className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-[10px] font-bold border transition-colors ${selectedPayer === 'All' ? 'bg-accent border-accent text-white' : 'bg-white border-surface-gray-mid text-ink-sub'}`}
+          >
+            全員
+          </button>
+          {userProfiles.map(p => (
+            <button
+              key={p.id}
+              type="button"
+              onClick={() => setSelectedPayer(p.id)}
+              className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-[10px] font-bold border transition-colors ${selectedPayer === p.id ? 'bg-accent border-accent text-white' : 'bg-white border-surface-gray-mid text-ink-sub'}`}
+            >
+              {p.displayName}
+            </button>
+          ))}
+          <div className="w-[1px] bg-surface-gray-mid mx-1 h-6 self-center"></div>
+          <button
+            type="button"
             onClick={() => setSelectedCategory('All')}
             className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-[10px] font-bold border transition-colors ${selectedCategory === 'All' ? 'bg-primary border-primary text-white' : 'bg-white border-surface-gray-mid text-ink-sub'}`}
           >
-            ALL
+            ALL CATEGORIES
           </button>
           {CATEGORIES.map(cat => (
             <button

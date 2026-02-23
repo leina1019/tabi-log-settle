@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { ItineraryItem, UserProfile, Participant } from '../types';
 import { fetchOgpData } from '../services/ogpService';
-import { MEMBER_COLORS, PARTICIPANTS } from '../constants';
+import { MEMBER_COLORS } from '../constants';
 
 // 予定種類の定義（ラベル + アイコン）
 const ITEM_TYPES: { value: ItineraryItem['type']; label: string; icon: string }[] = [

@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Participant, Expense, UserProfile } from '../types';
-import { PARTICIPANTS, CATEGORIES, CURRENCIES, EXCHANGE_RATE_AUD_TO_JPY } from '../constants';
+import { CATEGORIES, CURRENCIES, EXCHANGE_RATE_AUD_TO_JPY } from '../constants';
 import { fetchExchangeRate } from '../services/currencyService';
 
 interface Props {
@@ -18,8 +18,8 @@ const ExpenseForm: React.FC<Props> = ({ onAdd, onCancel, initialExpense, userPro
   const [date, setDate] = useState(initialExpense?.date || new Date().toISOString().split('T')[0]);
   const [rate, setRate] = useState<number>(initialExpense?.exchangeRate || EXCHANGE_RATE_AUD_TO_JPY);
   const [sourceUrl, setSourceUrl] = useState<string>(initialExpense?.sourceUrl || '');
-  const [paidBy, setPaidBy] = useState<Participant>(initialExpense?.paidBy || PARTICIPANTS[0]);
-  const [splitWith, setSplitWith] = useState<Participant[]>(initialExpense?.splitWith || [...PARTICIPANTS]);
+  const [paidBy, setPaidBy] = useState<Participant>(initialExpense?.paidBy || userProfiles[0]?.id || '');
+  const [splitWith, setSplitWith] = useState<Participant[]>(initialExpense?.splitWith || userProfiles.map(u => u.id));
   const [category, setCategory] = useState(initialExpense?.category || '食事');
   const [isFetchingRate, setIsFetchingRate] = useState(false);
 
@@ -160,14 +160,14 @@ const ExpenseForm: React.FC<Props> = ({ onAdd, onCancel, initialExpense, userPro
         <div className="space-y-3">
           <label className="block text-[10px] font-bold text-ink-sub uppercase tracking-widest">支払った人</label>
           <div className="flex gap-2">
-            {PARTICIPANTS.map(p => (
+            {userProfiles.map(p => (
               <button
-                key={p}
+                key={p.id}
                 type="button"
-                onClick={() => setPaidBy(p)}
-                className={`flex-1 py-3 rounded-xl border font-bold transition-all text-xs ${paidBy === p ? 'border-primary bg-primary text-white' : 'border-surface-gray-mid bg-surface-gray text-ink-sub'}`}
+                onClick={() => setPaidBy(p.id)}
+                className={`flex-1 py-3 rounded-xl border font-bold transition-all text-xs ${paidBy === p.id ? 'border-primary bg-primary text-white' : 'border-surface-gray-mid bg-surface-gray text-ink-sub'}`}
               >
-                {getDisplayName(p)}
+                {p.displayName}
               </button>
             ))}
           </div>
@@ -177,14 +177,14 @@ const ExpenseForm: React.FC<Props> = ({ onAdd, onCancel, initialExpense, userPro
         <div className="space-y-3">
           <label className="block text-[10px] font-bold text-ink-sub uppercase tracking-widest">割り勘する人</label>
           <div className="flex gap-2">
-            {PARTICIPANTS.map(p => (
+            {userProfiles.map(p => (
               <button
-                key={p}
+                key={p.id}
                 type="button"
-                onClick={() => handleToggleSplit(p)}
-                className={`flex-1 py-3 rounded-xl border font-bold transition-all text-xs ${splitWith.includes(p) ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-surface-gray-mid bg-surface-gray text-ink-sub'}`}
+                onClick={() => handleToggleSplit(p.id)}
+                className={`flex-1 py-3 rounded-xl border font-bold transition-all text-xs ${splitWith.includes(p.id) ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-surface-gray-mid bg-surface-gray text-ink-sub'}`}
               >
-                {getDisplayName(p)}
+                {p.displayName}
               </button>
             ))}
           </div>

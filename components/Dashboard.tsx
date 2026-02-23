@@ -3,7 +3,7 @@ import React, { useState, useMemo, useRef } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { Expense, Settlement, Participant, UserProfile } from '../types';
 import { formatCurrency, convertToJPY } from '../utils/currency';
-import { PARTICIPANTS } from '../constants';
+// PARTICIPANTS is removed to support dynamic members
 
 interface Props {
   expenses: Expense[];
@@ -52,7 +52,8 @@ const Dashboard: React.FC<Props> = ({
 
   // --- Calculations ---
   const memberStats = useMemo(() => {
-    return PARTICIPANTS.map(pId => {
+    return userProfiles.map(p => {
+      const pId = p.id;
       const paidTotal = expenses
         .filter(e => e.paidBy === pId)
         .reduce((sum, e) => sum + convertToJPY(e.amount, e.currency, e.exchangeRate), 0);
@@ -64,7 +65,7 @@ const Dashboard: React.FC<Props> = ({
       }, 0);
       return { id: pId, paid: paidTotal, cost: costTotal, balance: paidTotal - costTotal };
     });
-  }, [expenses]);
+  }, [expenses, userProfiles]);
 
   const getProfile = (id: string) => {
     return userProfiles.find(p => p.id === id) || { id, displayName: id, avatarUrl: '' };
@@ -132,8 +133,8 @@ const Dashboard: React.FC<Props> = ({
       stats,
       categoryData,
       memberPayments: [],
-      iPaidForOthers: PARTICIPANTS.filter(p => p !== selectedMemberId).map(p => ({ id: p, value: iPaidForOthers[p] || 0 })),
-      othersPaidForMe: PARTICIPANTS.filter(p => p !== selectedMemberId).map(p => ({ id: p, value: othersPaidForMe[p] || 0 }))
+      iPaidForOthers: userProfiles.filter(p => p.id !== selectedMemberId).map(p => ({ id: p.id, value: iPaidForOthers[p.id] || 0 })),
+      othersPaidForMe: userProfiles.filter(p => p.id !== selectedMemberId).map(p => ({ id: p.id, value: othersPaidForMe[p.id] || 0 }))
     };
   }, [selectedMemberId, expenses, memberStats, totalJPY]);
 
@@ -275,7 +276,7 @@ const Dashboard: React.FC<Props> = ({
               <div className="flex gap-2 text-[10px] font-medium opacity-80">
                 <span className="px-2 py-0.5 border border-white/30 rounded-full bg-black/20 backdrop-blur-sm">{formattedDateRange}</span>
               </div>
-              <span className="text-[10px] font-medium opacity-60">{PARTICIPANTS.length} Travelers</span>
+              <span className="text-[10px] font-medium opacity-60">{userProfiles.length} Travelers</span>
             </div>
           </div>
         </div>

@@ -1,5 +1,5 @@
-// PARTICIPANTSはアプリ全体で使用するメンバーリスト
-export const PARTICIPANTS = ['リョウスケさん', '玲奈さん', '岡ちゃん'] as const;
+// PARTICIPANTSは旧バージョンで使用していた固定リスト。現在はオンボーディングで動的に設定されます。
+// export const PARTICIPANTS = ['リョウスケさん', '玲奈さん', '岡ちゃん'] as const;
 
 export const MEMBER_COLORS = [
   '#006699', // Ocean Blue

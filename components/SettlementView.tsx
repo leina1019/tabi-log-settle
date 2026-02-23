@@ -2,7 +2,7 @@
 import React, { useMemo, useState } from 'react';
 import { Settlement, Expense, Participant, UserProfile } from '../types';
 import { convertToJPY, formatCurrency } from '../utils/currency';
-import { PARTICIPANTS } from '../constants';
+// PARTICIPANTS is removed
 
 interface Props {
   settlements: Settlement[];
@@ -16,7 +16,8 @@ const SettlementView: React.FC<Props> = ({ settlements, expenses, onBack, userPr
 
   const balances = useMemo(() => {
     const b: Record<string, number> = {};
-    PARTICIPANTS.forEach(p => b[p] = 0);
+    const memberIds = userProfiles.map(u => u.id);
+    memberIds.forEach(id => b[id] = 0);
     expenses.forEach(exp => {
       const amountJPY = convertToJPY(exp.amount, exp.currency, exp.exchangeRate);
       const share = amountJPY / (exp.splitWith.length || 1);
@@ -120,7 +121,7 @@ const SettlementView: React.FC<Props> = ({ settlements, expenses, onBack, userPr
           <span className="text-[9px] text-primary bg-primary/10 px-2 py-0.5 rounded-full font-bold">タップで計算式を表示</span>
         </div>
         <div className="space-y-4">
-          {PARTICIPANTS.map(p => (
+          {userProfiles.map(p => (
             <button
               key={p}
               type="button"

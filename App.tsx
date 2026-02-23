@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Expense, Participant, Settlement, ItineraryItem, Ticket, UserProfile } from './types';
-import { PARTICIPANTS, MEMBER_COLORS } from './constants';
+import { MEMBER_COLORS } from './constants';
 import { convertToJPY } from './utils/currency';
 import ExpenseForm from './components/ExpenseForm';
 import ExpenseList from './components/ExpenseList';
@@ -13,26 +13,19 @@ import SettingsView from './components/SettingsView';
 import { createNewTrip, subscribeToTrip, updateTripData, TripData } from './services/firebaseService';
 // import { fetchAllData, syncExpenseToSheet, ... } from './services/googleSheetService';
 import { SAMPLE_PROFILES, SAMPLE_ITINERARY, SAMPLE_EXPENSES, SAMPLE_TICKETS } from './utils/sampleData';
+import WelcomeView from './components/WelcomeView';
 
-type ViewState = 'home' | 'schedule' | 'tickets' | 'history' | 'add_expense' | 'settle' | 'settings';
+type ViewState = 'onboarding' | 'home' | 'schedule' | 'tickets' | 'history' | 'add_expense' | 'settle' | 'settings';
 
 const App: React.FC = () => {
   // --- State Management ---
   const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [budget, setBudget] = useState<number>(1000000);
-  const [userProfiles, setUserProfiles] = useState<UserProfile[]>(() =>
-    PARTICIPANTS.map((pId, idx) => ({
-      id: pId,
-      displayName: pId,
-      avatarUrl: '',
-      color: MEMBER_COLORS[idx % MEMBER_COLORS.length],
-      updatedAt: new Date().toISOString()
-    }))
-  );
+  const [budget, setBudget] = useState<number>(0);
+  const [userProfiles, setUserProfiles] = useState<UserProfile[]>([]);
   const [tripStartDate, setTripStartDate] = useState<string>('');
   const [tripEndDate, setTripEndDate] = useState<string>('');
-  const [tripName, setTripName] = useState<string>('Australia');
-  const [tripCoverImage, setTripCoverImage] = useState<string>('https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?q=80&w=800&auto=format&fit=crop');
+  const [tripName, setTripName] = useState<string>('');
+  const [tripCoverImage, setTripCoverImage] = useState<string>('');
   const [itinerary, setItinerary] = useState<ItineraryItem[]>([]);
   const [tickets, setTickets] = useState<Ticket[]>([]);
 
@@ -80,23 +73,10 @@ const App: React.FC = () => {
       const sTickets = localStorage.getItem(prefix + 'tickets');
       if (sTickets) setTickets(JSON.parse(sTickets));
     } else {
-      // BASE URL: Reset to templates
-      setTripId(null);
-      setExpenses([]);
-      setBudget(1000000);
-      setTripName('Australia');
-      setTripStartDate('');
-      setTripEndDate('');
-      setTripCoverImage('https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?q=80&w=800&auto=format&fit=crop');
-      setItinerary([]);
-      setTickets([]);
-      setUserProfiles(PARTICIPANTS.map((pId, idx) => ({
-        id: pId,
-        displayName: pId,
-        avatarUrl: '',
-        color: MEMBER_COLORS[idx % MEMBER_COLORS.length],
-        updatedAt: new Date().toISOString()
-      })));
+      // BASE URL: No tripId. Check if we have any data to show, otherwise show onboarding.
+      // If we want to support a "default" local-only trip without ID, we can do it here,
+      // but Reina wants a "Start Trip" flow.
+      setView('onboarding');
     }
   }, []);
 
@@ -423,18 +403,22 @@ const App: React.FC = () => {
   };
 
   const settlements = useMemo(() => {
-    // PARTICIPANTSを使って動的に残高を初期化（ハードコード排除）
     const balances: Record<string, number> = {};
-    PARTICIPANTS.forEach(p => { balances[p] = 0; });
+    const memberIds = userProfiles.map(u => u.id);
+    if (memberIds.length === 0) return [];
+
+    memberIds.forEach(id => { balances[id] = 0; });
     expenses.forEach(exp => {
       const amountJPY = convertToJPY(exp.amount, exp.currency, exp.exchangeRate);
       const share = amountJPY / (exp.splitWith.length || 1);
       balances[exp.paidBy] += amountJPY;
-      exp.splitWith.forEach(p => { balances[p] -= share; });
+      exp.splitWith.forEach(id => {
+        if (balances[id] !== undefined) balances[id] -= share;
+      });
     });
     const result: Settlement[] = [];
-    let payers = PARTICIPANTS.map(p => ({ name: p, balance: balances[p] })).filter(p => p.balance < -1).sort((a, b) => a.balance - b.balance);
-    let receivers = PARTICIPANTS.map(p => ({ name: p, balance: balances[p] })).filter(p => p.balance > 1).sort((a, b) => b.balance - a.balance);
+    let payers = memberIds.map(id => ({ name: id, balance: balances[id] })).filter(p => p.balance < -1).sort((a, b) => a.balance - b.balance);
+    let receivers = memberIds.map(id => ({ name: id, balance: balances[id] })).filter(p => p.balance > 1).sort((a, b) => b.balance - a.balance);
     payers.forEach(p => {
       while (Math.abs(p.balance) > 1 && receivers.length > 0) {
         const r = receivers[0];
@@ -445,7 +429,7 @@ const App: React.FC = () => {
       }
     });
     return result;
-  }, [expenses]);
+  }, [expenses, userProfiles]);
 
   return (
     <div className="max-w-md mx-auto h-screen bg-surface-gray flex flex-col text-ink relative overflow-hidden sm:border-x sm:border-surface-gray-mid">
@@ -529,6 +513,45 @@ const App: React.FC = () => {
         </div>
       </header>
 
+      {/* Welcome / Onboarding View */}
+      {view === 'onboarding' && (
+        <WelcomeView
+          onStart={async (data) => {
+            setTripName(data.name);
+            setTripStartDate(data.startDate);
+            setTripEndDate(data.endDate);
+            setUserProfiles(data.userProfiles);
+            setTripCoverImage(data.coverImage);
+
+            setSyncStatus('syncing');
+            try {
+              const newId = await createNewTrip({
+                name: data.name,
+                startDate: data.startDate,
+                endDate: data.endDate,
+                coverImage: data.coverImage,
+                userProfiles: data.userProfiles,
+                expenses: [],
+                itinerary: [],
+                tickets: [],
+                budget: 1000000 // Default 1M
+              });
+              setTripId(newId);
+              const url = `${window.location.origin}${window.location.pathname}?trip=${newId}`;
+              window.history.pushState({}, '', url);
+              setView('home');
+              setSyncStatus('success');
+            } catch (e) {
+              console.error(e);
+              alert("作成に失敗しました。オフラインモードで開始します。");
+              setView('home');
+            } finally {
+              setTimeout(() => setSyncStatus('idle'), 2000);
+            }
+          }}
+        />
+      )}
+
       {/* Main Content Area */}
       <main className="flex-1 overflow-y-auto px-4 pb-28 scrollbar-hide">
         {view === 'history' && (
@@ -608,7 +631,7 @@ const App: React.FC = () => {
       </main>
 
       {/* Bottom Navigation - ホワイトカード */}
-      {view !== 'add_expense' && view !== 'settle' && view !== 'settings' && (
+      {view !== 'onboarding' && view !== 'add_expense' && view !== 'settle' && view !== 'settings' && (
         <>
           {/* 追加メニュー表示時のオーバーレイ */}
           {isAddMenuOpen && (
