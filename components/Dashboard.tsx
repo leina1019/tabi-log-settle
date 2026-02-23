@@ -323,7 +323,39 @@ const Dashboard: React.FC<Props> = ({
                 <BarChart data={summaryData.dailyChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                   <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 8, fill: '#5A7184', fontWeight: 'bold' }} tickFormatter={(v) => v.split('-').slice(1).join('/')} />
                   <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 8, fill: '#5A7184' }} />
-                  <Tooltip cursor={{ fill: 'rgba(0,161,222,0.05)' }} contentStyle={{ background: 'rgba(255,255,255,0.95)', border: 'none', borderRadius: '12px', boxShadow: '0 10px 30px rgba(0,0,0,0.1)', fontSize: '10px' }} />
+                  <Tooltip
+                    cursor={{ fill: 'rgba(0,161,222,0.05)' }}
+                    content={({ active, payload, label }) => {
+                      if (active && payload && payload.length) {
+                        const total = payload.reduce((sum, entry) => sum + Number(entry.value || 0), 0);
+                        return (
+                          <div className="bg-white/95 backdrop-blur-sm p-3 rounded-2xl shadow-xl border border-surface-gray-mid animate-in fade-in zoom-in duration-200">
+                            <p className="text-[9px] font-bold text-ink-sub mb-2 tracking-wider">{label}</p>
+                            <div className="space-y-1.5 mb-2">
+                              {payload.map((entry: any, index: number) => (
+                                <div key={index} className="flex items-center justify-between gap-4">
+                                  <div className="flex items-center gap-1.5">
+                                    <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: entry.fill }}></div>
+                                    <span className="text-[10px] font-bold text-ink-sub">{entry.name}:</span>
+                                  </div>
+                                  <span className="text-[10px] font-sans font-black text-ink">
+                                    {Math.round(Number(entry.value)).toLocaleString()}円
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                            <div className="pt-2 border-t border-dashed border-surface-gray-mid flex justify-between items-center gap-4">
+                              <span className="text-[9px] font-black text-primary uppercase tracking-widest">合計</span>
+                              <span className="text-xs font-sans font-black text-primary">
+                                {Math.round(total).toLocaleString()}円
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
+                  />
                   {userProfiles.map((p, idx) => <Bar key={p.id} dataKey={p.id} stackId="a" name={p.displayName} fill={COLORS[idx % COLORS.length]} />)}
                 </BarChart>
               </ResponsiveContainer>
@@ -339,7 +371,7 @@ const Dashboard: React.FC<Props> = ({
                 <BarChart data={memberStats} layout="vertical" margin={{ left: -10, right: 20 }}>
                   <XAxis type="number" hide />
                   <YAxis dataKey="id" type="category" axisLine={false} tickLine={false} tickFormatter={(id) => getProfile(id).displayName} tick={{ fontSize: 9, fill: '#5A7184', fontWeight: '800' }} width={70} />
-                  <Tooltip cursor={{ fill: 'rgba(207,168,110,0.05)' }} contentStyle={{ background: 'rgba(255,255,255,0.95)', border: 'none', borderRadius: '12px', boxShadow: '0 10px 30px rgba(0,0,0,0.1)', fontSize: '10px' }} formatter={(v: number) => [`${v.toLocaleString()}円`, '支払総額']} />
+                  <Tooltip cursor={{ fill: 'rgba(207,168,110,0.05)' }} contentStyle={{ background: 'rgba(255,255,255,0.95)', border: 'none', borderRadius: '12px', boxShadow: '0 10px 30px rgba(0,0,0,0.1)', fontSize: '10px' }} formatter={(v: number) => [`${Math.round(v).toLocaleString()}円`, '支払額']} />
                   <Bar dataKey="paid" barSize={12}>
                     {memberStats.map((e, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} fillOpacity={0.8} />)}
                   </Bar>
@@ -485,7 +517,7 @@ const Dashboard: React.FC<Props> = ({
               <div className="space-y-10">
                 <section>
                   <div className="flex items-center gap-2 mb-4"><span className="w-1.5 h-4 bg-premium-gold rounded-full"></span><h4 className="text-[10px] font-bold text-ink uppercase tracking-[0.3em]">支出カテゴリー分布</h4></div>
-                  <div className="h-[180px] w-full"><ResponsiveContainer><PieChart><Pie data={detailData.categoryData} cx="50%" cy="50%" innerRadius={50} outerRadius={70} paddingAngle={5} dataKey="value" stroke="none">{detailData.categoryData.map((e, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}</Pie><Tooltip /></PieChart></ResponsiveContainer></div>
+                  <div className="h-[180px] w-full"><ResponsiveContainer><PieChart><Pie data={detailData.categoryData} cx="50%" cy="50%" innerRadius={50} outerRadius={70} paddingAngle={5} dataKey="value" stroke="none">{detailData.categoryData.map((e, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}</Pie><Tooltip contentStyle={{ background: 'rgba(255,255,255,0.95)', border: 'none', borderRadius: '12px', boxShadow: '0 10px 30px rgba(0,0,0,0.1)', fontSize: '10px' }} formatter={(v: number) => [`${Math.round(v).toLocaleString()}円`, '支出額']} /></PieChart></ResponsiveContainer></div>
                 </section>
                 <section className="space-y-4">
                   {selectedMemberId === 'ALL' ? (
