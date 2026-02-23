@@ -6,10 +6,11 @@ import { PARTICIPANTS, MEMBER_COLORS } from '../constants';
 interface Props {
   userProfiles: UserProfile[];
   onUpdateProfile: (id: Participant, updates: Partial<UserProfile>) => void;
+  onLoadSampleData: () => void;
   onBack: () => void;
 }
 
-const SettingsView: React.FC<Props> = ({ userProfiles, onUpdateProfile, onBack }) => {
+const SettingsView: React.FC<Props> = ({ userProfiles, onUpdateProfile, onLoadSampleData, onBack }) => {
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, id: string) => {
@@ -131,6 +132,22 @@ const SettingsView: React.FC<Props> = ({ userProfiles, onUpdateProfile, onBack }
             </div>
           );
         })}
+      </div>
+
+      <div className="px-2">
+        <button
+          onClick={onLoadSampleData}
+          className="w-full bg-white border border-dashed border-primary/40 p-5 rounded-3xl flex flex-col items-center gap-2 hover:bg-primary-light/30 transition-colors shadow-sm active:scale-95"
+        >
+          <span className="text-xl">💡</span>
+          <div className="text-center">
+            <p className="text-sm font-bold text-primary">デモ用サンプルデータを読み込む</p>
+            <p className="text-[10px] text-ink-light mt-1">
+              3日間の東京旅行データが自動入力されます。<br />
+              現在のデータはバックアップされます。
+            </p>
+          </div>
+        </button>
       </div>
     </div>
   );

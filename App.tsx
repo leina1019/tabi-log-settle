@@ -11,9 +11,8 @@ import ItineraryView from './components/ItineraryView';
 import TicketView from './components/TicketView';
 import SettingsView from './components/SettingsView';
 import { createNewTrip, subscribeToTrip, updateTripData, TripData } from './services/firebaseService';
-// NOTE: GoogleSheetService は Firebase 移行後は使用しない。
-// 将来的に完全削除予定。現在はコメントアウトで残す。
 // import { fetchAllData, syncExpenseToSheet, ... } from './services/googleSheetService';
+import { SAMPLE_PROFILES, SAMPLE_ITINERARY, SAMPLE_EXPENSES } from './utils/sampleData';
 
 type ViewState = 'home' | 'schedule' | 'tickets' | 'history' | 'add_expense' | 'settle' | 'settings';
 
@@ -260,6 +259,43 @@ const App: React.FC = () => {
       pushUpdate({ userProfiles: newVal });
       return newVal;
     });
+  };
+
+  const handleLoadSampleData = async () => {
+    if (!window.confirm('サンプルデータを読み込みますか？現在のデータは一時的にバックアップされます。')) return;
+
+    // 現在のデータをバックアップ
+    const backupKey = `oz-wari-backup-${new Date().getTime()}`;
+    const currentData = { expenses, itinerary, tickets, userProfiles, budget, tripName, tripStartDate, tripEndDate, tripCoverImage };
+    localStorage.setItem(backupKey, JSON.stringify(currentData));
+    console.log(`Backup saved to ${backupKey}`);
+
+    // サンプルデータをセット
+    setExpenses(SAMPLE_EXPENSES);
+    setItinerary(SAMPLE_ITINERARY);
+    setUserProfiles(SAMPLE_PROFILES);
+    setTripName('東京 3Days Demo');
+    setTripStartDate(new Date().toISOString().split('T')[0]);
+    // 3日後
+    const endDate = new Date(new Date().getTime() + 172800000).toISOString().split('T')[0];
+    setTripEndDate(endDate);
+    setTripCoverImage('https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?q=80&w=800&auto=format&fit=crop');
+
+    // Firebaseへ同期
+    if (tripId) {
+      pushUpdate({
+        expenses: SAMPLE_EXPENSES,
+        itinerary: SAMPLE_ITINERARY,
+        userProfiles: SAMPLE_PROFILES,
+        name: '東京 3Days Demo',
+        startDate: new Date().toISOString().split('T')[0],
+        endDate: endDate,
+        coverImage: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?q=80&w=800&auto=format&fit=crop'
+      });
+    }
+
+    alert('サンプルデータを読み込みました！設定画面から元のデータに戻すことも可能です（LocalStorageにバックアップ済み）。');
+    setView('home');
   };
 
   // --- Adapters for Child Components ---
@@ -563,6 +599,7 @@ const App: React.FC = () => {
           <SettingsView
             userProfiles={userProfiles}
             onUpdateProfile={updateProfile}
+            onLoadSampleData={handleLoadSampleData}
             onBack={() => setView('home')}
           />
         )}
