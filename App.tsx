@@ -242,12 +242,13 @@ const App: React.FC = () => {
   };
 
   const handleLoadSampleData = async () => {
-    if (!window.confirm('サンプルデータを読み込みますか？現在のデータは一時的にバックアップされます。')) return;
+    if (!window.confirm('サンプルデータを読み込みますか？現在のデータは一時的にバックアップされ、後で戻すことができます。')) return;
 
     // 現在のデータをバックアップ
     const backupKey = `oz-wari-backup-${new Date().getTime()}`;
     const currentData = { expenses, itinerary, tickets, userProfiles, budget, tripName, tripStartDate, tripEndDate, tripCoverImage };
     localStorage.setItem(backupKey, JSON.stringify(currentData));
+    localStorage.setItem('oz-wari-last-backup-key', backupKey); // 最新のバックアップキーを保存
     console.log(`Backup saved to ${backupKey}`);
 
     // サンプルデータをセット
@@ -255,12 +256,13 @@ const App: React.FC = () => {
     setItinerary(SAMPLE_ITINERARY);
     setTickets(SAMPLE_TICKETS);
     setUserProfiles(SAMPLE_PROFILES);
-    setTripName('東京 3Days Demo');
-    setTripStartDate(new Date().toISOString().split('T')[0]);
-    // 3日後
-    const endDate = new Date(new Date().getTime() + 172800000).toISOString().split('T')[0];
+    setTripName('オーストラリア 6Days Demo');
+    const startDate = new Date().toISOString().split('T')[0];
+    setTripStartDate(startDate);
+    // 6日間（5泊）
+    const endDate = new Date(new Date().getTime() + 5 * 86400000).toISOString().split('T')[0];
     setTripEndDate(endDate);
-    setTripCoverImage('https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?q=80&w=800&auto=format&fit=crop');
+    setTripCoverImage('https://images.unsplash.com/photo-1523413651479-797eb2c384d6?q=80&w=1200&auto=format&fit=crop');
 
     // Firebaseへ同期
     if (tripId) {
@@ -269,15 +271,66 @@ const App: React.FC = () => {
         itinerary: SAMPLE_ITINERARY,
         tickets: SAMPLE_TICKETS,
         userProfiles: SAMPLE_PROFILES,
-        name: '東京 3Days Demo',
-        startDate: new Date().toISOString().split('T')[0],
+        name: 'オーストラリア 6Days Demo',
+        startDate: startDate,
         endDate: endDate,
-        coverImage: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?q=80&w=800&auto=format&fit=crop'
+        coverImage: 'https://images.unsplash.com/photo-1523413651479-797eb2c384d6?q=80&w=1200&auto=format&fit=crop'
       });
     }
 
-    alert('サンプルデータを読み込みました！設定画面から元のデータに戻すことも可能です（LocalStorageにバックアップ済み）。');
+    alert('オーストラリアのサンプルデータを読み込みました！設定画面から元のデータに戻すことも可能です。');
     setView('home');
+  };
+
+  const handleRestoreData = async () => {
+    const lastBackupKey = localStorage.getItem('oz-wari-last-backup-key');
+    if (!lastBackupKey) {
+      alert('復元可能なバックアップが見つかりません。');
+      return;
+    }
+
+    const backupDataStr = localStorage.getItem(lastBackupKey);
+    if (!backupDataStr) {
+      alert('バックアップデータが破損しているか、削除されています。');
+      return;
+    }
+
+    if (!window.confirm('サンプルデータを読み込む前の状態に戻しますか？')) return;
+
+    try {
+      const data = JSON.parse(backupDataStr);
+      setExpenses(data.expenses || []);
+      setItinerary(data.itinerary || []);
+      setTickets(data.tickets || []);
+      setUserProfiles(data.userProfiles || []);
+      setBudget(data.budget || 0);
+      setTripName(data.tripName || '無題の旅行');
+      setTripStartDate(data.tripStartDate || new Date().toISOString().split('T')[0]);
+      setTripEndDate(data.tripEndDate || new Date().toISOString().split('T')[0]);
+      setTripCoverImage(data.tripCoverImage || '');
+
+      // Firebaseへ同期
+      if (tripId) {
+        pushUpdate({
+          expenses: data.expenses,
+          itinerary: data.itinerary,
+          tickets: data.tickets,
+          userProfiles: data.userProfiles,
+          budget: data.budget,
+          name: data.tripName,
+          startDate: data.tripStartDate,
+          endDate: data.tripEndDate,
+          coverImage: data.tripCoverImage
+        });
+      }
+
+      alert('データを復元しました！');
+      localStorage.removeItem('oz-wari-last-backup-key'); // 復元後はキーを削除（連続復元防止）
+      setView('home');
+    } catch (e) {
+      console.error('Restore failed', e);
+      alert('復元に失敗しました。');
+    }
   };
 
   // --- Adapters for Child Components ---
@@ -626,6 +679,7 @@ const App: React.FC = () => {
             userProfiles={userProfiles}
             onUpdateProfile={updateProfile}
             onLoadSampleData={handleLoadSampleData}
+            onRestoreData={handleRestoreData}
             onBack={() => setView('home')}
           />
         )}

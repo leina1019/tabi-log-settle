@@ -136,7 +136,7 @@ const Dashboard: React.FC<Props> = ({
       iPaidForOthers: userProfiles.filter(p => p.id !== selectedMemberId).map(p => ({ id: p.id, value: iPaidForOthers[p.id] || 0 })),
       othersPaidForMe: userProfiles.filter(p => p.id !== selectedMemberId).map(p => ({ id: p.id, value: othersPaidForMe[p.id] || 0 }))
     };
-  }, [selectedMemberId, expenses, memberStats, totalJPY]);
+  }, [selectedMemberId, expenses, memberStats, totalJPY, userProfiles]);
 
   const COLORS = ['#00A1DE', '#CFA86E', '#FFFFFF', '#003780', '#555555', '#AAAAAA'];
 

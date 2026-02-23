@@ -25,7 +25,7 @@ const SettlementView: React.FC<Props> = ({ settlements, expenses, onBack, userPr
       exp.splitWith.forEach(p => { b[p] -= share; });
     });
     return b;
-  }, [expenses]);
+  }, [expenses, userProfiles]);
 
   const participantDetails = useMemo(() => {
     if (!selectedPId) return null;
@@ -57,7 +57,7 @@ const SettlementView: React.FC<Props> = ({ settlements, expenses, onBack, userPr
       totalBurden,
       balance: totalPaid - totalBurden
     };
-  }, [expenses, selectedPId]);
+  }, [expenses, selectedPId, userProfiles]);
 
   const getDisplayName = (id: string) => {
     return userProfiles.find(p => p.id === id)?.displayName || id;
@@ -123,26 +123,26 @@ const SettlementView: React.FC<Props> = ({ settlements, expenses, onBack, userPr
         <div className="space-y-4">
           {userProfiles.map(p => (
             <button
-              key={p}
+              key={p.id}
               type="button"
-              onClick={() => setSelectedPId(p)}
+              onClick={() => setSelectedPId(p.id)}
               className="w-full flex justify-between items-center text-sm border-b border-surface-gray-mid pb-3 last:border-0 last:pb-0 hover:bg-surface-gray/50 transition-colors text-left"
             >
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-surface-gray-mid overflow-hidden border border-white">
-                  {getAvatar(p) ? (
-                    <img src={getAvatar(p)} alt="" className="w-full h-full object-cover" />
+                <div className="w-8 h-8 rounded-full bg-surface-gray-mid overflow-hidden border border-white" style={{ backgroundColor: p.color }}>
+                  {p.avatarUrl ? (
+                    <img src={p.avatarUrl} alt="" className="w-full h-full object-cover" />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-xs text-ink-light font-bold">
-                      {p.charAt(0)}
+                    <div className="w-full h-full flex items-center justify-center text-[10px] text-white font-bold">
+                      {p.displayName.charAt(0)}
                     </div>
                   )}
                 </div>
-                <span className="font-bold text-ink">{getDisplayName(p)}</span>
+                <span className="font-bold text-ink">{p.displayName}</span>
               </div>
               <div className="text-right flex items-center gap-2">
-                <p className={`font-bold font-sans ${balances[p] >= 0 ? 'text-emerald-600' : 'text-rose-500'}`}>
-                  {balances[p] >= 0 ? '+' : ''}{Math.round(balances[p]).toLocaleString()}
+                <p className={`font-bold font-sans ${balances[p.id] >= 0 ? 'text-emerald-600' : 'text-rose-500'}`}>
+                  {balances[p.id] >= 0 ? '+' : ''}{Math.round(balances[p.id]).toLocaleString()}
                 </p>
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-ink-light" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
               </div>

@@ -7,10 +7,11 @@ interface Props {
   userProfiles: UserProfile[];
   onUpdateProfile: (id: Participant, updates: Partial<UserProfile>) => void;
   onLoadSampleData: () => void;
+  onRestoreData: () => void;
   onBack: () => void;
 }
 
-const SettingsView: React.FC<Props> = ({ userProfiles, onUpdateProfile, onLoadSampleData, onBack }) => {
+const SettingsView: React.FC<Props> = ({ userProfiles, onUpdateProfile, onLoadSampleData, onRestoreData, onBack }) => {
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, id: string) => {
@@ -134,20 +135,35 @@ const SettingsView: React.FC<Props> = ({ userProfiles, onUpdateProfile, onLoadSa
         })}
       </div>
 
-      <div className="px-2">
+      <div className="px-2 space-y-4">
         <button
           onClick={onLoadSampleData}
           className="w-full bg-white border border-dashed border-primary/40 p-5 rounded-3xl flex flex-col items-center gap-2 hover:bg-primary-light/30 transition-colors shadow-sm active:scale-95"
         >
-          <span className="text-xl">💡</span>
+          <span className="text-xl">✈️</span>
           <div className="text-center">
-            <p className="text-sm font-bold text-primary">デモ用サンプルデータを読み込む</p>
-            <p className="text-[10px] text-ink-light mt-1">
-              3日間の東京旅行データが自動入力されます。<br />
-              現在のデータはバックアップされます。
+            <p className="text-sm font-bold text-primary text-center">デモ用サンプルデータを読み込む</p>
+            <p className="text-[10px] text-ink-light mt-1 text-center">
+              5泊6日のオーストラリア旅行データ（3名分）が自動入力されます。<br />
+              現在のデータは一時的に保存され、以下から戻すことが可能です。
             </p>
           </div>
         </button>
+
+        {localStorage.getItem('oz-wari-last-backup-key') && (
+          <button
+            onClick={onRestoreData}
+            className="w-full bg-emerald-50 border border-emerald-200 p-5 rounded-3xl flex flex-col items-center gap-2 hover:bg-emerald-100/50 transition-colors shadow-sm active:scale-95"
+          >
+            <span className="text-xl">🔙</span>
+            <div className="text-center">
+              <p className="text-sm font-bold text-emerald-700">元のデータに戻す</p>
+              <p className="text-[10px] text-emerald-600/70 mt-1">
+                サンプルデータを読み込む直前の状態を復元します。
+              </p>
+            </div>
+          </button>
+        )}
       </div>
     </div>
   );
