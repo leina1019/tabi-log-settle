@@ -37,3 +37,11 @@ export const CURRENCIES = [
 
 // デフォルトレート（AUD）
 export const EXCHANGE_RATE_AUD_TO_JPY = 105;
+
+export const DEVICE_CONFIG = {
+  'phone': { label: 'iPhone', icon: '📱', width: 'max-w-[390px]', description: '標準的なスマホ' },
+  'phone-l': { label: 'iPhone Max', icon: '📱+', width: 'max-w-[430px]', description: '大きめのスマホ' },
+  'tablet-s': { label: 'iPad mini', icon: '📗', width: 'max-w-[744px]', description: 'iPad mini (縦)' },
+  'tablet-m': { label: 'iPad Air', icon: '📘', width: 'max-w-[820px]', description: 'iPad (縦)' },
+  'tablet-l': { label: 'iPad Pro', icon: '💻', width: 'max-w-[1024px]', description: 'iPad Pro / PC' },
+} as const;

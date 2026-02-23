@@ -77,3 +77,5 @@ export interface PackingItem {
   participantId?: string; // 担当者、undefinedの場合は「全員共通」
   updatedAt?: string;
 }
+
+export type ViewModeSize = 'phone' | 'phone-l' | 'tablet-s' | 'tablet-m' | 'tablet-l';

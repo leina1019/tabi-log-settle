@@ -1,7 +1,7 @@
 
 import React, { useRef } from 'react';
-import { Participant, UserProfile } from '../types';
-import { MEMBER_COLORS } from '../constants';
+import { Participant, UserProfile, ViewModeSize } from '../types';
+import { MEMBER_COLORS, DEVICE_CONFIG } from '../constants';
 
 interface Props {
   userProfiles: UserProfile[];
@@ -9,8 +9,8 @@ interface Props {
   onLoadSampleData: () => void;
   onRestoreData: () => void;
   onBack: () => void;
-  viewModeSize: 'mobile' | 'tablet';
-  onUpdateViewModeSize: (size: 'mobile' | 'tablet') => void;
+  viewModeSize: ViewModeSize;
+  onUpdateViewModeSize: (size: ViewModeSize) => void;
 }
 
 const SettingsView: React.FC<Props> = ({ userProfiles, onUpdateProfile, onLoadSampleData, onRestoreData, onBack, viewModeSize, onUpdateViewModeSize }) => {
@@ -139,22 +139,27 @@ const SettingsView: React.FC<Props> = ({ userProfiles, onUpdateProfile, onLoadSa
 
       <div className="bg-white p-6 rounded-3xl space-y-4 shadow-sm border border-surface-gray-mid">
         <p className="text-[10px] text-ink-light font-bold uppercase tracking-widest">表示設定</p>
-        <div className="flex gap-2">
-          <button
-            onClick={() => onUpdateViewModeSize('mobile')}
-            className={`flex-1 py-3 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${viewModeSize === 'mobile' ? 'bg-primary text-white shadow-md' : 'bg-surface-gray text-ink-sub hover:bg-surface-gray-mid'}`}
-          >
-            <span>📱</span> スマホ
-          </button>
-          <button
-            onClick={() => onUpdateViewModeSize('tablet')}
-            className={`flex-1 py-3 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${viewModeSize === 'tablet' ? 'bg-primary text-white shadow-md' : 'bg-surface-gray text-ink-sub hover:bg-surface-gray-mid'}`}
-          >
-            <span>💻</span> タブレット
-          </button>
+        <p className="text-[11px] text-ink-sub leading-relaxed font-bold">
+          利用中のデバイスに合わせて画面サイズを切り替えます。
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {(Object.entries(DEVICE_CONFIG) as [ViewModeSize, typeof DEVICE_CONFIG[keyof typeof DEVICE_CONFIG]][]).map(([key, config]) => (
+            <button
+              key={key}
+              onClick={() => onUpdateViewModeSize(key)}
+              className={`p-4 rounded-2xl border-2 transition-all flex flex-col items-start gap-1 group ${viewModeSize === key ? 'border-primary bg-primary/5 shadow-inner' : 'border-surface-gray-mid bg-surface-gray hover:border-primary/40'}`}
+            >
+              <div className="flex items-center justify-between w-full mb-1">
+                <span className="text-xl group-hover:scale-110 transition-transform">{config.icon}</span>
+                {viewModeSize === key && <div className="w-2 h-2 rounded-full bg-primary" />}
+              </div>
+              <span className={`text-[11px] font-black uppercase tracking-wider ${viewModeSize === key ? 'text-primary' : 'text-ink-sub'}`}>{config.label}</span>
+              <span className="text-[9px] text-ink-light">{config.description}</span>
+            </button>
+          ))}
         </div>
-        <p className="text-[9px] text-ink-light leading-relaxed">
-          ※ PCなどの大きな画面で閲覧する際の表示幅を切り替えます。
+        <p className="text-[8px] text-ink-light leading-relaxed italic mt-2">
+          ※ PCなどの大きな画面で閲覧する際の表示シミュレーションとしてご利用ください。
         </p>
       </div>
 

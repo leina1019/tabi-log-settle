@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { Expense, Participant, Settlement, ItineraryItem, Ticket, UserProfile, PackingItem } from './types';
-import { MEMBER_COLORS } from './constants';
+import { Expense, Participant, Settlement, ItineraryItem, Ticket, UserProfile, PackingItem, ViewModeSize } from './types';
+import { MEMBER_COLORS, DEVICE_CONFIG } from './constants';
 import { convertToJPY } from './utils/currency';
 import ExpenseForm from './components/ExpenseForm';
 import ExpenseList from './components/ExpenseList';
@@ -32,8 +32,10 @@ const App: React.FC = () => {
   const [packingList, setPackingList] = useState<PackingItem[]>([]);
 
   const [view, setView] = useState<ViewState>('home');
-  const [viewModeSize, setViewModeSize] = useState<'mobile' | 'tablet'>(() => {
-    return (localStorage.getItem('oz-wari-view-mode-size') as 'mobile' | 'tablet') || 'mobile';
+  const [viewModeSize, setViewModeSize] = useState<ViewModeSize>(() => {
+    const saved = localStorage.getItem('oz-wari-view-mode-size');
+    if (saved && Object.keys(DEVICE_CONFIG).includes(saved)) return saved as ViewModeSize;
+    return 'phone';
   });
   const [isAddMenuOpen, setIsAddMenuOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
@@ -522,7 +524,7 @@ const App: React.FC = () => {
   return (
     <div className={`min-h-screen bg-ocean-light flex flex-col items-center antialiased font-sans select-none`}>
       {/* Main Container */}
-      <div className={`${viewModeSize === 'tablet' ? 'max-w-2xl' : 'max-w-md'} w-full mx-auto min-h-screen h-screen bg-surface-gray flex flex-col text-ink relative overflow-hidden sm:border-x sm:border-surface-gray-mid transition-all duration-300 shadow-2xl shadow-ocean-dark/20`}>
+      <div className={`${DEVICE_CONFIG[viewModeSize]?.width || 'max-w-md'} w-full mx-auto min-h-screen h-screen bg-surface-gray flex flex-col text-ink relative overflow-hidden sm:border-x sm:border-surface-gray-mid transition-all duration-300 shadow-2xl shadow-ocean-dark/20`}>
 
         {/* Header - ANAブルー帯 */}
         <header className="bg-ocean-dark px-5 pt-2 pb-2 flex justify-between items-center z-20 safe-pt shadow-sm">
@@ -674,7 +676,7 @@ const App: React.FC = () => {
               onTripNameChange={updateTripName}
               userProfiles={userProfiles}
               onTripCoverImageChange={updateTripCoverImage}
-              isTablet={viewModeSize === 'tablet'}
+              isTablet={viewModeSize.startsWith('tablet')}
             />
           )}
 
@@ -706,7 +708,7 @@ const App: React.FC = () => {
               onDelete={handleDeleteTicket}
               tripStartDate={tripStartDate}
               tripEndDate={tripEndDate}
-              isTablet={viewModeSize === 'tablet'}
+              isTablet={viewModeSize.startsWith('tablet')}
             />
           )}
 
@@ -715,7 +717,7 @@ const App: React.FC = () => {
               items={packingList}
               userProfiles={userProfiles}
               onUpdate={updatePackingList}
-              isTablet={viewModeSize === 'tablet'}
+              isTablet={viewModeSize.startsWith('tablet')}
             />
           )}
           {view === 'add_expense' && (
