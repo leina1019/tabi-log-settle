@@ -1,8 +1,8 @@
 
-import { initializeApp } from "firebase/app";
+import { initializeApp, FirebaseApp } from "firebase/app";
 import {
     getFirestore, doc, onSnapshot, setDoc, updateDoc,
-    collection, addDoc, getDoc, serverTimestamp
+    collection, addDoc, getDoc, serverTimestamp, Firestore
 } from "firebase/firestore";
 import { Expense, ItineraryItem, Ticket, UserProfile, PackingItem, TripData } from "../types";
 
@@ -16,14 +16,30 @@ const firebaseConfig = {
     appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+// Firebase初期化を安全に行う（環境変数が欠けていてもアプリをクラッシュさせない）
+let app: FirebaseApp | null = null;
+let db: Firestore | null = null;
+
+try {
+    if (firebaseConfig.apiKey && firebaseConfig.projectId) {
+        app = initializeApp(firebaseConfig);
+        db = getFirestore(app);
+    } else {
+        console.warn("[Firebase] 環境変数が設定されていません。Firebase機能は無効化されます。");
+    }
+} catch (error) {
+    console.error("[Firebase] 初期化に失敗しました:", error);
+}
 
 
 /**
  * 新しい旅行を作成し、IDを返します
  */
 export const createNewTrip = async (initialData: Omit<TripData, 'id' | 'createdAt' | 'updatedAt'>) => {
+    if (!db) {
+        console.error("Firebase is not initialized");
+        return null;
+    }
     try {
         const docRef = await addDoc(collection(db, "trips"), {
             ...initialData,
@@ -41,6 +57,10 @@ export const createNewTrip = async (initialData: Omit<TripData, 'id' | 'createdA
  * 指定された旅行IDのデータを購読します（リアルタイム同期）
  */
 export const subscribeToTrip = (tripId: string, onUpdate: (data: TripData) => void) => {
+    if (!db) {
+        console.error("Firebase is not initialized");
+        return () => { };
+    }
     return onSnapshot(doc(db, "trips", tripId), (docSnap) => {
         if (docSnap.exists()) {
             const data = docSnap.data() as TripData;
@@ -57,6 +77,10 @@ export const subscribeToTrip = (tripId: string, onUpdate: (data: TripData) => vo
  * 旅行データを更新します
  */
 export const updateTripData = async (tripId: string, data: Partial<TripData>) => {
+    if (!db) {
+        console.error("Firebase is not initialized");
+        return;
+    }
     try {
         const tripRef = doc(db, "trips", tripId);
         await updateDoc(tripRef, {
@@ -73,6 +97,10 @@ export const updateTripData = async (tripId: string, data: Partial<TripData>) =>
  * 旅行データの存在確認
  */
 export const getTripData = async (tripId: string) => {
+    if (!db) {
+        console.error("Firebase is not initialized");
+        return null;
+    }
     const docRef = doc(db, "trips", tripId);
     const docSnap = await getDoc(docRef);
     return docSnap.exists() ? { ...docSnap.data(), id: docSnap.id } as TripData : null;
