@@ -73,7 +73,8 @@ export interface PackingItem {
   id: string;
   category: string; // '衣服', '洗面用具', '電子機器', '重要書類' など
   title: string;
-  isPacked: boolean;
+  isPacked: boolean; // 従来通り：個人用ならそのまま、全員用なら「全員完了」を意味
+  packedBy?: string[]; // 全員用アイテムにおいて、誰が完了したかをIDの配列で保持
   participantId?: string; // 担当者、undefinedの場合は「全員共通」
   updatedAt?: string;
 }
