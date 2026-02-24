@@ -19,8 +19,6 @@ import WelcomeView from './components/WelcomeView';
 type ViewState = 'onboarding' | 'home' | 'schedule' | 'tickets' | 'packing' | 'history' | 'add_expense' | 'settle' | 'settings';
 
 const App: React.FC = () => {
-  // デバッグ用alert（画面が動いているか確認するため。本番確認後に削除します）
-  window.alert("たびログくん: Reactコンポーネント初期化OK");
   // --- State Management ---
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [budget, setBudget] = useState<number>(0);
