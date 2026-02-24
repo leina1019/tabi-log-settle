@@ -5,17 +5,18 @@ import { fetchOgpData } from '../services/ogpService';
 import { MEMBER_COLORS } from '../constants';
 import { fetchWeather, WeatherData, searchLocation } from '../services/weatherService';
 import { WeatherIcon } from './WeatherIcon';
+import { AppIcon } from './AppIcon';
 import { escapeHtml } from '../utils/security';
 
 // 予定種類の定義（ラベル + アイコン）
-const ITEM_TYPES: { value: ItineraryItem['type']; label: string; icon: string }[] = [
-  { value: 'activity', label: 'アクティビティ', icon: '🎯' },
-  { value: 'sightseeing', label: '観光・スポット', icon: '📸' },
-  { value: 'meal', label: '食事・カフェ', icon: '🍽️' },
-  { value: 'shopping', label: 'ショッピング', icon: '🛍️' },
-  { value: 'move', label: '移動・交通', icon: '✈️' },
-  { value: 'stay', label: '宿泊', icon: '🏨' },
-  { value: 'other', label: 'その他', icon: '✨' },
+const ITEM_TYPES: { value: ItineraryItem['type']; label: string; icon: IconName }[] = [
+  { value: 'activity', label: 'アクティビティ', icon: 'activity' },
+  { value: 'sightseeing', label: '観光・スポット', icon: 'sightseeing' },
+  { value: 'meal', label: '食事・カフェ', icon: 'meal' },
+  { value: 'shopping', label: 'ショッピング', icon: 'shopping' },
+  { value: 'move', label: '移動・交通', icon: 'move' },
+  { value: 'stay', label: '宿泊', icon: 'stay' },
+  { value: 'other', label: 'その他', icon: 'other' },
 ];
 
 const TYPE_IMAGES: Record<string, string> = {
@@ -308,7 +309,9 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
   if (!tripStartDate) {
     return (
       <div className="flex flex-col items-center justify-center h-[60vh] text-center px-6">
-        <div className="w-16 h-16 bg-primary-light rounded-full flex items-center justify-center mb-4 text-3xl">🗓️</div>
+        <div className="w-16 h-16 bg-primary-light rounded-full flex items-center justify-center mb-4">
+          <AppIcon name="itinerary" className="w-10 h-10 text-primary" />
+        </div>
         <h3 className="text-xl font-bold text-ink mb-2">旅行の計画を始めましょう</h3>
         <p className="text-ink-sub text-sm mb-6">Homeタブで旅行の日程を設定してください。</p>
       </div>
@@ -664,7 +667,7 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
                     onClick={() => setFormData({ ...formData, participantId: undefined })}
                     className={`px-3 py-1.5 rounded-full text-[10px] font-bold transition-all border ${!formData.participantId ? 'bg-ink text-white border-ink' : 'bg-surface-gray text-ink-light border-surface-gray-mid'}`}
                   >
-                    🌎 全員
+                    <AppIcon name="globe" className="w-3 h-3 inline-block mr-1" /> 全員
                   </button>
                   {userProfiles.map(p => (
                     <button
@@ -714,15 +717,18 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
               {/* 種類 - selectに変更 */}
               <div>
                 <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">種類</label>
-                <select
-                  className="w-full bg-surface-gray border border-surface-gray-mid rounded-xl p-3 text-sm text-ink outline-none appearance-none"
-                  value={formData.type || 'activity'}
-                  onChange={e => setFormData({ ...formData, type: e.target.value as ItineraryItem['type'] })}
-                >
-                  {ITEM_TYPES.map(t => (
-                    <option key={t.value} value={t.value}>{t.icon} {t.label}</option>
+                <div className="flex flex-wrap gap-2 mt-1">
+                  {ITEM_TYPES.map(type => (
+                    <button
+                      key={type.value}
+                      type="button"
+                      onClick={() => setFormData({ ...formData, type: type.value })}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-bold transition-all border ${formData.type === type.value ? 'bg-primary text-white border-primary' : 'bg-surface-gray text-ink-light border-surface-gray-mid'}`}
+                    >
+                      <AppIcon name={type.icon} className="w-3 h-3" /> {type.label}
+                    </button>
                   ))}
-                </select>
+                </div>
               </div>
 
               {/* 場所名 + Googleマップ */}
@@ -738,7 +744,9 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest text-rose-500">📍 GoogleマップURL</label>
+                  <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest text-rose-500">
+                    <AppIcon name="map" className="w-3 h-3 inline-block mr-1" /> GoogleマップURL
+                  </label>
                   <input
                     type="url"
                     placeholder="https://maps.app.goo.gl/..."
@@ -752,7 +760,7 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
               {/* Links (複数対応) */}
               <div>
                 <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">
-                  関連リンク
+                  <AppIcon name="link" className="w-3 h-3 inline-block mr-1" /> 関連リンク
                 </label>
                 <div className="space-y-2">
                   {formData.links?.map((lnk, i) => (
@@ -786,7 +794,7 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
                         }}
                         className="text-rose-500 font-bold px-2"
                       >
-                        ×
+                        <AppIcon name="close" className="w-4 h-4" />
                       </button>
                     </div>
                   ))}
@@ -795,7 +803,7 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
                     onClick={() => setFormData({ ...formData, links: [...(formData.links || []), { label: '', url: '' }] })}
                     className="w-full py-2 border-2 border-dashed border-surface-gray-mid rounded-xl text-[10px] font-bold text-ink-light hover:border-primary/40 hover:text-primary transition-all"
                   >
-                    + リンクを追加
+                    <AppIcon name="plus" className="w-3 h-3 inline-block mr-1" /> リンクを追加
                   </button>
                 </div>
               </div>

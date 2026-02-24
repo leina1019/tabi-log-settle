@@ -2,6 +2,7 @@
 import React, { useMemo, useState } from 'react';
 import { Settlement, Expense, Participant, UserProfile } from '../types';
 import { convertToJPY, formatCurrency } from '../utils/currency';
+import { AppIcon } from './AppIcon';
 // PARTICIPANTS is removed
 
 interface Props {
@@ -85,7 +86,10 @@ const SettlementView: React.FC<Props> = ({ settlements, expenses, onBack, userPr
 
         {settlements.length === 0 ? (
           <div className="text-center py-10 text-ink-light text-sm">
-            <p>清算は完了しています 🎉</p>
+            <div className="flex flex-col items-center gap-2">
+              <AppIcon name="celebrate" className="w-8 h-8 text-primary" />
+              <p>清算は完了しています</p>
+            </div>
           </div>
         ) : (
           <div className="space-y-4">
@@ -171,7 +175,9 @@ const SettlementView: React.FC<Props> = ({ settlements, expenses, onBack, userPr
               {/* 支払い済みリスト */}
               <section>
                 <div className="flex justify-between items-end mb-3">
-                  <h4 className="text-xs font-bold text-emerald-600 uppercase tracking-widest">💰 支払った合計</h4>
+                  <h4 className="text-xs font-bold text-emerald-600 uppercase tracking-widest flex items-center gap-1">
+                    <AppIcon name="expense" className="w-3 h-3" /> 支払った合計
+                  </h4>
                   <p className="text-lg font-bold text-emerald-600">{formatCurrency(participantDetails.totalPaid, 'JPY')}</p>
                 </div>
                 <div className="space-y-2">
@@ -191,7 +197,9 @@ const SettlementView: React.FC<Props> = ({ settlements, expenses, onBack, userPr
               {/* 負担分リスト */}
               <section>
                 <div className="flex justify-between items-end mb-3">
-                  <h4 className="text-xs font-bold text-rose-500 uppercase tracking-widest">🍽️ 自分が使った合計</h4>
+                  <h4 className="text-xs font-bold text-rose-500 uppercase tracking-widest flex items-center gap-1">
+                    <AppIcon name="meal" className="w-3 h-3" /> 自分が使った合計
+                  </h4>
                   <p className="text-lg font-bold text-rose-500">{formatCurrency(participantDetails.totalBurden, 'JPY')}</p>
                 </div>
                 <div className="space-y-2">

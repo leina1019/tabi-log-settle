@@ -1,6 +1,7 @@
-
+```javascript
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Expense, Participant, Settlement, ItineraryItem, Ticket, UserProfile, PackingItem, ViewModeSize, TripData } from './types';
+import { AppIcon } from './components/AppIcon';
 import { MEMBER_COLORS, DEVICE_CONFIG } from './constants';
 import { convertToJPY } from './utils/currency';
 import ExpenseForm from './components/ExpenseForm';
@@ -53,7 +54,7 @@ const App: React.FC = () => {
       setTripId(id);
 
       // Load from LocalStorage only if tripId exists (editing existing trip)
-      const prefix = `oz-wari-${id}-`;
+      const prefix = `oz - wari - ${ id } -`;
       const sBudget = localStorage.getItem(prefix + 'budget');
       if (sBudget) setBudget(parseInt(sBudget, 10));
 
@@ -125,7 +126,7 @@ const App: React.FC = () => {
   // --- Consolidated Persistence (Local Storage) ---
   useEffect(() => {
     if (!tripId) return;
-    const prefix = `oz-wari-${tripId}-`;
+    const prefix = `oz - wari - ${ tripId } -`;
     const saveData = {
       budget,
       profiles: userProfiles,
@@ -144,7 +145,7 @@ const App: React.FC = () => {
         const strVal = typeof val === 'string' ? val : JSON.stringify(val);
         localStorage.setItem(prefix + key, strVal);
       } catch (e) {
-        console.error(`Failed to save ${key} to localStorage`, e);
+        console.error(`Failed to save ${ key } to localStorage`, e);
       }
     });
 
@@ -231,11 +232,11 @@ const App: React.FC = () => {
     if (!window.confirm('サンプルデータを読み込みますか？現在のデータは一時的にバックアップされ、後で戻すことができます。')) return;
 
     // 現在のデータをバックアップ
-    const backupKey = `oz-wari-backup-${new Date().getTime()}`;
+    const backupKey = `oz - wari - backup - ${ new Date().getTime() } `;
     const currentData = { expenses, itinerary, tickets, packingList, userProfiles, budget, tripName, tripStartDate, tripEndDate, tripCoverImage };
     localStorage.setItem(backupKey, JSON.stringify(currentData));
     localStorage.setItem('oz-wari-last-backup-key', backupKey); // 最新のバックアップキーを保存
-    console.log(`Backup saved to ${backupKey}`);
+    console.log(`Backup saved to ${ backupKey } `);
 
     // サンプルデータをセット
     setExpenses(SAMPLE_EXPENSES);
@@ -385,7 +386,7 @@ const App: React.FC = () => {
     deletedIdsRef.current.add(id); // For Google Sheet sync
     updateItinerary(prev => prev.filter(i => i.id !== id));
     setTimeout(() => { if (deletedIdsRef.current.has(id)) deletedIdsRef.current.delete(id); }, 60000);
-    // await deleteItemFromSheet(`ITINERARY_${id}`); // For Google Sheet sync
+    // await deleteItemFromSheet(`ITINERARY_${ id } `); // For Google Sheet sync
   };
 
   // --- Handlers for Tickets ---
@@ -541,9 +542,9 @@ const App: React.FC = () => {
   }, [expenses, userProfiles]);
 
   return (
-    <div className={`min-h-screen bg-ocean-light flex flex-col items-center antialiased font-sans select-none`}>
+    <div className={`min - h - screen bg - ocean - light flex flex - col items - center antialiased font - sans select - none`}>
       {/* Main Container */}
-      <div className={`${DEVICE_CONFIG[viewModeSize]?.width || 'max-w-md'} w-full mx-auto min-h-screen h-screen bg-surface-gray flex flex-col text-ink relative overflow-hidden sm:border-x sm:border-surface-gray-mid transition-all duration-300 shadow-2xl shadow-ocean-dark/20`}>
+      <div className={`${ DEVICE_CONFIG[viewModeSize]?.width || 'max-w-md' } w - full mx - auto min - h - screen h - screen bg - surface - gray flex flex - col text - ink relative overflow - hidden sm: border - x sm: border - surface - gray - mid transition - all duration - 300 shadow - 2xl shadow - ocean - dark / 20`}>
 
         {/* Header - ANAブルー帯 */}
         <header className="bg-ocean-dark px-5 pt-2 pb-2 flex justify-between items-center z-20 safe-pt shadow-sm">
@@ -557,7 +558,7 @@ const App: React.FC = () => {
               onClick={async () => {
                 if (tripId) {
                   // window.location.href ではなく、確実にIDを含めたURLを再構築する
-                  const url = `${window.location.origin}${window.location.pathname}?trip=${tripId}`;
+                  const url = `${ window.location.origin }${ window.location.pathname }?trip = ${ tripId } `;
                   if (navigator.share) {
                     try {
                       await navigator.share({ title: 'たびログくん', text: '旅行の計画を立てよう！', url });
@@ -588,7 +589,7 @@ const App: React.FC = () => {
                       budget
                     });
                     setTripId(newId);
-                    const url = `${window.location.origin}${window.location.pathname}?trip=${newId}`;
+                    const url = `${ window.location.origin }${ window.location.pathname }?trip = ${ newId } `;
                     window.history.pushState({}, '', url);
 
                     if (navigator.share) {
@@ -614,7 +615,10 @@ const App: React.FC = () => {
               }}
               className="bg-white/20 border border-white/30 text-white px-3 py-1.5 rounded-full text-xs font-bold hover:bg-white/30 transition"
             >
-              {tripId ? '🔗 コピー' : '🔗 共有'}
+              <span className="flex items-center gap-1">
+                <AppIcon name={tripId ? "copy" : "share"} className="w-4 h-4" />
+                {tripId ? 'コピー' : '共有'}
+              </span>
             </button>
             <button
               onClick={() => setView('settings')}
@@ -651,7 +655,7 @@ const App: React.FC = () => {
                   budget: 1000000 // Default 1M
                 });
                 setTripId(newId);
-                const url = `${window.location.origin}${window.location.pathname}?trip=${newId}`;
+                const url = `${ window.location.origin }${ window.location.pathname }?trip = ${ newId } `;
                 window.history.pushState({}, '', url);
                 setView('home');
                 setSyncStatus('success');
@@ -785,13 +789,13 @@ const App: React.FC = () => {
             )}
 
             <nav className="fixed bottom-4 left-1/2 -translate-x-1/2 w-[92%] max-w-[400px] h-16 bg-white rounded-full flex justify-between items-center px-6 shadow-lg border border-surface-gray-mid z-[40] safe-pb">
-              <button onClick={() => { setView('home'); setIsAddMenuOpen(false); }} className={`flex flex-col items-center gap-1 transition-all ${view === 'home' ? 'text-primary -translate-y-1' : 'text-ink-light'}`}>
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
+              <button onClick={() => { setView('home'); setIsAddMenuOpen(false); }} className={`flex flex - col items - center gap - 1 transition - all ${ view === 'home' ? 'text-primary -translate-y-1' : 'text-ink-light' } `}>
+                <AppIcon name="home" className="w-6 h-6" />
                 <span className="text-[9px] font-bold tracking-widest uppercase">HOME</span>
               </button>
 
-              <button onClick={() => { setView('schedule'); setIsAddMenuOpen(false); }} className={`flex flex-col items-center gap-1 transition-all ${view === 'schedule' ? 'text-primary -translate-y-1' : 'text-ink-light'}`}>
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              <button onClick={() => { setView('schedule'); setIsAddMenuOpen(false); }} className={`flex flex - col items - center gap - 1 transition - all ${ view === 'schedule' ? 'text-primary -translate-y-1' : 'text-ink-light' } `}>
+                <AppIcon name="itinerary" className="w-6 h-6" />
                 <span className="text-[9px] font-bold tracking-widest uppercase">PLAN</span>
               </button>
 
@@ -803,21 +807,21 @@ const App: React.FC = () => {
                       onClick={() => { setView('schedule'); setIsAddMenuOpen(false); }}
                       className="flex items-center gap-3 bg-white px-5 py-3 rounded-2xl shadow-xl border border-surface-gray-mid whitespace-nowrap active:scale-95 transition-transform"
                     >
-                      <span className="text-lg">🗓️</span>
+                      <AppIcon name="itinerary" className="w-6 h-6 text-lg" />
                       <span className="text-xs font-bold text-ink">予定の追加</span>
                     </button>
                     <button
                       onClick={() => { setEditingExpense(null); setView('add_expense'); setIsAddMenuOpen(false); }}
                       className="flex items-center gap-3 bg-white px-5 py-3 rounded-2xl shadow-xl border border-surface-gray-mid whitespace-nowrap active:scale-95 transition-transform"
                     >
-                      <span className="text-lg">💰</span>
+                      <AppIcon name="expense" className="w-6 h-6 text-lg" />
                       <span className="text-xs font-bold text-ink">支出の登録</span>
                     </button>
                     <button
                       onClick={() => { setView('packing'); setIsAddMenuOpen(false); }}
                       className="flex items-center gap-3 bg-white px-5 py-3 rounded-2xl shadow-xl border border-surface-gray-mid whitespace-nowrap active:scale-95 transition-transform"
                     >
-                      <span className="text-lg">📦</span>
+                      <AppIcon name="packing" className="w-6 h-6 text-lg" />
                       <span className="text-xs font-bold text-ink">持ち物の追加</span>
                     </button>
                   </div>
@@ -825,18 +829,18 @@ const App: React.FC = () => {
 
                 <button
                   onClick={() => setIsAddMenuOpen(!isAddMenuOpen)}
-                  className={`w-14 h-14 bg-primary rounded-full flex items-center justify-center text-white shadow-lg -translate-y-6 transition-all z-50 ${isAddMenuOpen ? 'rotate-45 scale-90 bg-ocean-dark' : 'active:scale-95'}`}
+                  className={`w - 14 h - 14 bg - primary rounded - full flex items - center justify - center text - white shadow - lg - translate - y - 6 transition - all z - 50 ${ isAddMenuOpen ? 'rotate-45 scale-90 bg-ocean-dark' : 'active:scale-95' } `}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" /></svg>
                 </button>
               </div>
 
-              <button onClick={() => { setView('tickets'); setIsAddMenuOpen(false); }} className={`flex flex-col items-center gap-1 transition-all ${view === 'tickets' ? 'text-primary -translate-y-1' : 'text-ink-light'}`}>
+              <button onClick={() => { setView('tickets'); setIsAddMenuOpen(false); }} className={`flex flex - col items - center gap - 1 transition - all ${ view === 'tickets' ? 'text-primary -translate-y-1' : 'text-ink-light' } `}>
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" /></svg>
                 <span className="text-[9px] font-bold tracking-widest uppercase">TICKETS</span>
               </button>
 
-              <button onClick={() => { setView('packing'); setIsAddMenuOpen(false); }} className={`flex flex-col items-center gap-1 transition-all ${view === 'packing' ? 'text-primary -translate-y-1' : 'text-ink-light'}`}>
+              <button onClick={() => { setView('packing'); setIsAddMenuOpen(false); }} className={`flex flex - col items - center gap - 1 transition - all ${ view === 'packing' ? 'text-primary -translate-y-1' : 'text-ink-light' } `}>
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
                 <span className="text-[9px] font-bold tracking-widest uppercase">PACKING</span>
               </button>

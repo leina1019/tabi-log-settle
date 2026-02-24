@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { PackingItem, UserProfile } from '../types';
+import { AppIcon } from './AppIcon';
 import { suggestCategory } from '../utils/packingDictionary';
 
 interface Props {
@@ -191,7 +192,9 @@ const PackingView: React.FC<Props> = ({ items, userProfiles, onUpdate, isTablet 
             <div className={`px-1 ${isTablet ? 'grid grid-cols-2 gap-x-6 gap-y-0 items-start' : 'space-y-8'}`}>
                 {items.length === 0 ? (
                     <div className="text-center py-20 bg-white/50 rounded-[32px] border border-dashed border-surface-gray-mid">
-                        <div className="text-4xl mb-3 opacity-30 text-ink">🎒</div>
+                        <div className="mb-3 opacity-30 text-ink">
+                            <AppIcon name="packing" className="w-12 h-12" />
+                        </div>
                         <p className="text-sm font-bold text-ink-sub">準備を始めましょう！</p>
                         <p className="text-[10px] text-ink-light mt-1">追加ボタンから持ち物を入力してください</p>
                     </div>
@@ -230,7 +233,7 @@ const PackingView: React.FC<Props> = ({ items, userProfiles, onUpdate, isTablet 
                                                             {profile ? (
                                                                 <>
                                                                     <div className="w-2.5 h-2.5 rounded-full overflow-hidden bg-white/20">
-                                                                        {profile.avatarUrl ? <img src={profile.avatarUrl} className="w-full h-full object-cover" /> : <span>👤</span>}
+                                                                        {profile.avatarUrl ? <img src={profile.avatarUrl} className="w-full h-full object-cover" /> : <AppIcon name="user" className="w-3 h-3 text-ink-light" />}
                                                                     </div>
                                                                     {profile.displayName}
                                                                 </>
@@ -299,7 +302,7 @@ const PackingView: React.FC<Props> = ({ items, userProfiles, onUpdate, isTablet 
                                             style={editingItem.participantId === p.id ? { backgroundColor: p.color } : {}}
                                         >
                                             <div className="w-3 h-3 rounded-full overflow-hidden bg-white/20">
-                                                {p.avatarUrl ? <img src={p.avatarUrl} className="w-full h-full object-cover" /> : <span>👤</span>}
+                                                {p.avatarUrl ? <img src={p.avatarUrl} className="w-full h-full object-cover" /> : <AppIcon name="user" className="w-4 h-4 text-ink-light" />}
                                             </div>
                                             {p.displayName}
                                         </button>

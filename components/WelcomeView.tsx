@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
-import { UserProfile, Participant } from '../types';
+import { UserProfile, Participant, TripData } from '../types';
+import { AppIcon } from './AppIcon';
 import { MEMBER_COLORS } from '../constants';
 
 interface OnboardingData {
@@ -172,7 +173,7 @@ const WelcomeView: React.FC<Props> = ({ onStart, onDemoStart }) => {
                             {tempMembers.map((m, idx) => (
                                 <div key={m.id} className="flex items-center gap-3 animate-in slide-in-from-left-4 fade-in" style={{ animationDelay: `${idx * 50}ms` }}>
                                     <div className="w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center text-lg shadow-sm" style={{ backgroundColor: m.color }}>
-                                        👤
+                                        <AppIcon name="user" className="w-8 h-8 text-primary/30" />
                                     </div>
                                     <input
                                         type="text"
@@ -203,7 +204,7 @@ const WelcomeView: React.FC<Props> = ({ onStart, onDemoStart }) => {
                                 onClick={handleFinish}
                                 className="w-full bg-primary text-white py-5 rounded-3xl font-bold shadow-xl shadow-primary/20 active:scale-95 transition-all"
                             >
-                                この内容で旅を始める！ 🎫
+                                この内容で旅を始める！ <AppIcon name="ticket" className="w-4 h-4" />
                             </button>
                             <button onClick={() => setStep('info')} className="w-full mt-2 text-ink-light text-xs font-bold py-2">戻る</button>
                         </div>

@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { Ticket, UserProfile, Participant } from '../types';
+import { AppIcon } from './AppIcon';
 import { MEMBER_COLORS } from '../constants';
 
 interface Props {
@@ -106,10 +107,10 @@ const TicketView: React.FC<Props> = ({ tickets, userProfiles, onSave, onDelete, 
   const getTypeIcon = (type: Ticket['type']) => {
     switch (type) {
       case 'flight': return '✈️';
-      case 'train': return '🚄';
-      case 'hotel': return '🏨';
-      case 'event': return '🎫';
-      default: return '✨';
+      case 'train': return <AppIcon name="move" className="w-5 h-5" />;
+      case 'hotel': return <AppIcon name="stay" className="w-5 h-5" />;
+      case 'event': return <AppIcon name="ticket" className="w-5 h-5" />;
+      default: return <AppIcon name="ticket" className="w-5 h-5" />;
     }
   };
 
@@ -167,7 +168,7 @@ const TicketView: React.FC<Props> = ({ tickets, userProfiles, onSave, onDelete, 
                 style={selectedMemberId === p.id ? { backgroundColor: p.color } : {}}
               >
                 <div className="w-4 h-4 rounded-full overflow-hidden bg-white/20 flex items-center justify-center">
-                  {p.avatarUrl ? <img src={p.avatarUrl} className="w-full h-full object-cover" /> : <span>👤</span>}
+                  {p.avatarUrl ? <img src={p.avatarUrl} className="w-full h-full object-cover" /> : <AppIcon name="user" className="w-4 h-4 text-ink-light" />}
                 </div>
                 {p.displayName}
               </button>
@@ -203,7 +204,9 @@ const TicketView: React.FC<Props> = ({ tickets, userProfiles, onSave, onDelete, 
       <div className={`space-y-4 px-1 ${isTablet ? 'grid grid-cols-2 gap-4 space-y-0' : ''}`}>
         {filteredTickets.length === 0 && (
           <div className="bg-white p-12 rounded-[32px] text-center border border-dashed border-surface-gray-mid">
-            <div className="text-5xl mb-4 grayscale opacity-20">🎫</div>
+            <div className="mb-4 grayscale opacity-20">
+              <AppIcon name="ticket" className="w-16 h-16" />
+            </div>
             <p className="text-sm font-bold text-ink-light uppercase tracking-widest">No tickets found</p>
             <p className="text-[10px] text-ink-sub mt-1">このカテゴリーにチケットはまだありません</p>
           </div>

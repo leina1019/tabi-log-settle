@@ -1,6 +1,6 @@
-
 import React, { useRef } from 'react';
-import { Participant, UserProfile, ViewModeSize } from '../types';
+import { Participant, UserProfile, ViewModeSize, Expense, ItineraryItem, Ticket, TripData } from '../types';
+import { AppIcon } from './AppIcon';
 import { MEMBER_COLORS, DEVICE_CONFIG } from '../constants';
 
 interface Props {
@@ -120,7 +120,7 @@ const SettingsView: React.FC<Props> = ({
             disabled={isSyncing}
             className="flex flex-col items-center justify-center p-4 bg-emerald-50 border border-emerald-100 rounded-2xl gap-2 active:scale-95 transition-all disabled:opacity-50"
           >
-            <span className="text-xl">📤</span>
+            <AppIcon name="export" className="text-primary" />
             <span className="text-[10px] font-bold text-emerald-700">保存・同期</span>
           </button>
           <button
@@ -128,7 +128,7 @@ const SettingsView: React.FC<Props> = ({
             disabled={isSyncing}
             className="flex flex-col items-center justify-center p-4 bg-ocean-light/20 border border-ocean-light/30 rounded-2xl gap-2 active:scale-95 transition-all disabled:opacity-50"
           >
-            <span className="text-xl">📥</span>
+            <AppIcon name="import" className="text-primary" />
             <span className="text-[10px] font-bold text-ocean-dark">最新を取得</span>
           </button>
         </div>
@@ -145,14 +145,14 @@ const SettingsView: React.FC<Props> = ({
             onClick={handleExportJSON}
             className="flex flex-col items-center justify-center p-4 bg-surface-gray border border-surface-gray-mid rounded-2xl gap-2 active:scale-95 transition-all"
           >
-            <span className="text-xl">💾</span>
+            <AppIcon name="save" className="text-primary" />
             <span className="text-[10px] font-bold text-ink">JSONエクスポート</span>
           </button>
           <button
             onClick={() => jsonImportRef.current?.click()}
             className="flex flex-col items-center justify-center p-4 bg-surface-gray border border-surface-gray-mid rounded-2xl gap-2 active:scale-95 transition-all"
           >
-            <span className="text-xl">📂</span>
+            <AppIcon name="folder" className="text-primary" />
             <span className="text-[10px] font-bold text-ink">JSONインポート</span>
           </button>
           <input
@@ -267,7 +267,7 @@ const SettingsView: React.FC<Props> = ({
             onClick={onRestoreData}
             className="w-full bg-emerald-50 border border-emerald-200 p-5 rounded-3xl flex flex-col items-center gap-2 hover:bg-emerald-100/50 transition-colors shadow-sm active:scale-95"
           >
-            <span className="text-xl">🔙</span>
+            <AppIcon name="back" className="text-primary" />
             <div className="text-center">
               <p className="text-sm font-bold text-emerald-700">元のデータに戻す</p>
             </div>
