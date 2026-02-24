@@ -21,7 +21,7 @@ interface Props {
   onUpdateViewModeSize: (size: ViewModeSize) => void;
   onImportFullData: (data: any) => void;
   onSyncToSheet: () => void;
-  onFetchFromSheet: () => void;
+  onFetchFromSheet: (isLongPress?: boolean) => void;
   isSyncing: boolean;
 }
 
@@ -124,7 +124,19 @@ const SettingsView: React.FC<Props> = ({
             <span className="text-[10px] font-bold text-emerald-700">保存・同期</span>
           </button>
           <button
-            onClick={onFetchFromSheet}
+            onPointerDown={(e) => {
+              const timer = setTimeout(() => {
+                onFetchFromSheet(true);
+              }, 1000);
+              const cancel = () => {
+                clearTimeout(timer);
+                e.target.removeEventListener('pointerup', cancel);
+                e.target.removeEventListener('pointerleave', cancel);
+              };
+              e.target.addEventListener('pointerup', cancel);
+              e.target.addEventListener('pointerleave', cancel);
+            }}
+            onClick={() => onFetchFromSheet(false)}
             disabled={isSyncing}
             className="flex flex-col items-center justify-center p-4 bg-ocean-light/20 border border-ocean-light/30 rounded-2xl gap-2 active:scale-95 transition-all disabled:opacity-50"
           >
@@ -133,7 +145,7 @@ const SettingsView: React.FC<Props> = ({
           </button>
         </div>
         <p className="text-[8px] text-ink-light leading-relaxed italic mt-1">
-          ※ 取得ボタン長押しで「スプレッドシートから全データ強制再取得」が可能です。
+          ※ 取得ボタン長押し(1秒以上)で「スプレッドシートから全データ強制再取得」が可能です。
         </p>
       </div>
 

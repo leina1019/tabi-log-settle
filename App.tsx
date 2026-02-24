@@ -169,17 +169,34 @@ const App: React.FC = () => {
       packing: packingList
     };
 
-    Object.entries(saveData).forEach(([key, val]) => {
-      try {
-        const strVal = typeof val === 'string' ? val : JSON.stringify(val);
-        localStorage.setItem(prefix + key, strVal);
-      } catch (e) {
-        console.error(`Failed to save ${key} to localStorage`, e);
-      }
-    });
-
     localStorage.setItem('oz-wari-view-mode-size', viewModeSize);
   }, [tripId, budget, userProfiles, tripStartDate, tripEndDate, tripName, tripCoverImage, expenses, itinerary, tickets, packingList, viewModeSize]);
+
+  // --- Automatic Google Sheet Sync (Debounced 1.5s) ---
+  useEffect(() => {
+    if (!tripId) return;
+
+    // Use a ref to avoid initial sync or unnecessary fires
+    const timer = setTimeout(() => {
+      syncAllDataToSheet({
+        profiles: userProfiles,
+        expenses,
+        itinerary,
+        tickets,
+        tripSettings: {
+          tripName,
+          tripStartDate,
+          tripEndDate,
+          coverImage: tripCoverImage,
+          budget
+        }
+      }).then(success => {
+        if (success) console.log('Debounced Google Sheet sync successful');
+      }).catch(err => console.error('Debounced sync error', err));
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, [tripId, budget, userProfiles, tripStartDate, tripEndDate, tripName, tripCoverImage, expenses, itinerary, tickets]);
 
   // NOTE: syncWithCloud (Google Sheets) は Firebase 移行後は不要のため削除。
   // Firebase の onSnapshot リスナーがリアルタイム同期を担当する。
@@ -500,7 +517,9 @@ const App: React.FC = () => {
     }
   };
 
-  const handleFetchFromSheet = async () => {
+  const handleFetchFromSheet = async (isLongPress = false) => {
+    if (isLongPress && !window.confirm('スプレッドシートから全データを強制的に再取得し、現在の内容を上書きします。よろしいですか？')) return;
+
     setIsSyncing(true);
     try {
       const cloudData = await fetchAllData();
@@ -512,7 +531,7 @@ const App: React.FC = () => {
           itinerary: cloudData.itinerary,
           tickets: cloudData.tickets
         });
-        alert('最新データを取得しました。');
+        alert(isLongPress ? '全データを強制再取得しました。' : '最新データを取得しました。');
       }
     } catch (e) {
       console.error(e);

@@ -251,8 +251,9 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
       if (item.memo) text += `\n📝 ${item.memo}`;
 
       // リンク情報の追加
-      if (item.mapUrl) {
-        text += `\n📍 マップ🔗: ${item.mapUrl}`;
+      const effectiveMapUrl = item.mapUrl || (item.location ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.location)}` : '');
+      if (effectiveMapUrl) {
+        text += `\n📍 マップ🔗: ${effectiveMapUrl}`;
       }
       if (item.link) {
         text += `\n🔗 リンク: ${item.link}`;
@@ -563,17 +564,21 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
 
                           {(item.mapUrl || item.link || (item.links && item.links.length > 0)) && (
                             <div className="flex flex-wrap gap-2 mt-2">
-                              {item.mapUrl && (
-                                <a
-                                  href={item.mapUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="flex-1 min-w-[120px] flex items-center justify-center gap-2 py-2 bg-rose-50 hover:bg-rose-100 rounded-lg text-xs font-bold text-rose-600 transition-colors relative z-20 border border-rose-200"
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  <span>📍 マップ</span>
-                                </a>
-                              )}
+                              {(() => {
+                                const effectiveMapUrl = item.mapUrl || (item.location ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.location)}` : '');
+                                if (!effectiveMapUrl) return null;
+                                return (
+                                  <a
+                                    href={effectiveMapUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex-1 min-w-[120px] flex items-center justify-center gap-2 py-2 bg-rose-50 hover:bg-rose-100 rounded-lg text-xs font-bold text-rose-600 transition-colors relative z-20 border border-rose-200"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    <span>📍 マップ</span>
+                                  </a>
+                                );
+                              })()}
                               {item.link && (
                                 <a
                                   href={item.link}
