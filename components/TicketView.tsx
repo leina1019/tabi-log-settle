@@ -10,6 +10,7 @@ interface Props {
   onSave: (ticket: Ticket) => void;
   onDelete: (id: string) => void;
   tripEndDate: string;
+  tripStartDate?: string;
   isTablet?: boolean;
 }
 
@@ -106,7 +107,7 @@ const TicketView: React.FC<Props> = ({ tickets, userProfiles, onSave, onDelete, 
 
   const getTypeIcon = (type: Ticket['type']) => {
     switch (type) {
-      case 'flight': return '✈️';
+      case 'flight': return <AppIcon name="move" className="w-5 h-5" />;
       case 'train': return <AppIcon name="move" className="w-5 h-5" />;
       case 'hotel': return <AppIcon name="stay" className="w-5 h-5" />;
       case 'event': return <AppIcon name="ticket" className="w-5 h-5" />;

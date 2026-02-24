@@ -5,7 +5,7 @@ import { fetchOgpData } from '../services/ogpService';
 import { MEMBER_COLORS } from '../constants';
 import { fetchWeather, WeatherData, searchLocation } from '../services/weatherService';
 import { WeatherIcon } from './WeatherIcon';
-import { AppIcon } from './AppIcon';
+import { AppIcon, type IconName } from './AppIcon';
 import { escapeHtml } from '../utils/security';
 
 // 予定種類の定義（ラベル + アイコン）

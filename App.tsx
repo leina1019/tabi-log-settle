@@ -1,4 +1,3 @@
-```javascript
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Expense, Participant, Settlement, ItineraryItem, Ticket, UserProfile, PackingItem, ViewModeSize, TripData } from './types';
 import { AppIcon } from './components/AppIcon';
@@ -54,7 +53,7 @@ const App: React.FC = () => {
       setTripId(id);
 
       // Load from LocalStorage only if tripId exists (editing existing trip)
-      const prefix = `oz - wari - ${ id } -`;
+      const prefix = `oz - wari - ${id} -`;
       const sBudget = localStorage.getItem(prefix + 'budget');
       if (sBudget) setBudget(parseInt(sBudget, 10));
 
@@ -126,7 +125,7 @@ const App: React.FC = () => {
   // --- Consolidated Persistence (Local Storage) ---
   useEffect(() => {
     if (!tripId) return;
-    const prefix = `oz - wari - ${ tripId } -`;
+    const prefix = `oz - wari - ${tripId} -`;
     const saveData = {
       budget,
       profiles: userProfiles,
@@ -145,7 +144,7 @@ const App: React.FC = () => {
         const strVal = typeof val === 'string' ? val : JSON.stringify(val);
         localStorage.setItem(prefix + key, strVal);
       } catch (e) {
-        console.error(`Failed to save ${ key } to localStorage`, e);
+        console.error(`Failed to save ${key} to localStorage`, e);
       }
     });
 
@@ -232,11 +231,11 @@ const App: React.FC = () => {
     if (!window.confirm('サンプルデータを読み込みますか？現在のデータは一時的にバックアップされ、後で戻すことができます。')) return;
 
     // 現在のデータをバックアップ
-    const backupKey = `oz - wari - backup - ${ new Date().getTime() } `;
+    const backupKey = `oz - wari - backup - ${new Date().getTime()} `;
     const currentData = { expenses, itinerary, tickets, packingList, userProfiles, budget, tripName, tripStartDate, tripEndDate, tripCoverImage };
     localStorage.setItem(backupKey, JSON.stringify(currentData));
     localStorage.setItem('oz-wari-last-backup-key', backupKey); // 最新のバックアップキーを保存
-    console.log(`Backup saved to ${ backupKey } `);
+    console.log(`Backup saved to ${backupKey} `);
 
     // サンプルデータをセット
     setExpenses(SAMPLE_EXPENSES);
@@ -544,7 +543,7 @@ const App: React.FC = () => {
   return (
     <div className={`min - h - screen bg - ocean - light flex flex - col items - center antialiased font - sans select - none`}>
       {/* Main Container */}
-      <div className={`${ DEVICE_CONFIG[viewModeSize]?.width || 'max-w-md' } w - full mx - auto min - h - screen h - screen bg - surface - gray flex flex - col text - ink relative overflow - hidden sm: border - x sm: border - surface - gray - mid transition - all duration - 300 shadow - 2xl shadow - ocean - dark / 20`}>
+      <div className={`${DEVICE_CONFIG[viewModeSize]?.width || 'max-w-md'} w - full mx - auto min - h - screen h - screen bg - surface - gray flex flex - col text - ink relative overflow - hidden sm: border - x sm: border - surface - gray - mid transition - all duration - 300 shadow - 2xl shadow - ocean - dark / 20`}>
 
         {/* Header - ANAブルー帯 */}
         <header className="bg-ocean-dark px-5 pt-2 pb-2 flex justify-between items-center z-20 safe-pt shadow-sm">
@@ -558,7 +557,7 @@ const App: React.FC = () => {
               onClick={async () => {
                 if (tripId) {
                   // window.location.href ではなく、確実にIDを含めたURLを再構築する
-                  const url = `${ window.location.origin }${ window.location.pathname }?trip = ${ tripId } `;
+                  const url = `${window.location.origin}${window.location.pathname}?trip = ${tripId} `;
                   if (navigator.share) {
                     try {
                       await navigator.share({ title: 'たびログくん', text: '旅行の計画を立てよう！', url });
@@ -589,7 +588,7 @@ const App: React.FC = () => {
                       budget
                     });
                     setTripId(newId);
-                    const url = `${ window.location.origin }${ window.location.pathname }?trip = ${ newId } `;
+                    const url = `${window.location.origin}${window.location.pathname}?trip = ${newId} `;
                     window.history.pushState({}, '', url);
 
                     if (navigator.share) {
@@ -655,7 +654,7 @@ const App: React.FC = () => {
                   budget: 1000000 // Default 1M
                 });
                 setTripId(newId);
-                const url = `${ window.location.origin }${ window.location.pathname }?trip = ${ newId } `;
+                const url = `${window.location.origin}${window.location.pathname}?trip = ${newId} `;
                 window.history.pushState({}, '', url);
                 setView('home');
                 setSyncStatus('success');
@@ -789,12 +788,12 @@ const App: React.FC = () => {
             )}
 
             <nav className="fixed bottom-4 left-1/2 -translate-x-1/2 w-[92%] max-w-[400px] h-16 bg-white rounded-full flex justify-between items-center px-6 shadow-lg border border-surface-gray-mid z-[40] safe-pb">
-              <button onClick={() => { setView('home'); setIsAddMenuOpen(false); }} className={`flex flex - col items - center gap - 1 transition - all ${ view === 'home' ? 'text-primary -translate-y-1' : 'text-ink-light' } `}>
+              <button onClick={() => { setView('home'); setIsAddMenuOpen(false); }} className={`flex flex-col items-center gap-1 transition-all ${view === 'home' ? 'text-primary -translate-y-1' : 'text-ink-light'}`}>
                 <AppIcon name="home" className="w-6 h-6" />
                 <span className="text-[9px] font-bold tracking-widest uppercase">HOME</span>
               </button>
 
-              <button onClick={() => { setView('schedule'); setIsAddMenuOpen(false); }} className={`flex flex - col items - center gap - 1 transition - all ${ view === 'schedule' ? 'text-primary -translate-y-1' : 'text-ink-light' } `}>
+              <button onClick={() => { setView('schedule'); setIsAddMenuOpen(false); }} className={`flex flex-col items-center gap-1 transition-all ${view === 'schedule' ? 'text-primary -translate-y-1' : 'text-ink-light'}`}>
                 <AppIcon name="itinerary" className="w-6 h-6" />
                 <span className="text-[9px] font-bold tracking-widest uppercase">PLAN</span>
               </button>
@@ -829,19 +828,19 @@ const App: React.FC = () => {
 
                 <button
                   onClick={() => setIsAddMenuOpen(!isAddMenuOpen)}
-                  className={`w - 14 h - 14 bg - primary rounded - full flex items - center justify - center text - white shadow - lg - translate - y - 6 transition - all z - 50 ${ isAddMenuOpen ? 'rotate-45 scale-90 bg-ocean-dark' : 'active:scale-95' } `}
+                  className={`w-14 h-14 bg-primary rounded-full flex items-center justify-center text-white shadow-lg -translate-y-6 transition-all z-50 ${isAddMenuOpen ? 'rotate-45 scale-90 bg-ocean-dark' : 'active:scale-95'}`}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" /></svg>
                 </button>
               </div>
 
-              <button onClick={() => { setView('tickets'); setIsAddMenuOpen(false); }} className={`flex flex - col items - center gap - 1 transition - all ${ view === 'tickets' ? 'text-primary -translate-y-1' : 'text-ink-light' } `}>
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" /></svg>
+              <button onClick={() => { setView('tickets'); setIsAddMenuOpen(false); }} className={`flex flex-col items-center gap-1 transition-all ${view === 'tickets' ? 'text-primary -translate-y-1' : 'text-ink-light'}`}>
+                <AppIcon name="ticket" className="w-6 h-6" />
                 <span className="text-[9px] font-bold tracking-widest uppercase">TICKETS</span>
               </button>
 
-              <button onClick={() => { setView('packing'); setIsAddMenuOpen(false); }} className={`flex flex - col items - center gap - 1 transition - all ${ view === 'packing' ? 'text-primary -translate-y-1' : 'text-ink-light' } `}>
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
+              <button onClick={() => { setView('packing'); setIsAddMenuOpen(false); }} className={`flex flex-col items-center gap-1 transition-all ${view === 'packing' ? 'text-primary -translate-y-1' : 'text-ink-light'}`}>
+                <AppIcon name="packing" className="w-6 h-6" />
                 <span className="text-[9px] font-bold tracking-widest uppercase">PACKING</span>
               </button>
             </nav>
