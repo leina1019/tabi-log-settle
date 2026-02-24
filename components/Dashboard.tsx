@@ -114,7 +114,7 @@ const Dashboard: React.FC<Props> = ({
   }, [expenses, totalJPY, userProfiles, tripStartDate, tripEndDate]);
 
   const getProfile = (id: string) => {
-    return userProfiles.find(p => p.id === id) || { id, displayName: id, avatarUrl: '' };
+    return userProfiles.find(p => p.id === id) || { id, displayName: id, avatarUrl: '', color: '#CCCCCC' };
   };
 
   const detailData = useMemo(() => {

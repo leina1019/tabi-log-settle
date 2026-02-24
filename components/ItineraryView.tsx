@@ -562,7 +562,7 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
                             </div>
                           )}
 
-                          {(item.mapUrl || item.link || (item.links && item.links.length > 0)) && (
+                          {(item.mapUrl || item.location || item.link || (item.links && item.links.length > 0)) && (
                             <div className="flex flex-wrap gap-2 mt-2">
                               {(() => {
                                 const effectiveMapUrl = item.mapUrl || (item.location ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.location)}` : '');
@@ -740,13 +740,24 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
               <div className="grid grid-cols-1 gap-3">
                 <div>
                   <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">場所名</label>
-                  <input
-                    type="text"
-                    placeholder="例: 浅草寺、新宿駅"
-                    className="w-full bg-surface-gray border border-surface-gray-mid rounded-xl p-3 text-sm text-ink outline-none"
-                    value={formData.location || ''}
-                    onChange={e => setFormData({ ...formData, location: e.target.value })}
-                  />
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="例: 浅草寺、新宿駅"
+                      className="flex-1 bg-surface-gray border border-surface-gray-mid rounded-xl p-3 text-sm text-ink outline-none focus:border-primary"
+                      value={formData.location || ''}
+                      onChange={e => { setFormData({ ...formData, location: e.target.value }); setValidationError(''); }}
+                    />
+                    {formData.location && (
+                      <button
+                        type="button"
+                        onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(formData.location || '')}`, '_blank')}
+                        className="px-3 bg-rose-50 border border-rose-200 rounded-xl text-xs font-bold text-rose-500 hover:bg-rose-100 transition-colors"
+                      >
+                        検索
+                      </button>
+                    )}
+                  </div>
                 </div>
                 <div>
                   <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest text-rose-500">
