@@ -2,6 +2,8 @@ import React, { Component, ReactNode } from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 
+// デバッグ用alert（画面が動いているか確認するため。本番確認後に削除します）
+window.alert("たびログくん: JavaScriptエンジン起動OK");
 console.log("たびログくん: アプリ起動シーケンス開始");
 
 interface ErrorBoundaryProps {
@@ -19,7 +21,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
     this.state = { hasError: false };
   }
 
-  static getDerivedStateFromError(_: Error): ErrorBoundaryState {
+  static getDerivedStateFromError(_error: Error): ErrorBoundaryState {
     return { hasError: true };
   }
 

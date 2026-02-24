@@ -19,6 +19,8 @@ import WelcomeView from './components/WelcomeView';
 type ViewState = 'onboarding' | 'home' | 'schedule' | 'tickets' | 'packing' | 'history' | 'add_expense' | 'settle' | 'settings';
 
 const App: React.FC = () => {
+  // デバッグ用alert（画面が動いているか確認するため。本番確認後に削除します）
+  window.alert("たびログくん: Reactコンポーネント初期化OK");
   // --- State Management ---
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [budget, setBudget] = useState<number>(0);
@@ -53,7 +55,7 @@ const App: React.FC = () => {
       setTripId(id);
 
       // Load from LocalStorage only if tripId exists (editing existing trip)
-      const prefix = `oz - wari - ${id} -`;
+      const prefix = `oz-wari-${id}-`;
       const sBudget = localStorage.getItem(prefix + 'budget');
       if (sBudget) setBudget(parseInt(sBudget, 10));
 
@@ -155,7 +157,7 @@ const App: React.FC = () => {
   // --- Consolidated Persistence (Local Storage) ---
   useEffect(() => {
     if (!tripId) return;
-    const prefix = `oz - wari - ${tripId} -`;
+    const prefix = `oz-wari-${tripId}-`;
     const saveData = {
       budget,
       profiles: userProfiles,
@@ -261,7 +263,7 @@ const App: React.FC = () => {
     if (!window.confirm('サンプルデータを読み込みますか？現在のデータは一時的にバックアップされ、後で戻すことができます。')) return;
 
     // 現在のデータをバックアップ
-    const backupKey = `oz - wari - backup - ${new Date().getTime()} `;
+    const backupKey = `oz-wari-backup-${new Date().getTime()}`;
     const currentData = { expenses, itinerary, tickets, packingList, userProfiles, budget, tripName, tripStartDate, tripEndDate, tripCoverImage };
     localStorage.setItem(backupKey, JSON.stringify(currentData));
     localStorage.setItem('oz-wari-last-backup-key', backupKey); // 最新のバックアップキーを保存
@@ -571,9 +573,9 @@ const App: React.FC = () => {
   }, [expenses, userProfiles]);
 
   return (
-    <div className={`min - h - screen bg - ocean - light flex flex - col items - center antialiased font - sans select - none`}>
+    <div className={`min-h-screen bg-ocean-light flex flex-col items-center antialiased font-sans select-none`}>
       {/* Main Container */}
-      <div className={`${DEVICE_CONFIG[viewModeSize]?.width || 'max-w-md'} w - full mx - auto min - h - screen h - screen bg - surface - gray flex flex - col text - ink relative overflow - hidden sm: border - x sm: border - surface - gray - mid transition - all duration - 300 shadow - 2xl shadow - ocean - dark / 20`}>
+      <div className={`${DEVICE_CONFIG[viewModeSize]?.width || 'max-w-md'} w-full mx-auto min-h-screen h-screen bg-surface-gray flex flex-col text-ink relative overflow-hidden sm:border-x sm:border-surface-gray-mid transition-all duration-300 shadow-2xl shadow-ocean-dark/20`}>
 
         {/* Header - ANAブルー帯 */}
         <header className="bg-ocean-dark px-5 pt-2 pb-2 flex justify-between items-center z-20 safe-pt shadow-sm">
@@ -587,7 +589,7 @@ const App: React.FC = () => {
               onClick={async () => {
                 if (tripId) {
                   // window.location.href ではなく、確実にIDを含めたURLを再構築する
-                  const url = `${window.location.origin}${window.location.pathname}?trip = ${tripId} `;
+                  const url = `${window.location.origin}${window.location.pathname}?trip=${tripId}`;
                   if (navigator.share) {
                     try {
                       await navigator.share({ title: 'たびログくん', text: '旅行の計画を立てよう！', url });
@@ -618,7 +620,7 @@ const App: React.FC = () => {
                       budget
                     });
                     setTripId(newId);
-                    const url = `${window.location.origin}${window.location.pathname}?trip = ${newId} `;
+                    const url = `${window.location.origin}${window.location.pathname}?trip=${newId}`;
                     window.history.pushState({}, '', url);
 
                     if (navigator.share) {
@@ -684,7 +686,7 @@ const App: React.FC = () => {
                   budget: 1000000 // Default 1M
                 });
                 setTripId(newId);
-                const url = `${window.location.origin}${window.location.pathname}?trip = ${newId} `;
+                const url = `${window.location.origin}${window.location.pathname}?trip=${newId}`;
                 window.history.pushState({}, '', url);
                 setView('home');
                 setSyncStatus('success');
