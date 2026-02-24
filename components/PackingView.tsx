@@ -1,6 +1,6 @@
-
 import React, { useState, useMemo } from 'react';
 import { PackingItem, UserProfile } from '../types';
+import { suggestCategory } from '../utils/packingDictionary';
 
 interface Props {
     items: PackingItem[];
@@ -9,7 +9,7 @@ interface Props {
     isTablet?: boolean;
 }
 
-const CATEGORIES = ['衣類', '洗面用具', '電子機器', '重要書類', '常備薬', 'その他'] as const;
+const CATEGORIES = ['必需品', '衣類', '洗面用具', '電子機器', '日用品', '医薬品', '食品', 'その他'] as const;
 
 const PackingView: React.FC<Props> = ({ items, userProfiles, onUpdate, isTablet = false }) => {
     const [newItemTitle, setNewItemTitle] = useState('');
@@ -52,6 +52,7 @@ const PackingView: React.FC<Props> = ({ items, userProfiles, onUpdate, isTablet 
 
         onUpdate(prev => [...prev, newItem]);
         setNewItemTitle('');
+        setNewItemCategory(CATEGORIES[0]); // Reset to default
         setNewItemParticipantId(undefined);
         setShowAddForm(false);
     };
@@ -80,6 +81,15 @@ const PackingView: React.FC<Props> = ({ items, userProfiles, onUpdate, isTablet 
     };
 
     const getProfile = (id?: string) => userProfiles.find(p => p.id === id);
+
+    // アイテム名入力時のカテゴリ自動判定
+    const handleTitleChange = (val: string) => {
+        setNewItemTitle(val);
+        const suggestion = suggestCategory(val);
+        if (suggestion && CATEGORIES.includes(suggestion as any)) {
+            setNewItemCategory(suggestion);
+        }
+    };
 
     return (
         <div className="space-y-6 pt-2 pb-10">
@@ -122,7 +132,7 @@ const PackingView: React.FC<Props> = ({ items, userProfiles, onUpdate, isTablet 
                                 type="text"
                                 placeholder="例: パスポート、充電器..."
                                 value={newItemTitle}
-                                onChange={(e) => setNewItemTitle(e.target.value)}
+                                onChange={(e) => handleTitleChange(e.target.value)}
                                 className="w-full bg-white border border-surface-gray-mid rounded-xl px-4 py-3 text-sm focus:border-primary outline-none transition-all shadow-sm"
                             />
                         </div>

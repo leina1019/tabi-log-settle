@@ -103,7 +103,7 @@ const WelcomeView: React.FC<Props> = ({ onStart, onDemoStart }) => {
                                 デモ版をひらく（検証用）
                             </button>
                         )}
-                        <p className="mt-8 text-[10px] text-ink-light uppercase tracking-widest font-bold">Powered by Reina & Antigravity</p>
+                        <p className="mt-8 text-[10px] text-ink-light uppercase tracking-widest font-bold">Powered by Reina</p>
                     </div>
                 )}
 

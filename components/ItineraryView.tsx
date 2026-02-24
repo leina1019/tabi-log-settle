@@ -3,6 +3,8 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { ItineraryItem, UserProfile, Participant } from '../types';
 import { fetchOgpData } from '../services/ogpService';
 import { MEMBER_COLORS } from '../constants';
+import { fetchWeather, WeatherData, searchLocation } from '../services/weatherService';
+import { escapeHtml } from '../utils/security';
 
 // 予定種類の定義（ラベル + アイコン）
 const ITEM_TYPES: { value: ItineraryItem['type']; label: string; icon: string }[] = [
@@ -48,6 +50,7 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
   const [isCopying, setIsCopying] = useState(false);
   const [isFetchingOgp, setIsFetchingOgp] = useState(false);
   const [validationError, setValidationError] = useState('');
+  const [weatherData, setWeatherData] = useState<WeatherData[]>([]);
   const imageInputRef = useRef<HTMLInputElement>(null);
 
   // 旅行期間の日付配列を生成
@@ -75,6 +78,20 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dateRange]);
+
+  // 天気情報の取得
+  useEffect(() => {
+    const loadWeather = async () => {
+      // 最初のアイテムの場所、または「目的地」で検索（簡易実装）
+      const destination = items.find(i => i.location)?.location || 'Tokyo';
+      const loc = await searchLocation(destination);
+      if (loc) {
+        const weather = await fetchWeather(loc.latitude, loc.longitude);
+        setWeatherData(weather);
+      }
+    };
+    loadWeather();
+  }, [items]);
 
   // 選択日の予定を時刻順に並べる
   const filteredItems = useMemo(() => {
@@ -360,15 +377,21 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
           {dateRange.map((d, i) => {
             const label = getDayLabel(d, i);
             const isSelected = selectedDate === d;
+            const isToday = d === new Date().toISOString().split('T')[0];
             return (
               <button
                 key={d}
                 onClick={() => setSelectedDate(d)}
-                className={`flex-shrink-0 flex flex-col items-center justify-center w-16 h-20 rounded-2xl border transition-all ${isSelected
+                className={`flex-shrink-0 flex flex-col items-center justify-center w-16 h-20 rounded-2xl border transition-all relative ${isSelected
                   ? 'bg-primary border-primary shadow-md transform scale-105'
                   : 'bg-surface-gray border-surface-gray-mid text-ink-light'
                   }`}
               >
+                {isToday && (
+                  <span className="absolute -top-1 -right-1 bg-emerald-500 text-white text-[7px] font-black px-1.5 py-0.5 rounded-full shadow-sm z-10 animate-pulse">
+                    TODAY
+                  </span>
+                )}
                 <span className={`text-[9px] font-bold uppercase tracking-wider mb-1 ${isSelected ? 'text-white' : 'text-ink-light'}`}>{label.day}</span>
                 <span className={`text-lg font-bold leading-none ${isSelected ? 'text-white' : 'text-ink'}`}>{label.date}</span>
                 <span className={`text-[10px] font-bold ${isSelected ? 'text-white/80' : 'text-ink-light'}`}>{label.week}</span>
@@ -377,6 +400,29 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
           })}
         </div>
       </div>
+
+      {/* 今日の天気サマリー (7日以内) */}
+      {selectedDate && weatherData.length > 0 && (() => {
+        const dayWeather = weatherData.find(w => w.date === selectedDate);
+        if (!dayWeather) return null;
+        return (
+          <div className="px-4 mb-4">
+            <div className="bg-white/50 backdrop-blur-sm border border-white/60 rounded-2xl p-3 flex items-center justify-between shadow-sm">
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">{dayWeather.icon}</span>
+                <div>
+                  <p className="text-[8px] font-bold text-ink-sub uppercase tracking-widest">Forecast</p>
+                  <p className="text-[10px] font-bold text-ink">天気予報</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="text-sm font-black text-ink">{dayWeather.tempMax}° / {dayWeather.tempMin}°</p>
+                <p className="text-[8px] font-bold text-ink-light uppercase">Celsius</p>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* タイムライン表示 */}
       <div className="flex-1 overflow-y-auto px-4 pb-20 relative">
@@ -389,8 +435,15 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
             {/* タイムライン縦線 */}
             <div className="absolute left-[54px] top-4 bottom-0 w-[2px] bg-surface-gray-mid"></div>
 
-            {filteredItems.map((item) => {
+            {filteredItems.map((item, idx) => {
               const typeInfo = getTypeInfo(item.type);
+              const now = new Date();
+              const currentTimeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+              const isToday = selectedDate === now.toISOString().split('T')[0];
+
+              // 次の予定判定: 今日かつ、まだ始まっていない最初の予定
+              const isNext = isToday && item.time > currentTimeStr && (idx === 0 || filteredItems[idx - 1].time <= currentTimeStr);
+
               return (
                 <React.Fragment key={item.id}>
                   <div className="flex gap-4 mb-6 relative group">
@@ -456,7 +509,14 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
                           <div className="flex items-start gap-2 mb-2 pr-8">
                             <span className="text-xl">{typeInfo.icon}</span>
                             <div className="min-w-0">
-                              <span className="text-[10px] font-bold text-primary uppercase tracking-wider block mb-0.5">{typeInfo.label}</span>
+                              <div className="flex items-center gap-2">
+                                <span className="text-[10px] font-bold text-primary uppercase tracking-wider block">{typeInfo.label}</span>
+                                {isNext && (
+                                  <span className="bg-emerald-500 text-white text-[7px] font-black px-1.5 py-0.5 rounded-full animate-pulse shadow-sm shadow-emerald-500/20">
+                                    NEXT
+                                  </span>
+                                )}
+                              </div>
                               <h3 className="text-base font-bold text-ink leading-tight truncate">{item.title}</h3>
                             </div>
                           </div>

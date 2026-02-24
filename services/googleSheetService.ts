@@ -1,6 +1,7 @@
 
 import { Expense, ItineraryItem, Ticket, UserProfile } from '../types';
 import { convertToJPY } from '../utils/currency';
+import { MEMBER_COLORS } from '../constants';
 
 const GAS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbxMLrlCb3WphIRPzcnnoqKA615GJT0bylB-rMuUMZtEf85GK9yybzdlxhauUhypFAr1XQ/exec';
 
@@ -81,6 +82,7 @@ export async function fetchAllData(): Promise<CloudData> {
           id,
           displayName: String(item.title),
           avatarUrl: item.sourceUrl, // Storing avatar URL directly in sourceUrl
+          color: MEMBER_COLORS[result.profiles.length % MEMBER_COLORS.length], // Fallback color
           updatedAt
         });
       } else if (category === CAT_TRIP_SETTINGS) {
@@ -260,6 +262,123 @@ export async function resetSheetData(): Promise<boolean> {
     });
     return true;
   } catch (error) {
+    return false;
+  }
+}
+
+export async function syncAllDataToSheet(data: CloudData): Promise<boolean> {
+  try {
+    // 1. Reset sheet first (optional but cleaner for full sync)
+    await resetSheetData();
+
+    // 2. Prepare bulk payload
+    const payload: { action: string; data: any[] } = {
+      action: 'BULK_SAVE',
+      data: [
+        ...data.profiles.map(p => ({
+          id: `PROFILE_${p.id}`,
+          date: '2024-01-01', // Dummy date for profiles
+          title: p.displayName,
+          category: CAT_PROFILE,
+          paidBy: p.id,
+          amount: 0,
+          currency: 'JPY',
+          exchangeRate: 1,
+          amountJPY: 0,
+          splitWith: '',
+          sourceUrl: p.avatarUrl || '',
+          createdAt: new Date().toISOString(),
+          updatedAt: p.updatedAt || new Date().toISOString()
+        })),
+        ...data.expenses.map(e => ({
+          id: e.id,
+          date: e.date,
+          title: e.title,
+          category: e.category,
+          paidBy: e.paidBy,
+          amount: e.amount,
+          currency: e.currency,
+          exchangeRate: e.exchangeRate,
+          amountJPY: convertToJPY(e.amount, e.currency, e.exchangeRate),
+          splitWith: e.splitWith.join(', '),
+          sourceUrl: e.sourceUrl || '',
+          createdAt: e.createdAt,
+          updatedAt: e.updatedAt
+        })),
+        ...data.itinerary.map(item => ({
+          id: `ITINERARY_${item.id}`,
+          date: item.date,
+          title: item.title,
+          category: CAT_ITINERARY,
+          paidBy: 'SYSTEM',
+          amount: 0,
+          currency: 'JPY',
+          exchangeRate: 1,
+          amountJPY: 0,
+          splitWith: '',
+          sourceUrl: JSON.stringify({
+            time: item.time,
+            location: item.location,
+            memo: item.memo,
+            link: item.link,
+            type: item.type
+          }),
+          createdAt: new Date().toISOString(),
+          updatedAt: item.updatedAt || new Date().toISOString()
+        })),
+        ...data.tickets.map(item => ({
+          id: `TICKET_${item.id}`,
+          date: item.date,
+          title: item.title,
+          category: CAT_TICKET,
+          paidBy: 'SYSTEM',
+          amount: 0,
+          currency: 'JPY',
+          exchangeRate: 1,
+          amountJPY: 0,
+          splitWith: '',
+          sourceUrl: JSON.stringify({
+            type: item.type,
+            provider: item.provider,
+            time: item.time,
+            referenceNumber: item.referenceNumber,
+            notes: item.notes,
+            link: item.link
+          }),
+          createdAt: new Date().toISOString(),
+          updatedAt: item.updatedAt || new Date().toISOString()
+        }))
+      ]
+    };
+
+    if (data.tripSettings) {
+      payload.data.push({
+        id: 'TRIP_SETTINGS',
+        date: '2024-01-01',
+        title: 'Trip Settings',
+        category: CAT_TRIP_SETTINGS,
+        paidBy: 'SYSTEM',
+        amount: 0,
+        currency: 'JPY',
+        exchangeRate: 1,
+        amountJPY: 0,
+        splitWith: '',
+        sourceUrl: JSON.stringify(data.tripSettings),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      });
+    }
+
+    await fetch(GAS_WEBAPP_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    return true;
+  } catch (error) {
+    console.error('Bulk sync failed:', error);
     return false;
   }
 }

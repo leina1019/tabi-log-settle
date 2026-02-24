@@ -5,18 +5,36 @@ import { MEMBER_COLORS, DEVICE_CONFIG } from '../constants';
 
 interface Props {
   userProfiles: UserProfile[];
+  expenses: any[];
+  itinerary: any[];
+  tickets: any[];
+  budget: number;
+  tripName: string;
+  tripStartDate: string;
+  tripEndDate: string;
+  coverImage: string;
   onUpdateProfile: (id: Participant, updates: Partial<UserProfile>) => void;
   onLoadSampleData: () => void;
   onRestoreData: () => void;
   onBack: () => void;
   viewModeSize: ViewModeSize;
   onUpdateViewModeSize: (size: ViewModeSize) => void;
+  onImportFullData: (data: any) => void;
+  onSyncToSheet: () => void;
+  onFetchFromSheet: () => void;
+  isSyncing: boolean;
 }
 
-const SettingsView: React.FC<Props> = ({ userProfiles, onUpdateProfile, onLoadSampleData, onRestoreData, onBack, viewModeSize, onUpdateViewModeSize }) => {
+const SettingsView: React.FC<Props> = ({
+  userProfiles, expenses, itinerary, tickets, budget, tripName, tripStartDate, tripEndDate, coverImage,
+  onUpdateProfile, onLoadSampleData, onRestoreData, onBack, viewModeSize, onUpdateViewModeSize,
+  onImportFullData, onSyncToSheet, onFetchFromSheet, isSyncing
+}) => {
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const jsonImportRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, id: string) => {
+    // ... existing handleFileChange ...
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
@@ -44,8 +62,41 @@ const SettingsView: React.FC<Props> = ({ userProfiles, onUpdateProfile, onLoadSa
     reader.readAsDataURL(file);
   };
 
-  const getProfile = (id: string) => {
-    return userProfiles.find(p => p.id === id) || { id, displayName: id, avatarUrl: '' };
+  const handleExportJSON = () => {
+    const data = {
+      version: '1.0',
+      exportDate: new Date().toISOString(),
+      tripDetails: { tripName, tripStartDate, tripEndDate, coverImage, budget },
+      userProfiles,
+      expenses,
+      itinerary,
+      tickets
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `tabilog-backup-${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImportJSONChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const data = JSON.parse(event.target?.result as string);
+        if (window.confirm('データをインポートしますか？現在のデータは上書きされます。')) {
+          onImportFullData(data);
+          alert('インポートが完了しました。');
+        }
+      } catch (err) {
+        alert('無効なJSONファイルです。');
+      }
+    };
+    reader.readAsDataURL(file);
   };
 
   return (
@@ -54,12 +105,69 @@ const SettingsView: React.FC<Props> = ({ userProfiles, onUpdateProfile, onLoadSa
         <button type="button" onClick={onBack} className="p-2 -ml-2 text-ink-sub hover:text-ink">
           <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
         </button>
-        <h2 className="text-xl font-sans font-bold text-ink">メンバー設定</h2>
+        <h2 className="text-xl font-sans font-bold text-ink">設定</h2>
+      </div>
+
+      {/* クラウド同期セクション */}
+      <div className="bg-white p-6 rounded-3xl space-y-4 shadow-sm border border-surface-gray-mid">
+        <p className="text-[10px] text-ink-light font-bold uppercase tracking-widest">クラウド同期</p>
+        <p className="text-[11px] text-ink-sub leading-relaxed font-bold">
+          Googleスプレッドシートとデータを同期します。
+        </p>
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            onClick={onSyncToSheet}
+            disabled={isSyncing}
+            className="flex flex-col items-center justify-center p-4 bg-emerald-50 border border-emerald-100 rounded-2xl gap-2 active:scale-95 transition-all disabled:opacity-50"
+          >
+            <span className="text-xl">📤</span>
+            <span className="text-[10px] font-bold text-emerald-700">保存・同期</span>
+          </button>
+          <button
+            onClick={onFetchFromSheet}
+            disabled={isSyncing}
+            className="flex flex-col items-center justify-center p-4 bg-ocean-light/20 border border-ocean-light/30 rounded-2xl gap-2 active:scale-95 transition-all disabled:opacity-50"
+          >
+            <span className="text-xl">📥</span>
+            <span className="text-[10px] font-bold text-ocean-dark">最新を取得</span>
+          </button>
+        </div>
+        <p className="text-[8px] text-ink-light leading-relaxed italic mt-1">
+          ※ 取得ボタン長押しで「スプレッドシートから全データ強制再取得」が可能です。
+        </p>
+      </div>
+
+      {/* データ管理セクション */}
+      <div className="bg-white p-6 rounded-3xl space-y-4 shadow-sm border border-surface-gray-mid">
+        <p className="text-[10px] text-ink-light font-bold uppercase tracking-widest">データ管理</p>
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            onClick={handleExportJSON}
+            className="flex flex-col items-center justify-center p-4 bg-surface-gray border border-surface-gray-mid rounded-2xl gap-2 active:scale-95 transition-all"
+          >
+            <span className="text-xl">💾</span>
+            <span className="text-[10px] font-bold text-ink">JSONエクスポート</span>
+          </button>
+          <button
+            onClick={() => jsonImportRef.current?.click()}
+            className="flex flex-col items-center justify-center p-4 bg-surface-gray border border-surface-gray-mid rounded-2xl gap-2 active:scale-95 transition-all"
+          >
+            <span className="text-xl">📂</span>
+            <span className="text-[10px] font-bold text-ink">JSONインポート</span>
+          </button>
+          <input
+            type="file"
+            ref={jsonImportRef}
+            className="hidden"
+            accept=".json"
+            onChange={handleImportJSONChange}
+          />
+        </div>
       </div>
 
       <div className="bg-white p-6 rounded-3xl space-y-6 shadow-sm border border-surface-gray-mid">
         <p className="text-[10px] text-ink-light font-bold uppercase tracking-widest">プロフィール編集</p>
-
+        {/* ... userProfiles components remain same ... */}
         {userProfiles.map(profile => {
           const pId = profile.id;
           return (
@@ -115,23 +223,6 @@ const SettingsView: React.FC<Props> = ({ userProfiles, onUpdateProfile, onLoadSa
                   ))}
                 </div>
               </div>
-
-              <div className="flex justify-end gap-3 mt-1">
-                <button
-                  onClick={() => fileInputRefs.current[pId]?.click()}
-                  className="text-[10px] text-accent font-bold uppercase tracking-wider"
-                >
-                  画像を変更
-                </button>
-                {profile.avatarUrl && (
-                  <button
-                    onClick={() => onUpdateProfile(pId, { avatarUrl: '' })}
-                    className="text-[10px] text-ink-light hover:text-rose-500 font-bold uppercase"
-                  >
-                    画像を削除
-                  </button>
-                )}
-              </div>
             </div>
           );
         })}
@@ -158,9 +249,6 @@ const SettingsView: React.FC<Props> = ({ userProfiles, onUpdateProfile, onLoadSa
             </button>
           ))}
         </div>
-        <p className="text-[8px] text-ink-light leading-relaxed italic mt-2">
-          ※ PCなどの大きな画面で閲覧する際の表示シミュレーションとしてご利用ください。
-        </p>
       </div>
 
       <div className="px-2 space-y-4">
@@ -171,10 +259,6 @@ const SettingsView: React.FC<Props> = ({ userProfiles, onUpdateProfile, onLoadSa
           <span className="text-xl">✈️</span>
           <div className="text-center">
             <p className="text-sm font-bold text-primary text-center">デモ用サンプルデータを読み込む</p>
-            <p className="text-[10px] text-ink-light mt-1 text-center">
-              5泊6日のオーストラリア旅行データ（3名分）が自動入力されます。<br />
-              現在のデータは一時的に保存され、以下から戻すことが可能です。
-            </p>
           </div>
         </button>
 
@@ -186,9 +270,6 @@ const SettingsView: React.FC<Props> = ({ userProfiles, onUpdateProfile, onLoadSa
             <span className="text-xl">🔙</span>
             <div className="text-center">
               <p className="text-sm font-bold text-emerald-700">元のデータに戻す</p>
-              <p className="text-[10px] text-emerald-600/70 mt-1">
-                サンプルデータを読み込む直前の状態を復元します。
-              </p>
             </div>
           </button>
         )}

@@ -11,8 +11,8 @@ import ItineraryView from './components/ItineraryView';
 import TicketView from './components/TicketView';
 import SettingsView from './components/SettingsView';
 import PackingView from './components/PackingView';
-import { createNewTrip, subscribeToTrip, updateTripData, TripData } from './services/firebaseService';
-// import { fetchAllData, syncExpenseToSheet, ... } from './services/googleSheetService';
+import { createNewTrip, subscribeToTrip, updateTripData } from './services/firebaseService';
+import { fetchAllData, syncAllDataToSheet } from './services/googleSheetService';
 import { SAMPLE_PROFILES, SAMPLE_ITINERARY, SAMPLE_EXPENSES, SAMPLE_TICKETS, SAMPLE_PACKING } from './utils/sampleData';
 import WelcomeView from './components/WelcomeView';
 
@@ -738,6 +738,18 @@ const App: React.FC = () => {
               onBack={() => setView('home')}
               viewModeSize={viewModeSize}
               onUpdateViewModeSize={setViewModeSize}
+              expenses={expenses}
+              itinerary={itinerary}
+              tickets={tickets}
+              budget={budget}
+              tripName={tripName}
+              tripStartDate={tripStartDate}
+              tripEndDate={tripEndDate}
+              coverImage={tripCoverImage}
+              onImportFullData={handleImportFullData}
+              onSyncToSheet={handleSyncToSheet}
+              onFetchFromSheet={handleFetchFromSheet}
+              isSyncing={isSyncing}
             />
           )}
         </main>
@@ -769,13 +781,6 @@ const App: React.FC = () => {
                 {isAddMenuOpen && (
                   <div className="absolute bottom-20 left-1/2 -translate-x-1/2 flex flex-col gap-3 items-center animate-in slide-in-from-bottom-4 fade-in duration-300">
                     <button
-                      onClick={() => { setView('packing'); setIsAddMenuOpen(false); }}
-                      className="flex items-center gap-3 bg-white px-5 py-3 rounded-2xl shadow-xl border border-surface-gray-mid whitespace-nowrap active:scale-95 transition-transform"
-                    >
-                      <span className="text-lg">📦</span>
-                      <span className="text-xs font-bold text-ink">持ち物の追加</span>
-                    </button>
-                    <button
                       onClick={() => { setView('schedule'); setIsAddMenuOpen(false); }}
                       className="flex items-center gap-3 bg-white px-5 py-3 rounded-2xl shadow-xl border border-surface-gray-mid whitespace-nowrap active:scale-95 transition-transform"
                     >
@@ -788,6 +793,13 @@ const App: React.FC = () => {
                     >
                       <span className="text-lg">💰</span>
                       <span className="text-xs font-bold text-ink">支出の登録</span>
+                    </button>
+                    <button
+                      onClick={() => { setView('packing'); setIsAddMenuOpen(false); }}
+                      className="flex items-center gap-3 bg-white px-5 py-3 rounded-2xl shadow-xl border border-surface-gray-mid whitespace-nowrap active:scale-95 transition-transform"
+                    >
+                      <span className="text-lg">📦</span>
+                      <span className="text-xs font-bold text-ink">持ち物の追加</span>
                     </button>
                   </div>
                 )}
