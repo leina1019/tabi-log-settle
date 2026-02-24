@@ -34,7 +34,6 @@ const SettingsView: React.FC<Props> = ({
   const jsonImportRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, id: string) => {
-    // ... existing handleFileChange ...
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
@@ -100,191 +99,294 @@ const SettingsView: React.FC<Props> = ({
   };
 
   return (
-    <div className="space-y-6 pt-2 pb-10">
-      <div className="flex items-center gap-2 mb-4 px-2">
-        <button type="button" onClick={onBack} className="p-2 -ml-2 text-ink-sub hover:text-ink">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
-        </button>
-        <h2 className="text-xl font-sans font-bold text-ink">設定</h2>
-      </div>
-
-      {/* クラウド同期セクション */}
-      <div className="bg-white p-6 rounded-3xl space-y-4 shadow-sm border border-surface-gray-mid">
-        <p className="text-[10px] text-ink-light font-bold uppercase tracking-widest">クラウド同期</p>
-        <p className="text-[11px] text-ink-sub leading-relaxed font-bold">
-          Googleスプレッドシートとデータを同期します。
-        </p>
-        <div className="grid grid-cols-2 gap-3">
+    <div className="space-y-8 pt-2 pb-20 max-w-2xl mx-auto px-1">
+      {/* ヘッダー */}
+      <div className="flex items-center justify-between mb-2 px-1">
+        <div className="flex items-center gap-3">
           <button
-            onClick={onSyncToSheet}
-            disabled={isSyncing}
-            className="flex flex-col items-center justify-center p-4 bg-emerald-50 border border-emerald-100 rounded-2xl gap-2 active:scale-95 transition-all disabled:opacity-50"
+            type="button"
+            onClick={onBack}
+            className="w-10 h-10 flex items-center justify-center bg-white rounded-full shadow-sm border border-surface-gray-mid text-ink-sub hover:text-primary transition-all active:scale-90"
           >
-            <AppIcon name="export" className="text-primary" />
-            <span className="text-[10px] font-bold text-emerald-700">保存・同期</span>
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" /></svg>
           </button>
-          <button
-            onPointerDown={(e) => {
-              const timer = setTimeout(() => {
-                onFetchFromSheet(true);
-              }, 1000);
-              const cancel = () => {
-                clearTimeout(timer);
-                e.target.removeEventListener('pointerup', cancel);
-                e.target.removeEventListener('pointerleave', cancel);
-              };
-              e.target.addEventListener('pointerup', cancel);
-              e.target.addEventListener('pointerleave', cancel);
-            }}
-            onClick={() => onFetchFromSheet(false)}
-            disabled={isSyncing}
-            className="flex flex-col items-center justify-center p-4 bg-ocean-light/20 border border-ocean-light/30 rounded-2xl gap-2 active:scale-95 transition-all disabled:opacity-50"
-          >
-            <AppIcon name="import" className="text-primary" />
-            <span className="text-[10px] font-bold text-ocean-dark">最新を取得</span>
-          </button>
+          <h2 className="text-2xl font-sans font-black text-ink tracking-tight">App Settings</h2>
         </div>
-        <p className="text-[8px] text-ink-light leading-relaxed italic mt-1">
-          ※ 取得ボタン長押し(1秒以上)で「スプレッドシートから全データ強制再取得」が可能です。
-        </p>
-      </div>
-
-      {/* データ管理セクション */}
-      <div className="bg-white p-6 rounded-3xl space-y-4 shadow-sm border border-surface-gray-mid">
-        <p className="text-[10px] text-ink-light font-bold uppercase tracking-widest">データ管理</p>
-        <div className="grid grid-cols-2 gap-3">
-          <button
-            onClick={handleExportJSON}
-            className="flex flex-col items-center justify-center p-4 bg-surface-gray border border-surface-gray-mid rounded-2xl gap-2 active:scale-95 transition-all"
-          >
-            <AppIcon name="save" className="text-primary" />
-            <span className="text-[10px] font-bold text-ink">JSONエクスポート</span>
-          </button>
-          <button
-            onClick={() => jsonImportRef.current?.click()}
-            className="flex flex-col items-center justify-center p-4 bg-surface-gray border border-surface-gray-mid rounded-2xl gap-2 active:scale-95 transition-all"
-          >
-            <AppIcon name="folder" className="text-primary" />
-            <span className="text-[10px] font-bold text-ink">JSONインポート</span>
-          </button>
-          <input
-            type="file"
-            ref={jsonImportRef}
-            className="hidden"
-            accept=".json"
-            onChange={handleImportJSONChange}
-          />
+        <div className="text-[10px] font-bold text-ink-light bg-surface-gray px-3 py-1.5 rounded-full uppercase tracking-widest border border-surface-gray-mid/50 shadow-sm">
+          Ver 1.2
         </div>
       </div>
 
-      <div className="bg-white p-6 rounded-3xl space-y-6 shadow-sm border border-surface-gray-mid">
-        <p className="text-[10px] text-ink-light font-bold uppercase tracking-widest">プロフィール編集</p>
-        {/* ... userProfiles components remain same ... */}
-        {userProfiles.map(profile => {
-          const pId = profile.id;
-          return (
-            <div key={pId} className="flex flex-col gap-3 p-4 bg-surface-gray rounded-2xl border border-surface-gray-mid">
-              <div className="flex items-center gap-4">
-                <div
-                  className="w-14 h-14 rounded-full bg-primary-light border-2 border-primary/20 flex items-center justify-center overflow-hidden relative cursor-pointer hover:border-accent transition-colors flex-shrink-0"
-                  onClick={() => fileInputRefs.current[pId]?.click()}
-                >
-                  {profile.avatarUrl ? (
-                    <img src={profile.avatarUrl} alt={profile.displayName} className="w-full h-full object-cover" />
-                  ) : (
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-primary/50" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-                    </svg>
-                  )}
-                  <div className="absolute inset-0 bg-primary/20 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-                    <span className="text-[8px] font-bold text-white">EDIT</span>
+      {/* 1. プロフィール編集 */}
+      <section className="space-y-4">
+        <div className="flex items-center gap-2 px-2">
+          <span className="text-xl">👤</span>
+          <h3 className="text-xs font-black text-ink uppercase tracking-[0.2em]">Profile Editing</h3>
+        </div>
+        <div className="grid grid-cols-1 gap-4">
+          {userProfiles.map(profile => {
+            const pId = profile.id;
+            return (
+              <div key={pId} className="bg-white rounded-[32px] p-6 shadow-xl shadow-ink/5 border border-surface-gray-mid/50 relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 blur-2xl group-hover:bg-primary/10 transition-colors"></div>
+                <div className="relative z-10 flex flex-col sm:flex-row gap-6 items-center sm:items-start">
+                  {/* アバター */}
+                  <div className="relative">
+                    <div
+                      className="w-24 h-24 rounded-[32px] bg-surface-gray border-4 border-white shadow-lg flex items-center justify-center overflow-hidden cursor-pointer hover:scale-105 transition-all group/avatar"
+                      onClick={() => fileInputRefs.current[pId]?.click()}
+                      style={{ borderColor: profile.color + '40' }}
+                    >
+                      {profile.avatarUrl ? (
+                        <img src={profile.avatarUrl} alt={profile.displayName} className="w-full h-full object-cover" />
+                      ) : (
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-ink-light/30" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                        </svg>
+                      )}
+                      <div className="absolute inset-0 bg-ink/40 flex items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-opacity backdrop-blur-[2px]">
+                        <span className="text-[10px] font-black text-white tracking-widest">CHANGE</span>
+                      </div>
+                    </div>
+                    <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-white rounded-full shadow-md flex items-center justify-center border border-surface-gray-mid">
+                      <AppIcon name="camera" className="w-4 h-4 text-primary" />
+                    </div>
+                  </div>
+
+                  {/* 詳細 */}
+                  <div className="flex-1 w-full space-y-5">
+                    <div>
+                      <label className="text-[10px] font-bold text-ink-sub uppercase tracking-widest mb-2 block">Display Name</label>
+                      <input
+                        type="text"
+                        value={profile.displayName}
+                        onChange={(e) => onUpdateProfile(pId, { displayName: e.target.value })}
+                        className="w-full bg-surface-gray border-2 border-transparent focus:border-primary/20 focus:bg-white rounded-2xl px-5 py-3.5 text-sm font-bold text-ink outline-none transition-all shadow-inner"
+                        placeholder="名前を入力..."
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-ink-sub uppercase tracking-widest mb-2 block">Member Color</label>
+                      <div className="flex flex-wrap gap-2.5">
+                        {MEMBER_COLORS.map(color => (
+                          <button
+                            key={color}
+                            type="button"
+                            onClick={() => onUpdateProfile(pId, { color })}
+                            className={`w-8 h-8 rounded-full border-4 transition-all active:scale-75 ${profile.color === color ? 'border-ink/20 scale-110 shadow-md' : 'border-transparent opacity-80 hover:opacity-100'}`}
+                            style={{ backgroundColor: color }}
+                          />
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                <div className="flex-1">
-                  <label className="text-[9px] font-bold text-ink-light uppercase tracking-wider mb-1 block">表示名</label>
-                  <input
-                    type="text"
-                    value={profile.displayName}
-                    onChange={(e) => onUpdateProfile(pId, { displayName: e.target.value })}
-                    className="w-full bg-transparent border-b border-surface-gray-mid py-1 text-sm font-bold text-ink outline-none focus:border-primary transition-colors"
-                  />
-                </div>
+                <input
+                  type="file"
+                  ref={(el) => { if (el) fileInputRefs.current[pId] = el; }}
+                  className="hidden"
+                  accept="image/*"
+                  onClick={(e) => { (e.target as HTMLInputElement).value = ''; }}
+                  onChange={(e) => handleFileChange(e, pId)}
+                />
               </div>
+            );
+          })}
+        </div>
+      </section>
 
-              <input
-                type="file"
-                ref={(el) => { if (el) fileInputRefs.current[pId] = el; }}
-                className="hidden"
-                accept="image/*"
-                onClick={(e) => { (e.target as HTMLInputElement).value = ''; }}
-                onChange={(e) => handleFileChange(e, pId)}
-              />
-
-              <div className="mt-4 pt-4 border-t border-surface-gray-mid/50">
-                <label className="text-[9px] font-bold text-ink-light uppercase tracking-wider mb-2 block">メンバーカラー</label>
-                <div className="flex flex-wrap gap-2">
-                  {MEMBER_COLORS.map(color => (
-                    <button
-                      key={color}
-                      type="button"
-                      onClick={() => onUpdateProfile(pId, { color })}
-                      className={`w-7 h-7 rounded-sm border-2 transition-all ${profile.color === color ? 'border-ink scale-110 shadow-sm' : 'border-white/50'}`}
-                      style={{ backgroundColor: color }}
-                    />
-                  ))}
+      {/* 2. 表示設定 */}
+      <section className="space-y-4">
+        <div className="flex items-center gap-2 px-2">
+          <span className="text-xl">📱</span>
+          <h3 className="text-xs font-black text-ink uppercase tracking-[0.2em]">Display Settings</h3>
+        </div>
+        <div className="bg-white rounded-[32px] p-6 shadow-xl shadow-ink/5 border border-surface-gray-mid/50">
+          <p className="text-[11px] text-ink-sub leading-relaxed font-bold mb-6 px-1">
+            利用中のデバイスに合わせて画面サイズを切り替えます。
+          </p>
+          <div className="grid grid-cols-2 gap-4">
+            {(Object.entries(DEVICE_CONFIG) as [ViewModeSize, typeof DEVICE_CONFIG[keyof typeof DEVICE_CONFIG]][]).map(([key, config]) => (
+              <button
+                key={key}
+                onClick={() => onUpdateViewModeSize(key)}
+                className={`group p-5 rounded-3xl border-2 transition-all flex flex-col items-center gap-3 relative ${viewModeSize === key ? 'border-primary bg-primary/5 shadow-lg' : 'border-surface-gray-mid/30 bg-surface-gray/50 hover:bg-white hover:border-primary/20 hover:shadow-md'}`}
+              >
+                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-3xl transition-transform group-hover:scale-110 ${viewModeSize === key ? 'bg-primary text-white shadow-xl shadow-primary/20' : 'bg-white text-ink-sub shadow-sm'}`}>
+                  {config.icon}
                 </div>
+                <div className="text-center">
+                  <span className={`text-[10px] font-black uppercase tracking-widest block mb-1 ${viewModeSize === key ? 'text-primary' : 'text-ink-sub'}`}>{config.label}</span>
+                  <span className="text-[8px] font-bold text-ink-light opacity-60 block leading-tight">{config.description}</span>
+                </div>
+                {viewModeSize === key && (
+                  <div className="absolute top-3 right-3 w-2.5 h-2.5 rounded-full bg-accent shadow-[0_0_8px_rgba(255,215,0,0.8)] animate-pulse" />
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 3. クラウド同期 */}
+      <section className="space-y-4">
+        <div className="flex items-center gap-2 px-2">
+          <span className="text-xl">☁️</span>
+          <h3 className="text-xs font-black text-ink uppercase tracking-[0.2em]">Cloud Sync</h3>
+        </div>
+        <div className="bg-gradient-to-br from-ocean-dark to-primary p-7 rounded-[32px] text-white shadow-xl shadow-ocean-dark/20 relative overflow-hidden">
+          <div className="absolute -right-8 -top-8 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
+          <div className="relative z-10">
+            <div className="flex items-center gap-4 mb-5">
+              <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-7 h-7" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" /><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" /><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" /><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" /><path fill="none" d="M0 0h48v48H0z" /></svg>
+              </div>
+              <div>
+                <h4 className="text-sm font-black uppercase tracking-widest mb-1">Spreadsheet Sync</h4>
+                <p className="text-[10px] opacity-70 font-bold leading-tight">Googleスプレッドシートとデータを<br />リアルタイムで同期します。</p>
               </div>
             </div>
-          );
-        })}
-      </div>
 
-      <div className="bg-white p-6 rounded-3xl space-y-4 shadow-sm border border-surface-gray-mid">
-        <p className="text-[10px] text-ink-light font-bold uppercase tracking-widest">表示設定</p>
-        <p className="text-[11px] text-ink-sub leading-relaxed font-bold">
-          利用中のデバイスに合わせて画面サイズを切り替えます。
-        </p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {(Object.entries(DEVICE_CONFIG) as [ViewModeSize, typeof DEVICE_CONFIG[keyof typeof DEVICE_CONFIG]][]).map(([key, config]) => (
-            <button
-              key={key}
-              onClick={() => onUpdateViewModeSize(key)}
-              className={`p-4 rounded-2xl border-2 transition-all flex flex-col items-start gap-1 group ${viewModeSize === key ? 'border-primary bg-primary/5 shadow-inner' : 'border-surface-gray-mid bg-surface-gray hover:border-primary/40'}`}
-            >
-              <div className="flex items-center justify-between w-full mb-1">
-                <span className="text-xl group-hover:scale-110 transition-transform">{config.icon}</span>
-                {viewModeSize === key && <div className="w-2 h-2 rounded-full bg-primary" />}
-              </div>
-              <span className={`text-[11px] font-black uppercase tracking-wider ${viewModeSize === key ? 'text-primary' : 'text-ink-sub'}`}>{config.label}</span>
-              <span className="text-[9px] text-ink-light">{config.description}</span>
-            </button>
-          ))}
-        </div>
-      </div>
+            <div className="grid grid-cols-1 gap-3">
+              <button
+                onClick={onSyncToSheet}
+                disabled={isSyncing}
+                className="group flex items-center justify-between p-4 bg-white/10 hover:bg-white/20 active:bg-white/30 backdrop-blur-md border border-white/20 rounded-2xl transition-all disabled:opacity-50"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center shadow-lg group-active:scale-90 transition-transform">
+                    <AppIcon name="export" className="w-5 h-5 text-white" />
+                  </div>
+                  <span className="text-[11px] font-black uppercase tracking-widest">保存・同期を実行</span>
+                </div>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" /></svg>
+              </button>
 
-      <div className="px-2 space-y-4">
-        <button
-          onClick={onLoadSampleData}
-          className="w-full bg-white border border-dashed border-primary/40 p-5 rounded-3xl flex flex-col items-center gap-2 hover:bg-primary-light/30 transition-colors shadow-sm active:scale-95"
-        >
-          <span className="text-xl">✈️</span>
-          <div className="text-center">
-            <p className="text-sm font-bold text-primary text-center">デモ用サンプルデータを読み込む</p>
+              <button
+                onPointerDown={(e) => {
+                  const timer = setTimeout(() => {
+                    onFetchFromSheet(true);
+                  }, 1000);
+                  const cancel = () => {
+                    clearTimeout(timer);
+                    e.target.removeEventListener('pointerup', cancel);
+                    e.target.removeEventListener('pointerleave', cancel);
+                  };
+                  e.target.addEventListener('pointerup', cancel);
+                  e.target.addEventListener('pointerleave', cancel);
+                }}
+                onClick={() => onFetchFromSheet(false)}
+                disabled={isSyncing}
+                className="group flex items-center justify-between p-4 bg-white/10 hover:bg-white/20 active:bg-white/30 backdrop-blur-md border border-white/20 rounded-2xl transition-all disabled:opacity-50"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-ocean-light rounded-lg flex items-center justify-center shadow-lg group-active:scale-90 transition-transform">
+                    <AppIcon name="import" className="w-5 h-5 text-white" />
+                  </div>
+                  <span className="text-[11px] font-black uppercase tracking-widest">最新データを取得</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {isSyncing && <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" /></svg>
+                </div>
+              </button>
+            </div>
+
+            <div className="mt-4 flex items-start gap-2 text-white/50 bg-black/10 p-3 rounded-xl border border-white/5">
+              <span className="text-xs">💡</span>
+              <p className="text-[9px] font-bold leading-relaxed">
+                [最新を取得] ボタンを **1秒以上長押し** すると、ローカルの変更を破棄してスプレッドシートから強制再取得できます。
+              </p>
+            </div>
           </div>
-        </button>
+        </div>
+      </section>
 
-        {localStorage.getItem('oz-wari-last-backup-key') && (
+      {/* 4. データ管理 */}
+      <section className="space-y-4">
+        <div className="flex items-center gap-2 px-2">
+          <span className="text-xl">📁</span>
+          <h3 className="text-xs font-black text-ink uppercase tracking-[0.2em]">Data Management</h3>
+        </div>
+        <div className="bg-white rounded-[32px] p-6 shadow-xl shadow-ink/5 border border-surface-gray-mid/50">
+          <div className="grid grid-cols-2 gap-4">
+            <button
+              onClick={handleExportJSON}
+              className="flex flex-col items-center justify-center p-5 bg-surface-gray/50 hover:bg-white border-2 border-transparent hover:border-primary/20 rounded-3xl gap-3 transition-all active:scale-95 hover:shadow-md"
+            >
+              <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm">
+                <AppIcon name="save" className="w-6 h-6 text-primary" />
+              </div>
+              <span className="text-[10px] font-black uppercase tracking-widest text-ink">JSON Export</span>
+            </button>
+            <button
+              onClick={() => jsonImportRef.current?.click()}
+              className="flex flex-col items-center justify-center p-5 bg-surface-gray/50 hover:bg-white border-2 border-transparent hover:border-primary/20 rounded-3xl gap-3 transition-all active:scale-95 hover:shadow-md"
+            >
+              <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm">
+                <AppIcon name="folder" className="w-6 h-6 text-primary" />
+              </div>
+              <span className="text-[10px] font-black uppercase tracking-widest text-ink">JSON Import</span>
+            </button>
+            <input
+              type="file"
+              ref={jsonImportRef}
+              className="hidden"
+              accept=".json"
+              onChange={handleImportJSONChange}
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* 5. デモデータ */}
+      <section className="space-y-4">
+        <div className="flex items-center gap-2 px-2">
+          <span className="text-xl">🚀</span>
+          <h3 className="text-xs font-black text-ink uppercase tracking-[0.2em]">Demo Data</h3>
+        </div>
+        <div className="px-1 space-y-4">
           <button
-            onClick={onRestoreData}
-            className="w-full bg-emerald-50 border border-emerald-200 p-5 rounded-3xl flex flex-col items-center gap-2 hover:bg-emerald-100/50 transition-colors shadow-sm active:scale-95"
+            onClick={onLoadSampleData}
+            className="w-full relative overflow-hidden bg-white border-2 border-dashed border-primary/20 p-6 rounded-[32px] flex flex-col items-center gap-3 hover:bg-primary/5 hover:border-primary/40 transition-all shadow-sm active:scale-95 group"
           >
-            <AppIcon name="back" className="text-primary" />
-            <div className="text-center">
-              <p className="text-sm font-bold text-emerald-700">元のデータに戻す</p>
+            <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-full -mr-12 -mt-12 blur-2xl group-hover:scale-150 transition-transform"></div>
+            <div className="w-16 h-16 bg-primary-light/30 rounded-full flex items-center justify-center text-3xl shadow-inner group-hover:scale-110 transition-transform">
+              ✈️
+            </div>
+            <div className="text-center relative z-10">
+              <p className="text-sm font-black text-primary tracking-tight">Load Sample Trip Data</p>
+              <p className="text-[10px] text-ink-light font-bold mt-1 opacity-60">アプリの機能を体験するためのデモデータを読み込みます。</p>
             </div>
           </button>
-        )}
+
+          {localStorage.getItem('oz-wari-last-backup-key') && (
+            <button
+              onClick={onRestoreData}
+              className="w-full bg-emerald-50 border-2 border-emerald-100/50 p-6 rounded-[32px] flex items-center justify-center gap-4 hover:bg-emerald-100 transition-all shadow-sm active:scale-95 group"
+            >
+              <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm text-emerald-600 group-hover:rotate-[-12deg] transition-transform">
+                <AppIcon name="back" className="w-6 h-6" />
+              </div>
+              <div className="text-left">
+                <p className="text-xs font-black text-emerald-700 uppercase tracking-widest">Restore Previous Data</p>
+                <p className="text-[9px] text-emerald-600/60 font-bold">デモ読み込み前のデータに復元します。</p>
+              </div>
+            </button>
+          )}
+        </div>
+      </section>
+
+      {/* フッターとしての戻るボタン */}
+      <div className="pt-6 border-t border-surface-gray-mid/30 px-2">
+        <button
+          type="button"
+          onClick={onBack}
+          className="w-full py-5 bg-ink text-white rounded-[24px] text-xs font-black uppercase tracking-[0.3em] shadow-xl shadow-ink/20 active:scale-95 transition-all"
+        >
+          Back to Dashboard
+        </button>
       </div>
     </div>
   );
