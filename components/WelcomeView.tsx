@@ -85,8 +85,11 @@ const WelcomeView: React.FC<Props> = ({ onStart, onDemoStart }) => {
 
                 {step === 'welcome' && (
                     <div className="flex-1 flex flex-col items-center justify-center text-center animate-in fade-in zoom-in duration-500">
-                        <div className="w-24 h-24 bg-primary-light rounded-[32px] flex items-center justify-center text-5xl mb-8 shadow-inner">✈️</div>
-                        <h2 className="text-3xl font-bold text-ink mb-4 leading-tight">たびログくんへ<br />ようこそ！</h2>
+                        <div className="mb-8 animate-bounce">
+                            <img src="/logo_light.png" alt="TabiLog Logo" className="w-48 h-auto drop-shadow-2xl" onError={(e) => { e.currentTarget.style.display = 'none'; if (e.currentTarget.nextSibling) (e.currentTarget.nextSibling as HTMLElement).style.display = 'flex'; }} />
+                            <div className="hidden w-24 h-24 bg-primary-light rounded-[32px] items-center justify-center text-5xl shadow-inner">✈️</div>
+                        </div>
+                        <h2 className="text-4xl font-sans font-black text-ink mb-4 leading-tight tracking-tighter">TabiLogへ<br />ようこそ！</h2>
                         <p className="text-ink-sub text-sm mb-12 leading-relaxed px-4">
                             旅行のスケジュール管理から、面倒な割り勘の計算まで。みんなで共有して最高の旅を作りましょう。
                         </p>

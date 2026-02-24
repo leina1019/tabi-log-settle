@@ -33,7 +33,7 @@ const App: React.FC = () => {
 
   const [view, setView] = useState<ViewState>('home');
   const [viewModeSize, setViewModeSize] = useState<ViewModeSize>(() => {
-    const saved = localStorage.getItem('oz-wari-view-mode-size');
+    const saved = localStorage.getItem('tabilog-view-mode-size');
     if (saved && Object.keys(DEVICE_CONFIG).includes(saved)) return saved as ViewModeSize;
     return 'phone';
   });
@@ -53,7 +53,7 @@ const App: React.FC = () => {
       setTripId(id);
 
       // Load from LocalStorage only if tripId exists (editing existing trip)
-      const prefix = `oz-wari-${id}-`;
+      const prefix = `tabilog-${id}-`;
       const sBudget = localStorage.getItem(prefix + 'budget');
       if (sBudget) setBudget(parseInt(sBudget, 10));
 
@@ -596,9 +596,13 @@ const App: React.FC = () => {
 
         {/* Header - ANAブルー帯 */}
         <header className="bg-ocean-dark px-5 pt-2 pb-2 flex justify-between items-center z-20 safe-pt shadow-sm">
-          <h1 className="font-sans text-lg font-bold tracking-wide text-white flex items-center gap-2">
-            <span className="text-accent text-2xl">✈</span> たびログくん
-          </h1>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl overflow-hidden shadow-inner bg-white/20 p-1 flex items-center justify-center">
+              <img src="/logo_light.png" alt="Logo" className="w-full h-full object-contain" onError={(e) => { e.currentTarget.style.display = 'none'; if (e.currentTarget.nextSibling) (e.currentTarget.nextSibling as HTMLElement).classList.remove('hidden'); }} />
+              <div className="hidden text-xl">✈️</div>
+            </div>
+            <h1 className="text-xl font-sans font-black tracking-tighter text-white">TabiLog</h1>
+          </div>
           <div className="flex items-center gap-2">
             {syncStatus === 'syncing' && <span className="text-[10px] text-accent animate-pulse">SYNCING...</span>}
             {tripId && <span className="text-xs text-white font-bold bg-white/20 px-2 py-1 rounded-full border border-white/30">● 同期中</span>}

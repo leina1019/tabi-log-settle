@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 
 // デバッグ用（JSが正常に読み込まれたことを確認）
-console.log("たびログくん: アプリ起動シーケンス開始");
+console.log('TabiLog initialized');
 
 interface ErrorBoundaryProps {
   children: ReactNode;
