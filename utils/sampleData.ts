@@ -2,6 +2,11 @@
 import { Expense, ItineraryItem, UserProfile, Ticket, PackingItem } from '../types';
 import { MEMBER_COLORS, EXCHANGE_RATE_AUD_TO_JPY } from '../constants';
 
+/**
+ * デモ用サンプルデータを生成
+ * Reina, Ken, Sarah の3人グループによるシドニー旅行を想定
+ */
+
 // 今日の日付をベースに6日間の旅行データを生成
 const today = new Date();
 const d = (days: number) => {
@@ -10,9 +15,27 @@ const d = (days: number) => {
 };
 
 export const SAMPLE_PROFILES: UserProfile[] = [
-    { id: 'Reina', displayName: 'Reina', color: MEMBER_COLORS[0], updatedAt: new Date().toISOString() },
-    { id: 'Ken', displayName: 'Ken', color: MEMBER_COLORS[1], updatedAt: new Date().toISOString() },
-    { id: 'Sarah', displayName: 'Sarah', color: MEMBER_COLORS[4], updatedAt: new Date().toISOString() },
+    {
+        id: 'Reina',
+        displayName: 'Reina',
+        color: MEMBER_COLORS[0],
+        avatarUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=200&auto=format&fit=crop',
+        updatedAt: new Date().toISOString()
+    },
+    {
+        id: 'Ken',
+        displayName: 'Ken',
+        color: MEMBER_COLORS[1],
+        avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200&auto=format&fit=crop',
+        updatedAt: new Date().toISOString()
+    },
+    {
+        id: 'Sarah',
+        displayName: 'Sarah',
+        color: MEMBER_COLORS[4],
+        avatarUrl: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=200&auto=format&fit=crop',
+        updatedAt: new Date().toISOString()
+    },
 ];
 
 export const SAMPLE_ITINERARY: ItineraryItem[] = [
@@ -39,7 +62,7 @@ export const SAMPLE_ITINERARY: ItineraryItem[] = [
         type: 'meal',
         memo: '有名なパンケーキ店。リブも美味しい！',
         imageUrl: 'https://images.unsplash.com/photo-1517701604599-bb23b32062aa?q=80&w=600&auto=format&fit=crop',
-        mapUrl: 'https://maps.app.goo.gl/hGzB9x9XzXzXzXzXz',
+        mapUrl: '', // 空白にして自動生成リンクをテスト
         links: [{ label: 'メニュー', url: 'https://pancakesontherocks.com.au/' }]
     },
     {
@@ -64,7 +87,7 @@ export const SAMPLE_ITINERARY: ItineraryItem[] = [
         location: 'Circular Quay, Sydney',
         type: 'meal',
         memo: 'ハーバーブリッジの夜景が見えるレストランを散策。',
-        imageUrl: 'https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?q=80&w=800&auto=format&fit=crop',
+        imageUrl: '', // 空白にしてOGP自動取得をテスト
         mapUrl: 'https://maps.app.goo.gl/wW5K5K5K5K5K5K5K5'
     },
 
@@ -215,11 +238,11 @@ export const SAMPLE_TICKETS: Ticket[] = [
 ];
 
 export const SAMPLE_PACKING: PackingItem[] = [
-    { id: 'p-1', category: '重要書類', title: 'パスポート', isPacked: true, updatedAt: new Date().toISOString() },
-    { id: 'p-2', category: '重要書類', title: '航空券Eチケット', isPacked: true, updatedAt: new Date().toISOString() },
-    { id: 'p-3', category: '電子機器', title: '変換プラグ (タイプO)', isPacked: false, updatedAt: new Date().toISOString() },
-    { id: 'p-4', category: '洗面用具', title: '日焼け止め', isPacked: false, updatedAt: new Date().toISOString() },
-    { id: 'p-5', category: '衣服', title: '薄手の羽織もの', isPacked: true, participantId: 'Reina', updatedAt: new Date().toISOString() },
+    { id: 'p-1', category: '必需品', title: 'パスポート', isPacked: true, updatedAt: new Date().toISOString() },
+    { id: 'p-2', category: '必需品', title: 'クレジットカード', isPacked: true, updatedAt: new Date().toISOString() },
+    { id: 'p-3', category: '電子機器', title: '変圧器', isPacked: false, updatedAt: new Date().toISOString() },
+    { id: 'p-4', category: '日用品', title: '日焼け止め', isPacked: false, updatedAt: new Date().toISOString() },
+    { id: 'p-5', category: '衣類', title: '水着', isPacked: true, participantId: 'Reina', updatedAt: new Date().toISOString() },
     { id: 'p-6', category: '電子機器', title: 'モバイルバッテリー', isPacked: false, updatedAt: new Date().toISOString() },
-    { id: 'p-7', category: '重要書類', title: '海外旅行保険証', isPacked: false, updatedAt: new Date().toISOString() },
+    { id: 'p-7', category: '電子機器', title: '充電器', isPacked: false, updatedAt: new Date().toISOString() },
 ];
