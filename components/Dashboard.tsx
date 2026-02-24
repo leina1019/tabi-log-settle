@@ -1,7 +1,9 @@
 import React, { useState, useMemo, useRef } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
-import { Expense, Settlement, Participant, UserProfile } from '../types';
+import { Expense, Settlement, Participant, UserProfile, ItineraryItem } from '../types';
 import { formatCurrency, convertToJPY } from '../utils/currency';
+import { fetchWeather, WeatherData, searchLocation } from '../services/weatherService';
+import { WeatherIcon } from './WeatherIcon';
 
 interface Props {
   expenses: Expense[];
@@ -17,6 +19,7 @@ interface Props {
   userProfiles: UserProfile[];
   tripCoverImage: string;
   onTripCoverImageChange: (url: string) => void;
+  itinerary: ItineraryItem[];
   isTablet?: boolean;
 }
 
@@ -34,6 +37,7 @@ const Dashboard: React.FC<Props> = ({
   userProfiles,
   tripCoverImage,
   onTripCoverImageChange,
+  itinerary,
   isTablet = false
 }) => {
   const [selectedMemberId, setSelectedMemberId] = useState<Participant | 'ALL' | null>(null);
@@ -45,6 +49,7 @@ const Dashboard: React.FC<Props> = ({
   const [tempEnd, setTempEnd] = useState(tripEndDate);
   const [tempCoverImage, setTempCoverImage] = useState(tripCoverImage);
   const [error, setError] = useState<string | null>(null);
+  const [weatherData, setWeatherData] = useState<WeatherData[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const totalJPY = expenses.reduce((sum, e) => sum + convertToJPY(e.amount, e.currency, e.exchangeRate), 0);
@@ -223,6 +228,29 @@ const Dashboard: React.FC<Props> = ({
     return { text: `Day ${day}`, sub: "Enjoy your trip!" };
   }, [tripStartDate, tripEndDate]);
 
+  // 天気情報の取得
+  React.useEffect(() => {
+    const loadWeather = async () => {
+      try {
+        const destination = itinerary.find(i => i.location)?.location;
+        if (!destination) return;
+        const loc = await searchLocation(destination);
+        if (loc) {
+          const weather = await fetchWeather(loc.latitude, loc.longitude);
+          setWeatherData(weather);
+        }
+      } catch (e) {
+        console.error('Weather sync failed:', e);
+      }
+    };
+    loadWeather();
+  }, [itinerary]);
+
+  const currentWeather = useMemo(() => {
+    const todayStr = new Date().toISOString().split('T')[0];
+    return weatherData.find(w => w.date === todayStr) || (weatherData.length > 0 ? weatherData[0] : null);
+  }, [weatherData]);
+
   const formattedDateRange = useMemo(() => {
     if (!tripStartDate) return "Set Dates";
     const s = new Date(tripStartDate), e = tripEndDate ? new Date(tripEndDate) : null;
@@ -247,6 +275,12 @@ const Dashboard: React.FC<Props> = ({
               <p className="text-lg sm:text-2xl font-bold text-white/90">{tripStatus.text}</p>
             </div>
             <div className="flex flex-col items-end gap-1">
+              {currentWeather && (
+                <div className="flex items-center gap-1 bg-white/10 backdrop-blur-md px-2 py-1 rounded-lg border border-white/20 mb-1">
+                  <WeatherIcon code={currentWeather.weatherCode} className="w-4 h-4" />
+                  <span className="text-[10px] font-bold">{currentWeather.tempMax}°</span>
+                </div>
+              )}
               <span className="px-2 py-0.5 border border-white/30 rounded-full bg-black/20 backdrop-blur-sm text-[8px] sm:text-[10px]">{formattedDateRange}</span>
               <span className="text-[8px] sm:text-[10px] font-medium opacity-60">{userProfiles.length} Travelers</span>
             </div>

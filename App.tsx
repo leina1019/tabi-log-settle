@@ -748,6 +748,7 @@ const App: React.FC = () => {
               userProfiles={userProfiles}
               tripCoverImage={tripCoverImage}
               onTripCoverImageChange={updateTripCoverImage}
+              itinerary={itinerary}
               isTablet={viewModeSize.startsWith('tablet')}
             />
           )}

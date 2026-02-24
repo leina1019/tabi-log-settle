@@ -425,23 +425,19 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
         if (!dayWeather) return null;
         return (
           <div className="px-4 mb-4">
-            return (
-            <div className="px-4 mb-4">
-              <div className="bg-white/50 backdrop-blur-sm border border-white/60 rounded-2xl p-3 flex items-center justify-between shadow-sm">
-                <div className="flex items-center gap-3">
-                  <WeatherIcon code={dayWeather.weatherCode} className="w-8 h-8" />
-                  <div>
-                    <p className="text-[8px] font-bold text-ink-sub uppercase tracking-widest">Forecast</p>
-                    <p className="text-[10px] font-bold text-ink">今日の予報</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-black text-ink">{dayWeather.tempMax}° / {dayWeather.tempMin}°</p>
-                  <p className="text-[8px] font-bold text-ink-light uppercase">Celsius</p>
+            <div className="bg-white/50 backdrop-blur-sm border border-white/60 rounded-2xl p-3 flex items-center justify-between shadow-sm">
+              <div className="flex items-center gap-3">
+                <WeatherIcon code={dayWeather.weatherCode} className="w-8 h-8" />
+                <div>
+                  <p className="text-[8px] font-bold text-ink-sub uppercase tracking-widest">Forecast</p>
+                  <p className="text-[10px] font-bold text-ink">今日の予報</p>
                 </div>
               </div>
+              <div className="text-right">
+                <p className="text-sm font-black text-ink">{dayWeather.tempMax}° / {dayWeather.tempMin}°</p>
+                <p className="text-[8px] font-bold text-ink-light uppercase">Celsius</p>
+              </div>
             </div>
-            );
           </div>
         );
       })()}
