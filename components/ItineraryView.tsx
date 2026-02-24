@@ -274,8 +274,8 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
 
   // URL入力後にOGPを自動取得（0.8秒のデバウンス）
   useEffect(() => {
-    // 互換性維持のためのformData.link、または複数リンクの最初の1件
-    const url = formData.link || (formData.links && formData.links.length > 0 ? formData.links[0].url : '');
+    // 優先順位: 1.mapUrl > 2.link > 3.links[0]
+    const url = formData.mapUrl || formData.link || (formData.links && formData.links.length > 0 ? formData.links[0].url : '');
 
     if (!url || !url.startsWith('http') || formData.imageUrl) return; // 既に画像あれば取得しない
 
@@ -293,7 +293,7 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
 
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formData.link, formData.links]);
+  }, [formData.mapUrl, formData.link, formData.links]);
 
   // 日付タブのラベル生成
   const getDayLabel = (dateStr: string, index: number) => {
@@ -382,7 +382,7 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
       </div>
 
       {/* 日付タブ */}
-      <div className="overflow-x-auto scrollbar-hide mb-2 px-4">
+      <div className="overflow-x-auto scrollbar-hide mb-2 px-4 pt-4">
         <div className="flex gap-3 pb-2 min-w-min">
           {dateRange.map((d, i) => {
             const label = getDayLabel(d, i);
@@ -398,7 +398,7 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
                   }`}
               >
                 {isToday && (
-                  <span className="absolute -top-1 -right-1 bg-emerald-500 text-white text-[7px] font-black px-1.5 py-0.5 rounded-full shadow-sm z-10 animate-pulse">
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-emerald-500 text-white text-[7px] font-black px-1.5 py-0.5 rounded-full shadow-sm z-10 animate-pulse whitespace-nowrap">
                     TODAY
                   </span>
                 )}
