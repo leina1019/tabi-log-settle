@@ -58,7 +58,13 @@ const App: React.FC = () => {
       if (sBudget) setBudget(parseInt(sBudget, 10));
 
       const sProfiles = localStorage.getItem(prefix + 'profiles');
-      if (sProfiles) setUserProfiles(JSON.parse(sProfiles));
+      if (sProfiles) {
+        try {
+          setUserProfiles(JSON.parse(sProfiles));
+        } catch (e) {
+          console.error("Failed to parse profiles from localStorage", e);
+        }
+      }
 
       const sStart = localStorage.getItem(prefix + 'trip-start');
       if (sStart) setTripStartDate(sStart);
@@ -73,16 +79,40 @@ const App: React.FC = () => {
       if (sCover) setTripCoverImage(sCover);
 
       const sExpenses = localStorage.getItem(prefix + 'expenses');
-      if (sExpenses) setExpenses(JSON.parse(sExpenses));
+      if (sExpenses) {
+        try {
+          setExpenses(JSON.parse(sExpenses));
+        } catch (e) {
+          console.error("Failed to parse expenses from localStorage", e);
+        }
+      }
 
       const sItinerary = localStorage.getItem(prefix + 'itinerary');
-      if (sItinerary) setItinerary(JSON.parse(sItinerary));
+      if (sItinerary) {
+        try {
+          setItinerary(JSON.parse(sItinerary));
+        } catch (e) {
+          console.error("Failed to parse itinerary from localStorage", e);
+        }
+      }
 
       const sTickets = localStorage.getItem(prefix + 'tickets');
-      if (sTickets) setTickets(JSON.parse(sTickets));
+      if (sTickets) {
+        try {
+          setTickets(JSON.parse(sTickets));
+        } catch (e) {
+          console.error("Failed to parse tickets from localStorage", e);
+        }
+      }
 
       const sPacking = localStorage.getItem(prefix + 'packing');
-      if (sPacking) setPackingList(JSON.parse(sPacking));
+      if (sPacking) {
+        try {
+          setPackingList(JSON.parse(sPacking));
+        } catch (e) {
+          console.error("Failed to parse packing list from localStorage", e);
+        }
+      }
     } else {
       // BASE URL: No tripId. Check if we have any data to show, otherwise show onboarding.
       // If we want to support a "default" local-only trip without ID, we can do it here,

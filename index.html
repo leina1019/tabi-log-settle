@@ -2,6 +2,31 @@
 <html lang="ja">
 
 <head>
+  <script>
+    window.onerror = function (msg, url, line, col, error) {
+      var div = document.createElement('div');
+      div.style.position = 'fixed';
+      div.style.top = '0';
+      div.style.left = '0';
+      div.style.width = '100%';
+      div.style.height = '100%';
+      div.style.backgroundColor = 'white';
+      div.style.color = 'red';
+      div.style.zIndex = '9999';
+      div.style.padding = '20px';
+      div.style.overflow = 'auto';
+      div.innerHTML = '<h2>Global Error Detected</h2>' +
+        '<p><b>Message:</b> ' + msg + '</p>' +
+        '<p><b>Source:</b> ' + url + ' (Line: ' + line + ', Col: ' + col + ')</p>' +
+        '<p><b>Stack:</b> ' + (error ? error.stack : 'N/A') + '</p>' +
+        '<button onclick="location.reload()" style="padding: 10px; background: #003780; color: white; border: none; border-radius: 8px;">Reload</button>';
+      document.body ? document.body.appendChild(div) : window.onload = function () { document.body.appendChild(div); };
+      return false;
+    };
+    window.onunhandledrejection = function (event) {
+      console.error('Unhandled Promise Rejection:', event.reason);
+    };
+  </script>
   <meta charset="UTF-8">
   <meta name="viewport"
     content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=0">
@@ -109,18 +134,6 @@
       background: #94A3B8;
     }
   </style>
-  <script type="importmap">
-{
-  "imports": {
-    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
-    "react/": "https://esm.sh/react@^19.2.4/",
-    "react": "https://esm.sh/react@^19.2.4",
-    "recharts": "https://esm.sh/recharts@^3.7.0",
-    "@google/genai": "https://esm.sh/@google/genai@^1.40.0",
-    "framer-motion": "https://esm.sh/framer-motion@^10.16.4"
-  }
-}
-</script>
   <link rel="stylesheet" href="/index.css">
 </head>
 
