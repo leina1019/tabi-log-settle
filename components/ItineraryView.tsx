@@ -4,6 +4,7 @@ import { ItineraryItem, UserProfile, Participant } from '../types';
 import { fetchOgpData } from '../services/ogpService';
 import { MEMBER_COLORS } from '../constants';
 import { fetchWeather, WeatherData, searchLocation } from '../services/weatherService';
+import { WeatherIcon } from './WeatherIcon';
 import { escapeHtml } from '../utils/security';
 
 // 予定種類の定義（ラベル + アイコン）
@@ -82,16 +83,22 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
   // 天気情報の取得
   useEffect(() => {
     const loadWeather = async () => {
-      // 最初のアイテムの場所、または「目的地」で検索（簡易実装）
-      const destination = items.find(i => i.location)?.location || 'Tokyo';
-      const loc = await searchLocation(destination);
-      if (loc) {
-        const weather = await fetchWeather(loc.latitude, loc.longitude);
-        setWeatherData(weather);
+      try {
+        // 全日程の代表的な場所を特定（最初に見つかった場所）
+        const destination = items.find(i => i.location)?.location;
+        if (!destination) return;
+
+        const loc = await searchLocation(destination);
+        if (loc) {
+          const weather = await fetchWeather(loc.latitude, loc.longitude);
+          setWeatherData(weather);
+        }
+      } catch (e) {
+        console.error('Weather sync failed:', e);
       }
     };
     loadWeather();
-  }, [items]);
+  }, [items, tripStartDate]); // 加えて旅行開始日が設定された時も実行
 
   // 選択日の予定を時刻順に並べる
   const filteredItems = useMemo(() => {
@@ -382,7 +389,7 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
               <button
                 key={d}
                 onClick={() => setSelectedDate(d)}
-                className={`flex-shrink-0 flex flex-col items-center justify-center w-16 h-20 rounded-2xl border transition-all relative ${isSelected
+                className={`flex-shrink-0 flex flex-col items-center justify-center w-16 h-24 rounded-2xl border transition-all relative ${isSelected
                   ? 'bg-primary border-primary shadow-md transform scale-105'
                   : 'bg-surface-gray border-surface-gray-mid text-ink-light'
                   }`}
@@ -394,7 +401,14 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
                 )}
                 <span className={`text-[9px] font-bold uppercase tracking-wider mb-1 ${isSelected ? 'text-white' : 'text-ink-light'}`}>{label.day}</span>
                 <span className={`text-lg font-bold leading-none ${isSelected ? 'text-white' : 'text-ink'}`}>{label.date}</span>
-                <span className={`text-[10px] font-bold ${isSelected ? 'text-white/80' : 'text-ink-light'}`}>{label.week}</span>
+                <span className={`text-[10px] font-bold ${isSelected ? 'text-white/80' : 'text-ink-light'} mb-1`}>{label.week}</span>
+
+                {/* 日付タブ内の天気アイコン */}
+                {weatherData.find(w => w.date === d) && (
+                  <div className="mt-1">
+                    <WeatherIcon code={weatherData.find(w => w.date === d)!.weatherCode} className="w-5 h-5" />
+                  </div>
+                )}
               </button>
             );
           })}
@@ -407,19 +421,23 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
         if (!dayWeather) return null;
         return (
           <div className="px-4 mb-4">
-            <div className="bg-white/50 backdrop-blur-sm border border-white/60 rounded-2xl p-3 flex items-center justify-between shadow-sm">
-              <div className="flex items-center gap-3">
-                <span className="text-2xl">{dayWeather.icon}</span>
-                <div>
-                  <p className="text-[8px] font-bold text-ink-sub uppercase tracking-widest">Forecast</p>
-                  <p className="text-[10px] font-bold text-ink">天気予報</p>
+            return (
+            <div className="px-4 mb-4">
+              <div className="bg-white/50 backdrop-blur-sm border border-white/60 rounded-2xl p-3 flex items-center justify-between shadow-sm">
+                <div className="flex items-center gap-3">
+                  <WeatherIcon code={dayWeather.weatherCode} className="w-8 h-8" />
+                  <div>
+                    <p className="text-[8px] font-bold text-ink-sub uppercase tracking-widest">Forecast</p>
+                    <p className="text-[10px] font-bold text-ink">今日の予報</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-black text-ink">{dayWeather.tempMax}° / {dayWeather.tempMin}°</p>
+                  <p className="text-[8px] font-bold text-ink-light uppercase">Celsius</p>
                 </div>
               </div>
-              <div className="text-right">
-                <p className="text-sm font-black text-ink">{dayWeather.tempMax}° / {dayWeather.tempMin}°</p>
-                <p className="text-[8px] font-bold text-ink-light uppercase">Celsius</p>
-              </div>
             </div>
+            );
           </div>
         );
       })()}

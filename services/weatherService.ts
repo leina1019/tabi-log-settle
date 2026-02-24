@@ -8,7 +8,8 @@ const GEOCODING_URL = 'https://geocoding-api.open-meteo.com/v1/search';
 
 export interface WeatherData {
     date: string;
-    icon: string;
+    icon: string; // Keep for backward compatibility if needed
+    weatherCode: number;
     tempMax: number;
     tempMin: number;
 }
@@ -55,7 +56,8 @@ export async function fetchWeather(lat: number, lon: number): Promise<WeatherDat
         if (data.daily) {
             return data.daily.time.map((time: string, index: number) => ({
                 date: time,
-                icon: getWeatherIcon(data.daily.weather_code[index]),
+                icon: '', // Deprecated
+                weatherCode: data.daily.weather_code[index],
                 tempMax: Math.round(data.daily.temperature_2m_max[index]),
                 tempMin: Math.round(data.daily.temperature_2m_min[index]),
             }));
