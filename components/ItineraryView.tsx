@@ -9,14 +9,14 @@ import { AppIcon, type IconName } from './AppIcon';
 import { escapeHtml } from '../utils/security';
 
 // 予定種類の定義（ラベル + アイコン）
-const ITEM_TYPES: { value: ItineraryItem['type']; label: string; icon: IconName }[] = [
-  { value: 'activity', label: 'アクティビティ', icon: 'activity' },
-  { value: 'sightseeing', label: '観光・スポット', icon: 'sightseeing' },
-  { value: 'meal', label: '食事・カフェ', icon: 'meal' },
-  { value: 'shopping', label: 'ショッピング', icon: 'shopping' },
-  { value: 'move', label: '移動・交通', icon: 'move' },
-  { value: 'stay', label: '宿泊', icon: 'stay' },
-  { value: 'other', label: 'その他', icon: 'other' },
+const ITEM_TYPES: { value: ItineraryItem['type']; label: string; icon: string }[] = [
+  { value: 'activity', label: 'アクティビティ', icon: '🎾' },
+  { value: 'sightseeing', label: '観光・スポット', icon: '📸' },
+  { value: 'meal', label: '食事・カフェ', icon: '🍴' },
+  { value: 'shopping', label: 'ショッピング', icon: '🛍️' },
+  { value: 'move', label: '移動・交通', icon: '✈️' },
+  { value: 'stay', label: '宿泊', icon: '🏨' },
+  { value: 'other', label: 'その他', icon: '✨' },
 ];
 
 const TYPE_IMAGES: Record<string, string> = {

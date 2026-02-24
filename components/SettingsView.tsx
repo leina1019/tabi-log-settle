@@ -241,7 +241,7 @@ const SettingsView: React.FC<Props> = ({
               className={`p-4 rounded-2xl border-2 transition-all flex flex-col items-start gap-1 group ${viewModeSize === key ? 'border-primary bg-primary/5 shadow-inner' : 'border-surface-gray-mid bg-surface-gray hover:border-primary/40'}`}
             >
               <div className="flex items-center justify-between w-full mb-1">
-                <AppIcon name={config.icon} className={`w-6 h-6 transition-transform group-hover:scale-110 ${viewModeSize === key ? 'text-primary' : 'text-ink-sub'}`} />
+                <span className="text-xl group-hover:scale-110 transition-transform">{config.icon}</span>
                 {viewModeSize === key && <div className="w-2 h-2 rounded-full bg-primary" />}
               </div>
               <span className={`text-[11px] font-black uppercase tracking-wider ${viewModeSize === key ? 'text-primary' : 'text-ink-sub'}`}>{config.label}</span>
