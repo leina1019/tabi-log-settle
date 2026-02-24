@@ -275,10 +275,15 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
 
   // URL入力後にOGPを自動取得（0.8秒のデバウンス）
   useEffect(() => {
-    // 優先順位: 1.mapUrl > 2.link > 3.links[0]
-    const url = formData.mapUrl || formData.link || (formData.links && formData.links.length > 0 ? formData.links[0].url : '');
+    // 優先順位: 1.関連リンク[0] > 2.link > 3.mapUrl
+    // Reinaのフィードバックに基づき、より具体的な情報のありそうなリンクを優先
+    const url = (formData.links && formData.links.length > 0 ? formData.links[0].url : '') || formData.link || formData.mapUrl;
 
-    if (!url || !url.startsWith('http') || formData.imageUrl) return; // 既に画像あれば取得しない
+    if (!url || !url.startsWith('http')) return;
+
+    // すでに画像がある場合でも、「リンクから優先取得」がONなら上書きを試みる
+    const canFetch = (formData as any).preferOgp || !formData.imageUrl;
+    if (!canFetch) return;
 
     const timer = setTimeout(async () => {
       setIsFetchingOgp(true);
@@ -294,7 +299,7 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
 
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formData.mapUrl, formData.link, formData.links]);
+  }, [formData.mapUrl, formData.link, formData.links, (formData as any).preferOgp]);
 
   // 日付タブのラベル生成
   const getDayLabel = (dateStr: string, index: number) => {
@@ -409,7 +414,7 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
 
                 {/* 日付タブ内の天気アイコン */}
                 {weatherData.find(w => w.date === d) && (
-                  <div className="mt-1">
+                  <div className="pt-2">
                     <WeatherIcon code={weatherData.find(w => w.date === d)!.weatherCode} className="w-5 h-5" />
                   </div>
                 )}
@@ -742,7 +747,18 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
                       placeholder="例: 浅草寺、新宿駅"
                       className="flex-1 bg-surface-gray border border-surface-gray-mid rounded-xl p-3 text-sm text-ink outline-none focus:border-primary"
                       value={formData.location || ''}
-                      onChange={e => { setFormData({ ...formData, location: e.target.value }); setValidationError(''); }}
+                      onChange={e => {
+                        const newLoc = e.target.value;
+                        setFormData(prev => ({
+                          ...prev,
+                          location: newLoc,
+                          // 場所名が入力され、かつGoogleマップURLがまだ空の場合のみ自動生成
+                          mapUrl: (!prev.mapUrl || prev.mapUrl.includes('google.com/maps/search'))
+                            ? (newLoc ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(newLoc)}` : '')
+                            : prev.mapUrl
+                        }));
+                        setValidationError('');
+                      }}
                     />
                     {formData.location && (
                       <button
@@ -818,6 +834,21 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
                     <AppIcon name="plus" className="w-3 h-3 inline-block mr-1" /> リンクを追加
                   </button>
                 </div>
+              </div>
+
+              {/* OGP取得設定 */}
+              <div className="pt-2">
+                <p className="text-[9px] font-bold text-ink-sub uppercase mb-2">カバー画像の取得設定</p>
+                <label className="flex items-center gap-2 cursor-pointer p-3 bg-surface-gray rounded-xl border border-surface-gray-mid transition-colors hover:bg-white">
+                  <input
+                    type="checkbox"
+                    className="w-4 h-4 rounded text-primary focus:ring-primary"
+                    checked={!!(formData as any).preferOgp}
+                    onChange={e => setFormData({ ...formData, [('preferOgp' as any)]: e.target.checked })}
+                  />
+                  <span className="text-xs font-bold text-ink">入力されたリンクから画像を自動取得する</span>
+                </label>
+                <p className="text-[8px] text-ink-light mt-1 ml-1">※チェックを入れると、保存時にリンク先の画像を優先的に取得・設定します</p>
               </div>
 
               {/* メモ */}
