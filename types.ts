@@ -79,3 +79,19 @@ export interface PackingItem {
 }
 
 export type ViewModeSize = 'phone' | 'phone-l' | 'tablet-s' | 'tablet-m' | 'tablet-l';
+
+export interface TripData {
+  id?: string;
+  name?: string;
+  startDate?: string;
+  endDate?: string;
+  coverImage?: string;
+  budget?: number;
+  expenses?: Expense[];
+  itinerary?: ItineraryItem[];
+  tickets?: Ticket[];
+  packingList?: PackingItem[];
+  userProfiles?: UserProfile[];
+  createdAt?: any;
+  updatedAt?: any;
+}

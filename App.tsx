@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { Expense, Participant, Settlement, ItineraryItem, Ticket, UserProfile, PackingItem, ViewModeSize } from './types';
+import { Expense, Participant, Settlement, ItineraryItem, Ticket, UserProfile, PackingItem, ViewModeSize, TripData } from './types';
 import { MEMBER_COLORS, DEVICE_CONFIG } from './constants';
 import { convertToJPY } from './utils/currency';
 import ExpenseForm from './components/ExpenseForm';
@@ -41,6 +41,7 @@ const App: React.FC = () => {
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'success' | 'error'>('idle');
   const [tripId, setTripId] = useState<string | null>(null);
+  const [isSyncing, setIsSyncing] = useState(false);
   // 削除済みIDを一時的に保持して、同期時のゾンビ復活を防ぐ
   const deletedIdsRef = useRef<Set<string>>(new Set());
 
@@ -121,82 +122,34 @@ const App: React.FC = () => {
     }
   }, [tripId]);
 
-  // --- Effects (Local Storage) ---
+  // --- Consolidated Persistence (Local Storage) ---
   useEffect(() => {
     if (!tripId) return;
     const prefix = `oz-wari-${tripId}-`;
-    localStorage.setItem(prefix + 'budget', budget.toString());
-  }, [budget, tripId]);
+    const saveData = {
+      budget,
+      profiles: userProfiles,
+      'trip-start': tripStartDate,
+      'trip-end': tripEndDate,
+      'trip-name': tripName,
+      'trip-cover': tripCoverImage,
+      expenses,
+      itinerary,
+      tickets,
+      packing: packingList
+    };
 
-  useEffect(() => {
-    if (!tripId) return;
-    const prefix = `oz-wari-${tripId}-`;
-    localStorage.setItem(prefix + 'profiles', JSON.stringify(userProfiles));
-  }, [userProfiles, tripId]);
+    Object.entries(saveData).forEach(([key, val]) => {
+      try {
+        const strVal = typeof val === 'string' ? val : JSON.stringify(val);
+        localStorage.setItem(prefix + key, strVal);
+      } catch (e) {
+        console.error(`Failed to save ${key} to localStorage`, e);
+      }
+    });
 
-  useEffect(() => {
     localStorage.setItem('oz-wari-view-mode-size', viewModeSize);
-  }, [viewModeSize]);
-
-  useEffect(() => {
-    if (!tripId) return;
-    const prefix = `oz-wari-${tripId}-`;
-    localStorage.setItem(prefix + 'trip-start', tripStartDate);
-  }, [tripStartDate, tripId]);
-
-  useEffect(() => {
-    if (!tripId) return;
-    const prefix = `oz-wari-${tripId}-`;
-    localStorage.setItem(prefix + 'trip-end', tripEndDate);
-  }, [tripEndDate, tripId]);
-
-  useEffect(() => {
-    if (!tripId) return;
-    const prefix = `oz-wari-${tripId}-`;
-    localStorage.setItem(prefix + 'trip-name', tripName);
-  }, [tripName, tripId]);
-
-  useEffect(() => {
-    if (!tripId) return;
-    const prefix = `oz-wari-${tripId}-`;
-    localStorage.setItem(prefix + 'trip-cover', tripCoverImage);
-  }, [tripCoverImage, tripId]);
-
-  useEffect(() => {
-    if (!tripId) return;
-    const prefix = `oz-wari-${tripId}-`;
-    try {
-      localStorage.setItem(prefix + 'itinerary', JSON.stringify(itinerary));
-    } catch (e) {
-      console.error('Failed to save itinerary to localStorage', e);
-    }
-  }, [itinerary, tripId]);
-
-  useEffect(() => {
-    if (!tripId) return;
-    const prefix = `oz-wari-${tripId}-`;
-    try {
-      localStorage.setItem(prefix + 'tickets', JSON.stringify(tickets));
-    } catch (e) {
-      console.error('Failed to save tickets to localStorage', e);
-    }
-  }, [tickets, tripId]);
-
-  useEffect(() => {
-    if (!tripId) return;
-    const prefix = `oz-wari-${tripId}-`;
-    localStorage.setItem(prefix + 'expenses', JSON.stringify(expenses));
-  }, [expenses, tripId]);
-
-  useEffect(() => {
-    if (!tripId) return;
-    const prefix = `oz-wari-${tripId}-`;
-    try {
-      localStorage.setItem(prefix + 'packing', JSON.stringify(packingList));
-    } catch (e) {
-      console.error('Failed to save packing list to localStorage', e);
-    }
-  }, [packingList, tripId]);
+  }, [tripId, budget, userProfiles, tripStartDate, tripEndDate, tripName, tripCoverImage, expenses, itinerary, tickets, packingList, viewModeSize]);
 
   // NOTE: syncWithCloud (Google Sheets) は Firebase 移行後は不要のため削除。
   // Firebase の onSnapshot リスナーがリアルタイム同期を担当する。
@@ -441,37 +394,103 @@ const App: React.FC = () => {
       const exists = prev.find(t => t.id === ticket.id);
       return exists ? prev.map(t => t.id === ticket.id ? ticket : t) : [...prev, ticket];
     });
-    // await syncTicketToSheet(ticket); // Handled by Firebase
   };
 
   const handleDeleteTicket = async (id: string) => {
     deletedIdsRef.current.add(id); // For Google Sheet sync
     updateTickets(prev => prev.filter(t => t.id !== id));
     setTimeout(() => { if (deletedIdsRef.current.has(id)) deletedIdsRef.current.delete(id); }, 60000);
-    // await deleteItemFromSheet(`TICKET_${id}`); // For Google Sheet sync
   };
 
   // --- Handlers for Profiles ---
   const updateProfile = async (id: Participant, updates: Partial<UserProfile>) => {
     const now = new Date().toISOString();
-    let updatedProfile: UserProfile | null = null;
-
     updateUserProfiles(prev => prev.map(p => {
       if (p.id === id) {
-        updatedProfile = { ...p, ...updates, updatedAt: now };
-        return updatedProfile;
+        return { ...p, ...updates, updatedAt: now };
       }
       return p;
     }));
-
-    // if (updatedProfile) {
-    //   await syncProfileToSheet(updatedProfile); // Handled by Firebase
-    // }
   };
 
-  // NOTE: handleUpdateTripSettings は Firebase 移行後は直接ラッパー関数を使うため未使用。
-  // 将来的に削除予定。
-  // const handleUpdateTripSettings = async (...) => { ... };
+  const handleImportFullData = (data: any) => {
+    if (!data) return;
+    const trip = data.tripDetails || {};
+    setTripName(trip.tripName || tripName);
+    setTripStartDate(trip.tripStartDate || tripStartDate);
+    setTripEndDate(trip.tripEndDate || tripEndDate);
+    setTripCoverImage(trip.coverImage || tripCoverImage);
+    setBudget(trip.budget || budget);
+
+    if (data.userProfiles) setUserProfiles(data.userProfiles);
+    if (data.expenses) setExpenses(data.expenses);
+    if (data.itinerary) setItinerary(data.itinerary);
+    if (data.tickets) setTickets(data.tickets);
+    if (data.packingList) setPackingList(data.packingList);
+
+    if (tripId) {
+      pushUpdate({
+        name: trip.tripName || tripName,
+        startDate: trip.tripStartDate || tripStartDate,
+        endDate: trip.tripEndDate || tripEndDate,
+        coverImage: trip.coverImage || tripCoverImage,
+        budget: trip.budget || budget,
+        userProfiles: data.userProfiles,
+        expenses: data.expenses,
+        itinerary: data.itinerary,
+        tickets: data.tickets,
+        packingList: data.packingList
+      });
+    }
+  };
+
+  const handleSyncToSheet = async () => {
+    setIsSyncing(true);
+    try {
+      const success = await syncAllDataToSheet({
+        profiles: userProfiles,
+        expenses,
+        itinerary,
+        tickets,
+        tripSettings: {
+          tripName,
+          tripStartDate,
+          tripEndDate,
+          coverImage: tripCoverImage,
+          budget
+        }
+      });
+      if (success) alert('Googleスプレッドシートへの同期が完了しました！');
+      else alert('同期に失敗しました。');
+    } catch (e) {
+      console.error(e);
+      alert('エラーが発生しました。');
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  const handleFetchFromSheet = async () => {
+    setIsSyncing(true);
+    try {
+      const cloudData = await fetchAllData();
+      if (cloudData) {
+        handleImportFullData({
+          tripDetails: cloudData.tripSettings,
+          userProfiles: cloudData.profiles,
+          expenses: cloudData.expenses,
+          itinerary: cloudData.itinerary,
+          tickets: cloudData.tickets
+        });
+        alert('最新データを取得しました。');
+      }
+    } catch (e) {
+      console.error(e);
+      alert('データ取得に失敗しました。');
+    } finally {
+      setIsSyncing(false);
+    }
+  };
 
   const handleResetAll = async () => {
     if (!window.confirm('全てのデータを削除しますか？この操作は取り消せません。')) return;

@@ -4,7 +4,7 @@ import {
     getFirestore, doc, onSnapshot, setDoc, updateDoc,
     collection, addDoc, getDoc, serverTimestamp
 } from "firebase/firestore";
-import { Expense, ItineraryItem, Ticket, UserProfile, PackingItem } from "../types";
+import { Expense, ItineraryItem, Ticket, UserProfile, PackingItem, TripData } from "../types";
 
 // Firebase設定 (環境変数から読み込み)
 const firebaseConfig = {
@@ -19,22 +19,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// 旅行データの型定義
-export interface TripData {
-    id?: string;
-    name: string;
-    startDate: string;
-    endDate: string;
-    coverImage: string;
-    expenses: Expense[];
-    itinerary: ItineraryItem[];
-    tickets: Ticket[];
-    userProfiles: UserProfile[];
-    budget: number;
-    packingList: PackingItem[];
-    createdAt: any;
-    updatedAt: any;
-}
 
 /**
  * 新しい旅行を作成し、IDを返します
