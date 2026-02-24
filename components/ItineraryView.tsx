@@ -725,7 +725,7 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
                       onClick={() => setFormData({ ...formData, type: type.value })}
                       className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-bold transition-all border ${formData.type === type.value ? 'bg-primary text-white border-primary' : 'bg-surface-gray text-ink-light border-surface-gray-mid'}`}
                     >
-                      <AppIcon name={type.icon} className="w-3 h-3" /> {type.label}
+                      <span className="text-xs">{type.icon}</span> {type.label}
                     </button>
                   ))}
                 </div>
