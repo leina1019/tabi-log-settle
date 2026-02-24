@@ -23,7 +23,7 @@ export const SAMPLE_ITINERARY: ItineraryItem[] = [
         time: '08:00',
         endTime: '09:30',
         title: 'シドニー国際空港 到着',
-        location: 'SYD Airport',
+        location: 'Sydney Airport',
         type: 'move',
         memo: 'オパールカード（交通系IC）を購入すること。空港の駅で買えます。',
         mapUrl: 'https://maps.app.goo.gl/jS5E2LpS8J1V6vK67',
@@ -35,7 +35,7 @@ export const SAMPLE_ITINERARY: ItineraryItem[] = [
         time: '12:00',
         endTime: '13:30',
         title: 'ランチ：Pancakes On The Rocks',
-        location: 'The Rocks',
+        location: 'The Rocks, Sydney',
         type: 'meal',
         memo: '有名なパンケーキ店。リブも美味しい！',
         imageUrl: 'https://images.unsplash.com/photo-1517701604599-bb23b32062aa?q=80&w=600&auto=format&fit=crop',
@@ -55,6 +55,18 @@ export const SAMPLE_ITINERARY: ItineraryItem[] = [
         mapUrl: 'https://maps.app.goo.gl/uX3K3K3K3K3K3K3K3',
         links: [{ label: '予約確認', url: 'https://www.sydneyoperahouse.com/' }]
     },
+    {
+        id: 'au-next',
+        date: d(0),
+        time: '19:00',
+        endTime: '21:00',
+        title: 'ディナー：Circular Quay',
+        location: 'Circular Quay, Sydney',
+        type: 'meal',
+        memo: 'ハーバーブリッジの夜景が見えるレストランを散策。',
+        imageUrl: 'https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?q=80&w=800&auto=format&fit=crop',
+        mapUrl: 'https://maps.app.goo.gl/wW5K5K5K5K5K5K5K5'
+    },
 
     // 2日目: 動物園とクルーズ
     {
@@ -63,7 +75,7 @@ export const SAMPLE_ITINERARY: ItineraryItem[] = [
         time: '10:00',
         endTime: '13:00',
         title: 'タロンガ動物園',
-        location: 'Taronga Zoo',
+        location: 'Taronga Zoo, Sydney',
         type: 'sightseeing',
         memo: 'サーキュラーキーからフェリーで移動。コアラと一緒に写真が撮れる！',
         imageUrl: 'https://images.unsplash.com/photo-1542151759-5776d63914bd?q=80&w=600&auto=format&fit=crop',
@@ -75,7 +87,7 @@ export const SAMPLE_ITINERARY: ItineraryItem[] = [
         time: '18:30',
         endTime: '21:00',
         title: 'ディナークルーズ',
-        location: 'Circular Quay Wharf 6',
+        location: 'Circular Quay, Sydney',
         type: 'meal',
         memo: '夜景を見ながらの豪華フルコース。スマートカジュアル推奨。',
         mapUrl: 'https://maps.app.goo.gl/wW5K5K5K5K5K5K5K5',
@@ -89,7 +101,7 @@ export const SAMPLE_ITINERARY: ItineraryItem[] = [
         time: '08:30',
         endTime: '17:30',
         title: 'ブルーマウンテンズ国立公園',
-        location: 'Katoomba',
+        location: 'Katoomba, NSW',
         type: 'sightseeing',
         memo: 'シーニックワールドの乗り物チケットを忘れずに。',
         imageUrl: 'https://images.unsplash.com/photo-1527672829631-02607ae7198a?q=80&w=600&auto=format&fit=crop',
@@ -208,4 +220,6 @@ export const SAMPLE_PACKING: PackingItem[] = [
     { id: 'p-3', category: '電子機器', title: '変換プラグ (タイプO)', isPacked: false, updatedAt: new Date().toISOString() },
     { id: 'p-4', category: '洗面用具', title: '日焼け止め', isPacked: false, updatedAt: new Date().toISOString() },
     { id: 'p-5', category: '衣服', title: '薄手の羽織もの', isPacked: true, participantId: 'Reina', updatedAt: new Date().toISOString() },
+    { id: 'p-6', category: '電子機器', title: 'モバイルバッテリー', isPacked: false, updatedAt: new Date().toISOString() },
+    { id: 'p-7', category: '重要書類', title: '海外旅行保険証', isPacked: false, updatedAt: new Date().toISOString() },
 ];
