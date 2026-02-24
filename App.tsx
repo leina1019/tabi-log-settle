@@ -278,10 +278,10 @@ const App: React.FC = () => {
     if (!window.confirm('サンプルデータを読み込みますか？現在のデータは一時的にバックアップされ、後で戻すことができます。')) return;
 
     // 現在のデータをバックアップ
-    const backupKey = `oz-wari-backup-${new Date().getTime()}`;
+    const backupKey = `tabilog-backup-${new Date().getTime()}`;
     const currentData = { expenses, itinerary, tickets, packingList, userProfiles, budget, tripName, tripStartDate, tripEndDate, tripCoverImage };
     localStorage.setItem(backupKey, JSON.stringify(currentData));
-    localStorage.setItem('oz-wari-last-backup-key', backupKey); // 最新のバックアップキーを保存
+    localStorage.setItem('tabilog-last-backup-key', backupKey); // 最新のバックアップキーを保存
     console.log(`Backup saved to ${backupKey} `);
 
     // サンプルデータをセット
@@ -313,7 +313,7 @@ const App: React.FC = () => {
       });
     }
 
-    alert('オーストラリアのサンプルデータを読み込みました！設定画面から元のデータに戻すことも可能です。');
+    alert('TabiLogのサンプルデータを読み込みました！設定画面から元のデータに戻すことも可能です。');
     setView('home');
   };
 

@@ -61,8 +61,8 @@ export const SAMPLE_ITINERARY: ItineraryItem[] = [
         location: 'The Rocks, Sydney',
         type: 'meal',
         memo: '有名なパンケーキ店。リブも美味しい！',
-        imageUrl: 'https://images.unsplash.com/photo-1517701604599-bb23b32062aa?q=80&w=600&auto=format&fit=crop',
-        mapUrl: '', // 空白にして自動生成リンクをテスト
+        imageUrl: 'https://images.unsplash.com/photo-1517701604599-bb23b320628aa?q=80&w=600&auto=format&fit=crop',
+        mapUrl: 'https://maps.app.goo.gl/pancakes-rocks',
         links: [{ label: 'メニュー', url: 'https://pancakesontherocks.com.au/' }]
     },
     {
@@ -77,18 +77,6 @@ export const SAMPLE_ITINERARY: ItineraryItem[] = [
         imageUrl: 'https://images.unsplash.com/photo-1523413651479-797eb2c384d6?q=80&w=800&auto=format&fit=crop',
         mapUrl: 'https://maps.app.goo.gl/uX3K3K3K3K3K3K3K3',
         links: [{ label: '予約確認', url: 'https://www.sydneyoperahouse.com/' }]
-    },
-    {
-        id: 'au-next',
-        date: d(0),
-        time: '19:00',
-        endTime: '21:00',
-        title: 'ディナー：Circular Quay',
-        location: 'Circular Quay, Sydney',
-        type: 'meal',
-        memo: 'ハーバーブリッジの夜景が見えるレストランを散策。',
-        imageUrl: '', // 空白にしてOGP自動取得をテスト
-        mapUrl: 'https://maps.app.goo.gl/wW5K5K5K5K5K5K5K5'
     },
 
     // 2日目: 動物園とクルーズ
@@ -109,10 +97,10 @@ export const SAMPLE_ITINERARY: ItineraryItem[] = [
         date: d(1),
         time: '18:30',
         endTime: '21:00',
-        title: 'ディナークルーズ',
+        title: 'Captain Cook Cruises',
         location: 'Circular Quay, Sydney',
         type: 'meal',
-        memo: '夜景を見ながらの豪華フルコース。スマートカジュアル推奨。',
+        memo: '夜景を見ながらの豪華フルコース。',
         mapUrl: 'https://maps.app.goo.gl/wW5K5K5K5K5K5K5K5',
         links: [{ label: '運行状況', url: 'https://www.captaincook.com.au/' }]
     },
@@ -198,6 +186,19 @@ export const SAMPLE_EXPENSES: Expense[] = [
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
     },
+    {
+        id: 'exp-6',
+        date: d(2),
+        title: 'ディナークルーズお酒代',
+        amount: 12000,
+        currency: 'JPY',
+        exchangeRate: 1,
+        paidBy: 'Sarah',
+        splitWith: ['Reina', 'Ken', 'Sarah'],
+        category: '食事',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+    }
 ];
 
 export const SAMPLE_TICKETS: Ticket[] = [
@@ -242,7 +243,7 @@ export const SAMPLE_PACKING: PackingItem[] = [
     { id: 'p-2', category: '必需品', title: 'クレジットカード', isPacked: true, updatedAt: new Date().toISOString() },
     { id: 'p-3', category: '電子機器', title: '変圧器', isPacked: false, updatedAt: new Date().toISOString() },
     { id: 'p-4', category: '日用品', title: '日焼け止め', isPacked: false, updatedAt: new Date().toISOString() },
-    { id: 'p-5', category: '衣類', title: '水着', isPacked: true, participantId: 'Reina', updatedAt: new Date().toISOString() },
-    { id: 'p-6', category: '電子機器', title: 'モバイルバッテリー', isPacked: false, updatedAt: new Date().toISOString() },
-    { id: 'p-7', category: '電子機器', title: '充電器', isPacked: false, updatedAt: new Date().toISOString() },
+    { id: 'p-5', category: '衣類', title: '水着', isPacked: true, packedBy: ['Reina'], updatedAt: new Date().toISOString() },
+    { id: 'p-6', category: '衣類', title: '厚手のパーカー', isPacked: false, packedBy: ['Ken'], updatedAt: new Date().toISOString() },
+    { id: 'p-7', category: '必需品', title: '海外旅行保険証', isPacked: false, packedBy: ['Sarah'], updatedAt: new Date().toISOString() },
 ];

@@ -393,31 +393,47 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
           {dateRange.map((d, i) => {
             const label = getDayLabel(d, i);
             const isSelected = selectedDate === d;
+            const weatherForDate = weatherData.find(w => w.date === d);
             const isToday = d === new Date().toISOString().split('T')[0];
+
             return (
               <button
                 key={d}
                 onClick={() => setSelectedDate(d)}
-                className={`flex-shrink-0 flex flex-col items-center justify-center w-16 h-24 rounded-2xl border transition-all relative ${isSelected
-                  ? 'bg-primary border-primary shadow-md transform scale-105'
-                  : 'bg-surface-gray border-surface-gray-mid text-ink-light'
+                className={`flex-shrink-0 flex flex-col items-center justify-center w-20 h-24 rounded-[28px] border transition-all active:scale-95 relative overflow-hidden ${isSelected
+                  ? 'bg-primary border-primary shadow-xl shadow-primary/20 scale-105 z-10'
+                  : 'bg-white border-surface-gray-mid/50 text-ink-light'
                   }`}
               >
                 {isToday && (
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-emerald-500 text-white text-[7px] font-black px-1.5 py-0.5 rounded-full shadow-sm z-10 animate-pulse whitespace-nowrap">
-                    TODAY
+                  <span className="absolute top-2 right-2 flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-accent"></span>
                   </span>
                 )}
-                <span className={`text-[9px] font-bold uppercase tracking-wider mb-1 ${isSelected ? 'text-white' : 'text-ink-light'}`}>{label.day}</span>
-                <span className={`text-lg font-bold leading-none ${isSelected ? 'text-white' : 'text-ink'}`}>{label.date}</span>
-                <span className={`text-[10px] font-bold ${isSelected ? 'text-white/80' : 'text-ink-light'} mb-1`}>{label.week}</span>
 
-                {/* 日付タブ内の天気アイコン */}
-                {weatherData.find(w => w.date === d) && (
-                  <div className="pt-2">
-                    <WeatherIcon code={weatherData.find(w => w.date === d)!.weatherCode} className="w-5 h-5" />
-                  </div>
-                )}
+                <span className={`text-[9px] font-black uppercase tracking-tighter mb-1.5 ${isSelected ? 'text-white/70' : 'text-ink-sub'}`}>
+                  {label.day}
+                </span>
+
+                <span className={`text-2xl font-black leading-none ${isSelected ? 'text-white' : 'text-ink'}`}>
+                  {label.date}
+                </span>
+
+                <div className="flex items-center gap-1 mt-2">
+                  {weatherForDate ? (
+                    <div className="flex flex-col items-center">
+                      <WeatherIcon code={weatherForDate.weatherCode} className="w-5 h-5 text-current" />
+                      <span className={`text-[8px] font-bold ${isSelected ? 'text-white/80' : 'text-ink-sub'}`}>
+                        {weatherForDate.tempMax}°
+                      </span>
+                    </div>
+                  ) : (
+                    <span className={`text-[9px] font-bold ${isSelected ? 'text-white/50' : 'text-ink-sub/40'}`}>
+                      {label.week}
+                    </span>
+                  )}
+                </div>
               </button>
             );
           })}
@@ -425,27 +441,29 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
       </div>
 
       {/* 今日の天気サマリー (7日以内) */}
-      {selectedDate && weatherData.length > 0 && (() => {
-        const dayWeather = weatherData.find(w => w.date === selectedDate);
-        if (!dayWeather) return null;
-        return (
-          <div className="px-4 mb-4">
-            <div className="bg-white/50 backdrop-blur-sm border border-white/60 rounded-2xl p-3 flex items-center justify-between shadow-sm">
-              <div className="flex items-center gap-3">
-                <WeatherIcon code={dayWeather.weatherCode} className="w-8 h-8" />
-                <div>
-                  <p className="text-[8px] font-bold text-ink-sub uppercase tracking-widest">Forecast</p>
-                  <p className="text-[10px] font-bold text-ink">今日の予報</p>
+      {
+        selectedDate && weatherData.length > 0 && (() => {
+          const dayWeather = weatherData.find(w => w.date === selectedDate);
+          if (!dayWeather) return null;
+          return (
+            <div className="px-4 mb-4">
+              <div className="bg-white/50 backdrop-blur-sm border border-white/60 rounded-2xl p-3 flex items-center justify-between shadow-sm">
+                <div className="flex items-center gap-3">
+                  <WeatherIcon code={dayWeather.weatherCode} className="w-8 h-8" />
+                  <div>
+                    <p className="text-[8px] font-bold text-ink-sub uppercase tracking-widest">Forecast</p>
+                    <p className="text-[10px] font-bold text-ink">今日の予報</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-black text-ink">{dayWeather.tempMax}° / {dayWeather.tempMin}°</p>
+                  <p className="text-[8px] font-bold text-ink-light uppercase">Celsius</p>
                 </div>
               </div>
-              <div className="text-right">
-                <p className="text-sm font-black text-ink">{dayWeather.tempMax}° / {dayWeather.tempMin}°</p>
-                <p className="text-[8px] font-bold text-ink-light uppercase">Celsius</p>
-              </div>
             </div>
-          </div>
-        );
-      })()}
+          );
+        })()
+      }
 
       {/* タイムライン表示 */}
       <div className="flex-1 overflow-y-auto px-4 pb-20 relative">
@@ -638,253 +656,255 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
       </div>
 
       {/* 予定追加/編集モーダル */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-[100] bg-primary/90 backdrop-blur-sm flex items-end sm:items-center justify-center p-4">
-          <div
-            className="bg-white w-full max-w-sm rounded-[24px] p-5 border border-surface-gray-mid shadow-xl overflow-y-auto max-h-[88vh] pb-6"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h3 className="text-lg font-sans font-bold mb-4 text-ink">
-              {formData.id ? '予定を編集' : '予定を追加'}
-            </h3>
+      {
+        isModalOpen && (
+          <div className="fixed inset-0 z-[100] bg-primary/90 backdrop-blur-sm flex items-end sm:items-center justify-center p-4">
+            <div
+              className="bg-white w-full max-w-sm rounded-[24px] p-5 border border-surface-gray-mid shadow-xl overflow-y-auto max-h-[88vh] pb-6"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 className="text-lg font-sans font-bold mb-4 text-ink">
+                {formData.id ? '予定を編集' : '予定を追加'}
+              </h3>
 
-            <div className="space-y-4">
-              {/* タイトル */}
-              <div>
-                <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">タイトル *</label>
-                <input
-                  type="text"
-                  placeholder="例: 浅草寺を観光"
-                  className="w-full bg-surface-gray border border-surface-gray-mid rounded-xl p-3 text-sm text-ink outline-none focus:border-primary"
-                  value={formData.title || ''}
-                  onChange={e => { setFormData({ ...formData, title: e.target.value }); setValidationError(''); }}
-                />
-                {validationError && (
-                  <p className="text-xs text-rose-500 mt-1">{validationError}</p>
-                )}
-              </div>
+              <div className="space-y-4">
+                {/* タイトル */}
+                <div>
+                  <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">タイトル *</label>
+                  <input
+                    type="text"
+                    placeholder="例: 浅草寺を観光"
+                    className="w-full bg-surface-gray border border-surface-gray-mid rounded-xl p-3 text-sm text-ink outline-none focus:border-primary"
+                    value={formData.title || ''}
+                    onChange={e => { setFormData({ ...formData, title: e.target.value }); setValidationError(''); }}
+                  />
+                  {validationError && (
+                    <p className="text-xs text-rose-500 mt-1">{validationError}</p>
+                  )}
+                </div>
 
-              {/* 誰の予定か */}
-              <div>
-                <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">担当メンバー</label>
-                <div className="flex flex-wrap gap-2 mt-1">
-                  <button
-                    type="button"
-                    onClick={() => setFormData({ ...formData, participantId: undefined })}
-                    className={`px-3 py-1.5 rounded-full text-[10px] font-bold transition-all border ${!formData.participantId ? 'bg-ink text-white border-ink' : 'bg-surface-gray text-ink-light border-surface-gray-mid'}`}
-                  >
-                    <AppIcon name="globe" className="w-3 h-3 inline-block mr-1" /> 全員
-                  </button>
-                  {userProfiles.map(p => (
+                {/* 誰の予定か */}
+                <div>
+                  <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">担当メンバー</label>
+                  <div className="flex flex-wrap gap-2 mt-1">
                     <button
-                      key={p.id}
                       type="button"
-                      onClick={() => setFormData({ ...formData, participantId: p.id })}
-                      className={`px-3 py-1.5 rounded-full text-[10px] font-bold transition-all border ${formData.participantId === p.id ? 'text-white border-transparent' : 'bg-surface-gray text-ink-light border-surface-gray-mid'}`}
-                      style={formData.participantId === p.id ? { backgroundColor: p.color } : {}}
+                      onClick={() => setFormData({ ...formData, participantId: undefined })}
+                      className={`px-3 py-1.5 rounded-full text-[10px] font-bold transition-all border ${!formData.participantId ? 'bg-ink text-white border-ink' : 'bg-surface-gray text-ink-light border-surface-gray-mid'}`}
                     >
-                      {p.displayName}
+                      <AppIcon name="globe" className="w-3 h-3 inline-block mr-1" /> 全員
                     </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* 日付 + 時間 */}
-              <div className="grid grid-cols-2 gap-3">
-                <div className="col-span-2">
-                  <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">日付</label>
-                  <input
-                    type="date"
-                    className="w-full bg-surface-gray border border-surface-gray-mid rounded-xl p-2.5 text-sm text-ink outline-none"
-                    value={formData.date || ''}
-                    onChange={e => setFormData({ ...formData, date: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">開始時間</label>
-                  <input
-                    type="time"
-                    className="w-full bg-surface-gray border border-surface-gray-mid rounded-xl p-2.5 text-sm text-ink outline-none"
-                    value={formData.time || ''}
-                    onChange={e => setFormData({ ...formData, time: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">終了時間</label>
-                  <input
-                    type="time"
-                    className="w-full bg-surface-gray border border-surface-gray-mid rounded-xl p-2.5 text-sm text-ink outline-none"
-                    value={formData.endTime || ''}
-                    onChange={e => setFormData({ ...formData, endTime: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              {/* 種類 - selectに変更 */}
-              <div>
-                <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">種類</label>
-                <div className="flex flex-wrap gap-2 mt-1">
-                  {ITEM_TYPES.map(type => (
-                    <button
-                      key={type.value}
-                      type="button"
-                      onClick={() => setFormData({ ...formData, type: type.value })}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-bold transition-all border ${formData.type === type.value ? 'bg-primary text-white border-primary' : 'bg-surface-gray text-ink-light border-surface-gray-mid'}`}
-                    >
-                      <span className="text-xs">{type.icon}</span> {type.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* 場所名 + Googleマップ */}
-              <div className="grid grid-cols-1 gap-3">
-                <div>
-                  <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">場所名</label>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      placeholder="例: 浅草寺、新宿駅"
-                      className="flex-1 bg-surface-gray border border-surface-gray-mid rounded-xl p-3 text-sm text-ink outline-none focus:border-primary"
-                      value={formData.location || ''}
-                      onChange={e => {
-                        const newLoc = e.target.value;
-                        setFormData(prev => ({
-                          ...prev,
-                          location: newLoc,
-                          // 場所名が入力され、かつGoogleマップURLがまだ空の場合のみ自動生成
-                          mapUrl: (!prev.mapUrl || prev.mapUrl.includes('google.com/maps/search'))
-                            ? (newLoc ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(newLoc)}` : '')
-                            : prev.mapUrl
-                        }));
-                        setValidationError('');
-                      }}
-                    />
-                    {formData.location && (
+                    {userProfiles.map(p => (
                       <button
+                        key={p.id}
                         type="button"
-                        onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(formData.location || '')}`, '_blank')}
-                        className="px-3 bg-rose-50 border border-rose-200 rounded-xl text-xs font-bold text-rose-500 hover:bg-rose-100 transition-colors"
+                        onClick={() => setFormData({ ...formData, participantId: p.id })}
+                        className={`px-3 py-1.5 rounded-full text-[10px] font-bold transition-all border ${formData.participantId === p.id ? 'text-white border-transparent' : 'bg-surface-gray text-ink-light border-surface-gray-mid'}`}
+                        style={formData.participantId === p.id ? { backgroundColor: p.color } : {}}
                       >
-                        検索
+                        {p.displayName}
                       </button>
-                    )}
+                    ))}
                   </div>
                 </div>
-                <div>
-                  <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest text-rose-500">
-                    <AppIcon name="map" className="w-3 h-3 inline-block mr-1" /> GoogleマップURL
-                  </label>
-                  <input
-                    type="url"
-                    placeholder="https://maps.app.goo.gl/..."
-                    className="w-full bg-rose-50 border border-rose-200 rounded-xl p-3 text-sm text-ink outline-none focus:border-rose-400"
-                    value={formData.mapUrl || ''}
-                    onChange={e => setFormData({ ...formData, mapUrl: e.target.value })}
-                  />
-                </div>
-              </div>
 
-              {/* Links (複数対応) */}
-              <div>
-                <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">
-                  <AppIcon name="link" className="w-3 h-3 inline-block mr-1" /> 関連リンク
-                </label>
-                <div className="space-y-2">
-                  {formData.links?.map((lnk, i) => (
-                    <div key={i} className="flex gap-2">
+                {/* 日付 + 時間 */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="col-span-2">
+                    <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">日付</label>
+                    <input
+                      type="date"
+                      className="w-full bg-surface-gray border border-surface-gray-mid rounded-xl p-2.5 text-sm text-ink outline-none"
+                      value={formData.date || ''}
+                      onChange={e => setFormData({ ...formData, date: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">開始時間</label>
+                    <input
+                      type="time"
+                      className="w-full bg-surface-gray border border-surface-gray-mid rounded-xl p-2.5 text-sm text-ink outline-none"
+                      value={formData.time || ''}
+                      onChange={e => setFormData({ ...formData, time: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">終了時間</label>
+                    <input
+                      type="time"
+                      className="w-full bg-surface-gray border border-surface-gray-mid rounded-xl p-2.5 text-sm text-ink outline-none"
+                      value={formData.endTime || ''}
+                      onChange={e => setFormData({ ...formData, endTime: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                {/* 種類 - selectに変更 */}
+                <div>
+                  <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">種類</label>
+                  <div className="flex flex-wrap gap-2 mt-1">
+                    {ITEM_TYPES.map(type => (
+                      <button
+                        key={type.value}
+                        type="button"
+                        onClick={() => setFormData({ ...formData, type: type.value })}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-bold transition-all border ${formData.type === type.value ? 'bg-primary text-white border-primary' : 'bg-surface-gray text-ink-light border-surface-gray-mid'}`}
+                      >
+                        <span className="text-xs">{type.icon}</span> {type.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 場所名 + Googleマップ */}
+                <div className="grid grid-cols-1 gap-3">
+                  <div>
+                    <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">場所名</label>
+                    <div className="flex gap-2">
                       <input
                         type="text"
-                        placeholder="ラベル (例: Web)"
-                        className="w-20 bg-surface-gray border border-surface-gray-mid rounded-lg p-2 text-xs text-ink outline-none"
-                        value={lnk.label}
+                        placeholder="例: 浅草寺、新宿駅"
+                        className="flex-1 bg-surface-gray border border-surface-gray-mid rounded-xl p-3 text-sm text-ink outline-none focus:border-primary"
+                        value={formData.location || ''}
                         onChange={e => {
-                          const newLinks = [...(formData.links || [])];
-                          newLinks[i].label = e.target.value;
-                          setFormData({ ...formData, links: newLinks });
+                          const newLoc = e.target.value;
+                          setFormData(prev => ({
+                            ...prev,
+                            location: newLoc,
+                            // 場所名が入力され、かつGoogleマップURLがまだ空の場合のみ自動生成
+                            mapUrl: (!prev.mapUrl || prev.mapUrl.includes('google.com/maps/search'))
+                              ? (newLoc ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(newLoc)}` : '')
+                              : prev.mapUrl
+                          }));
+                          setValidationError('');
                         }}
                       />
-                      <input
-                        type="url"
-                        placeholder="https://..."
-                        className="flex-1 bg-surface-gray border border-surface-gray-mid rounded-lg p-2 text-xs text-ink outline-none"
-                        value={lnk.url}
-                        onChange={e => {
-                          const newLinks = [...(formData.links || [])];
-                          newLinks[i].url = e.target.value;
-                          setFormData({ ...formData, links: newLinks });
-                        }}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setFormData({ ...formData, links: formData.links?.filter((_, idx) => idx !== i) });
-                        }}
-                        className="text-rose-500 font-bold px-2"
-                      >
-                        <AppIcon name="close" className="w-4 h-4" />
-                      </button>
+                      {formData.location && (
+                        <button
+                          type="button"
+                          onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(formData.location || '')}`, '_blank')}
+                          className="px-3 bg-rose-50 border border-rose-200 rounded-xl text-xs font-bold text-rose-500 hover:bg-rose-100 transition-colors"
+                        >
+                          検索
+                        </button>
+                      )}
                     </div>
-                  ))}
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest text-rose-500">
+                      <AppIcon name="map" className="w-3 h-3 inline-block mr-1" /> GoogleマップURL
+                    </label>
+                    <input
+                      type="url"
+                      placeholder="https://maps.app.goo.gl/..."
+                      className="w-full bg-rose-50 border border-rose-200 rounded-xl p-3 text-sm text-ink outline-none focus:border-rose-400"
+                      value={formData.mapUrl || ''}
+                      onChange={e => setFormData({ ...formData, mapUrl: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                {/* Links (複数対応) */}
+                <div>
+                  <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">
+                    <AppIcon name="link" className="w-3 h-3 inline-block mr-1" /> 関連リンク
+                  </label>
+                  <div className="space-y-2">
+                    {formData.links?.map((lnk, i) => (
+                      <div key={i} className="flex gap-2">
+                        <input
+                          type="text"
+                          placeholder="ラベル (例: Web)"
+                          className="w-20 bg-surface-gray border border-surface-gray-mid rounded-lg p-2 text-xs text-ink outline-none"
+                          value={lnk.label}
+                          onChange={e => {
+                            const newLinks = [...(formData.links || [])];
+                            newLinks[i].label = e.target.value;
+                            setFormData({ ...formData, links: newLinks });
+                          }}
+                        />
+                        <input
+                          type="url"
+                          placeholder="https://..."
+                          className="flex-1 bg-surface-gray border border-surface-gray-mid rounded-lg p-2 text-xs text-ink outline-none"
+                          value={lnk.url}
+                          onChange={e => {
+                            const newLinks = [...(formData.links || [])];
+                            newLinks[i].url = e.target.value;
+                            setFormData({ ...formData, links: newLinks });
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setFormData({ ...formData, links: formData.links?.filter((_, idx) => idx !== i) });
+                          }}
+                          className="text-rose-500 font-bold px-2"
+                        >
+                          <AppIcon name="close" className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, links: [...(formData.links || []), { label: '', url: '' }] })}
+                      className="w-full py-2 border-2 border-dashed border-surface-gray-mid rounded-xl text-[10px] font-bold text-ink-light hover:border-primary/40 hover:text-primary transition-all"
+                    >
+                      <AppIcon name="plus" className="w-3 h-3 inline-block mr-1" /> リンクを追加
+                    </button>
+                  </div>
+                </div>
+
+                {/* OGP取得設定 */}
+                <div className="pt-2">
+                  <p className="text-[9px] font-bold text-ink-sub uppercase mb-2">カバー画像の取得設定</p>
+                  <label className="flex items-center gap-2 cursor-pointer p-3 bg-surface-gray rounded-xl border border-surface-gray-mid transition-colors hover:bg-white">
+                    <input
+                      type="checkbox"
+                      className="w-4 h-4 rounded text-primary focus:ring-primary"
+                      checked={!!(formData as any).preferOgp}
+                      onChange={e => setFormData({ ...formData, [('preferOgp' as any)]: e.target.checked })}
+                    />
+                    <span className="text-xs font-bold text-ink">入力されたリンクから画像を自動取得する</span>
+                  </label>
+                  <p className="text-[8px] text-ink-light mt-1 ml-1">※チェックを入れると、保存時にリンク先の画像を優先的に取得・設定します</p>
+                </div>
+
+                {/* メモ */}
+                <div>
+                  <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">メモ</label>
+                  <textarea
+                    rows={2}
+                    placeholder="自由にメモ..."
+                    className="w-full bg-surface-gray border border-surface-gray-mid rounded-xl p-3 text-sm text-ink outline-none resize-none"
+                    value={formData.memo || ''}
+                    onChange={e => setFormData({ ...formData, memo: e.target.value })}
+                  />
+                </div>
+
+                {/* ボタン */}
+                <div className="flex gap-3 pt-1">
                   <button
                     type="button"
-                    onClick={() => setFormData({ ...formData, links: [...(formData.links || []), { label: '', url: '' }] })}
-                    className="w-full py-2 border-2 border-dashed border-surface-gray-mid rounded-xl text-[10px] font-bold text-ink-light hover:border-primary/40 hover:text-primary transition-all"
+                    onClick={() => { setIsModalOpen(false); setValidationError(''); }}
+                    className="flex-1 py-3 rounded-xl text-xs font-bold text-ink-sub hover:bg-surface-gray border border-surface-gray-mid transition-colors"
                   >
-                    <AppIcon name="plus" className="w-3 h-3 inline-block mr-1" /> リンクを追加
+                    キャンセル
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); handleSubmit(); }}
+                    className="flex-1 py-3 rounded-xl bg-primary text-white text-xs font-bold shadow-lg hover:bg-primary/90 active:scale-95 transition-all"
+                  >
+                    保存
                   </button>
                 </div>
-              </div>
-
-              {/* OGP取得設定 */}
-              <div className="pt-2">
-                <p className="text-[9px] font-bold text-ink-sub uppercase mb-2">カバー画像の取得設定</p>
-                <label className="flex items-center gap-2 cursor-pointer p-3 bg-surface-gray rounded-xl border border-surface-gray-mid transition-colors hover:bg-white">
-                  <input
-                    type="checkbox"
-                    className="w-4 h-4 rounded text-primary focus:ring-primary"
-                    checked={!!(formData as any).preferOgp}
-                    onChange={e => setFormData({ ...formData, [('preferOgp' as any)]: e.target.checked })}
-                  />
-                  <span className="text-xs font-bold text-ink">入力されたリンクから画像を自動取得する</span>
-                </label>
-                <p className="text-[8px] text-ink-light mt-1 ml-1">※チェックを入れると、保存時にリンク先の画像を優先的に取得・設定します</p>
-              </div>
-
-              {/* メモ */}
-              <div>
-                <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">メモ</label>
-                <textarea
-                  rows={2}
-                  placeholder="自由にメモ..."
-                  className="w-full bg-surface-gray border border-surface-gray-mid rounded-xl p-3 text-sm text-ink outline-none resize-none"
-                  value={formData.memo || ''}
-                  onChange={e => setFormData({ ...formData, memo: e.target.value })}
-                />
-              </div>
-
-              {/* ボタン */}
-              <div className="flex gap-3 pt-1">
-                <button
-                  type="button"
-                  onClick={() => { setIsModalOpen(false); setValidationError(''); }}
-                  className="flex-1 py-3 rounded-xl text-xs font-bold text-ink-sub hover:bg-surface-gray border border-surface-gray-mid transition-colors"
-                >
-                  キャンセル
-                </button>
-                <button
-                  type="button"
-                  onClick={(e) => { e.stopPropagation(); handleSubmit(); }}
-                  className="flex-1 py-3 rounded-xl bg-primary text-white text-xs font-bold shadow-lg hover:bg-primary/90 active:scale-95 transition-all"
-                >
-                  保存
-                </button>
               </div>
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        )
+      }
+    </div >
   );
 };
 
