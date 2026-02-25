@@ -5,7 +5,8 @@ export type IconName =
     | 'itinerary' | 'expense' | 'packing' | 'settle'
     | 'copy' | 'share' | 'settings' | 'back' | 'save' | 'import' | 'export' | 'folder'
     | 'user' | 'ticket' | 'map' | 'memo' | 'link' | 'time' | 'check' | 'celebrate'
-    | 'device-phone' | 'device-tablet' | 'device-laptop' | 'add' | 'close' | 'home';
+    | 'device-phone' | 'device-tablet' | 'device-laptop' | 'add' | 'close' | 'home'
+    | 'globe' | 'plus' | 'camera';
 
 interface AppIconProps {
     name: IconName | string;
@@ -239,6 +240,43 @@ export const AppIcon: React.FC<AppIconProps> = ({ name, className = "w-5 h-5", c
             <svg className={className} viewBox="0 0 24 24" fill={fill} stroke={stroke} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
                 <line x1="18" y1="6" x2="6" y2="18" />
                 <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+        ),
+        // saveアイコン（フロッピータイプ）
+        save: (
+            <svg className={className} viewBox="0 0 24 24" fill={fill} stroke={stroke} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                <polyline points="17 21 17 13 7 13 7 21" />
+                <polyline points="7 3 7 8 15 8" />
+            </svg>
+        ),
+        // timeアイコン（時計）
+        time: (
+            <svg className={className} viewBox="0 0 24 24" fill={fill} stroke={stroke} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <polyline points="12 6 12 12 16 14" />
+            </svg>
+        ),
+        // globeアイコン（地球儀）
+        globe: (
+            <svg className={className} viewBox="0 0 24 24" fill={fill} stroke={stroke} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="2" y1="12" x2="22" y2="12" />
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+            </svg>
+        ),
+        // plusアイコン（＋）
+        plus: (
+            <svg className={className} viewBox="0 0 24 24" fill={fill} stroke={stroke} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+        ),
+        // cameraアイコン
+        camera: (
+            <svg className={className} viewBox="0 0 24 24" fill={fill} stroke={stroke} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                <circle cx="12" cy="13" r="4" />
             </svg>
         )
     };

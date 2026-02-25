@@ -286,7 +286,7 @@ const PackingView: React.FC<Props> = ({ items, userProfiles, onUpdate, isTablet 
                         </div>
                         <button
                             type="submit"
-                            className="w-full py-4.5 bg-gradient-to-r from-ocean-dark to-primary text-white rounded-2xl text-xs font-black uppercase tracking-[0.2em] shadow-lg shadow-primary/30 active:scale-95 transition-all mt-2"
+                            className="w-full py-[18px] bg-gradient-to-r from-ocean-dark to-primary text-white rounded-2xl text-xs font-black uppercase tracking-[0.2em] shadow-lg shadow-primary/30 active:scale-95 transition-all mt-2"
                         >
                             追加を確定する
                         </button>
@@ -483,13 +483,13 @@ const PackingView: React.FC<Props> = ({ items, userProfiles, onUpdate, isTablet 
                                 <button
                                     type="button"
                                     onClick={() => setEditingItem(null)}
-                                    className="flex-1 py-4.5 text-[11px] font-black text-ink-sub uppercase tracking-[0.2em] bg-surface-gray rounded-2xl hover:bg-white border border-surface-gray-mid transition-all"
+                                    className="flex-1 py-[18px] text-[11px] font-black text-ink-sub uppercase tracking-[0.2em] bg-surface-gray rounded-2xl hover:bg-white border border-surface-gray-mid transition-all"
                                 >
                                     戻る
                                 </button>
                                 <button
                                     type="submit"
-                                    className="flex-1 py-4.5 bg-ink text-white rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] shadow-xl hover:opacity-90 active:scale-95 transition-all"
+                                    className="flex-1 py-[18px] bg-ink text-white rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] shadow-xl hover:opacity-90 active:scale-95 transition-all"
                                 >
                                     保存する
                                 </button>

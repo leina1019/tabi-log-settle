@@ -45,8 +45,9 @@ const WelcomeView: React.FC<Props> = ({ onStart, onDemoStart }) => {
             return;
         }
 
+        // #6: IDにnameを使うと同名メンバーで衝突するため、generateしたm.idを使用
         const userProfiles: UserProfile[] = validMembers.map(m => ({
-            id: m.name, // Use name as ID for now to match current logic, or randomUUID
+            id: m.id, // crypto.randomUUID()で生成済みの一意ID
             displayName: m.name,
             color: m.color,
             avatarUrl: '',

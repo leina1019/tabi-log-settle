@@ -155,7 +155,7 @@ const App: React.FC = () => {
   // --- Consolidated Persistence (Local Storage) ---
   useEffect(() => {
     if (!tripId) return;
-    const prefix = `oz-wari-${tripId}-`;
+    const prefix = `tabilog-${tripId}-`;
     const saveData = {
       budget,
       profiles: userProfiles,
@@ -169,15 +169,25 @@ const App: React.FC = () => {
       packing: packingList
     };
 
-    localStorage.setItem('oz-wari-view-mode-size', viewModeSize);
+    // 各キーを個別に保存（Firebaseのキャッシュとして機能）
+    Object.entries(saveData).forEach(([key, value]) => {
+      try {
+        localStorage.setItem(prefix + key, typeof value === 'string' ? value : JSON.stringify(value));
+      } catch (e) {
+        console.warn('localStorage save failed for key:', key, e);
+      }
+    });
+
+    localStorage.setItem('tabilog-view-mode-size', viewModeSize);
   }, [tripId, budget, userProfiles, tripStartDate, tripEndDate, tripName, tripCoverImage, expenses, itinerary, tickets, packingList, viewModeSize]);
 
   // --- Automatic Google Sheet Sync (Debounced 1.5s) ---
   useEffect(() => {
     if (!tripId) return;
 
-    // Use a ref to avoid initial sync or unnecessary fires
+    // 自動同期：tripId必須
     const timer = setTimeout(() => {
+      if (!tripId) return;
       syncAllDataToSheet({
         profiles: userProfiles,
         expenses,
@@ -190,9 +200,9 @@ const App: React.FC = () => {
           coverImage: tripCoverImage,
           budget
         }
-      }).then(success => {
-        if (success) console.log('Debounced Google Sheet sync successful');
-      }).catch(err => console.error('Debounced sync error', err));
+      }, tripId).then(success => {
+        if (success) console.log('[GSheet] Debounced sync successful for tripId:', tripId);
+      }).catch(err => console.error('[GSheet] Debounced sync error', err));
     }, 1500);
 
     return () => clearTimeout(timer);
@@ -318,7 +328,7 @@ const App: React.FC = () => {
   };
 
   const handleRestoreData = async () => {
-    const lastBackupKey = localStorage.getItem('oz-wari-last-backup-key');
+    const lastBackupKey = localStorage.getItem('tabilog-last-backup-key');
     if (!lastBackupKey) {
       alert('復元可能なバックアップが見つかりません。');
       return;
@@ -362,7 +372,7 @@ const App: React.FC = () => {
       }
 
       alert('データを復元しました！');
-      localStorage.removeItem('oz-wari-last-backup-key'); // 復元後はキーを削除（連続復元防止）
+      localStorage.removeItem('tabilog-last-backup-key'); // 復元後はキーを削除（連続復元防止）
       setView('home');
     } catch (e) {
       console.error('Restore failed', e);
@@ -494,6 +504,11 @@ const App: React.FC = () => {
   const handleSyncToSheet = async () => {
     setIsSyncing(true);
     try {
+      // tripIdが未設定の場合は同期不可
+      if (!tripId) {
+        alert('旅行IDが設定されていません。URLから旅行リンクを開いてください。');
+        return;
+      }
       const success = await syncAllDataToSheet({
         profiles: userProfiles,
         expenses,
@@ -506,8 +521,8 @@ const App: React.FC = () => {
           coverImage: tripCoverImage,
           budget
         }
-      });
-      if (success) alert('Googleスプレッドシートへの同期が完了しました！');
+      }, tripId);
+      if (success) alert('Googleスプレッドシートへの同期が完了しました！\n（tripId: ' + tripId + '）');
       else alert('同期に失敗しました。');
     } catch (e) {
       console.error(e);
@@ -522,7 +537,12 @@ const App: React.FC = () => {
 
     setIsSyncing(true);
     try {
-      const cloudData = await fetchAllData();
+      // tripIdが未設定の場合はフェッチ不可
+      if (!tripId) {
+        alert('旅行IDが未設定です。');
+        return;
+      }
+      const cloudData = await fetchAllData(tripId);
       if (cloudData) {
         handleImportFullData({
           tripDetails: cloudData.tripSettings,

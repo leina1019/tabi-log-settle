@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Participant, Expense, UserProfile } from '../types';
 import { CATEGORIES, CURRENCIES, EXCHANGE_RATE_AUD_TO_JPY } from '../constants';
 import { fetchExchangeRate } from '../services/currencyService';
+import { convertToJPY } from '../utils/currency';
 
 interface Props {
   onAdd: (expense: Omit<import('../types').Expense, 'id' | 'createdAt' | 'updatedAt'>) => void;
@@ -10,6 +11,18 @@ interface Props {
   initialExpense?: Expense | null;
   userProfiles: UserProfile[];
 }
+
+// カテゴリーにアイコンを対応付け
+const CATEGORY_ICONS: Record<string, string> = {
+  '食事': '🍽️',
+  '交通': '🚌',
+  '宿泊': '🏨',
+  '観光': '🗺️',
+  'お土産': '🛍️',
+  '通信費': '📶',
+  '会議費': '💼',
+  'その他': '📌',
+};
 
 const ExpenseForm: React.FC<Props> = ({ onAdd, onCancel, initialExpense, userProfiles }) => {
   const [title, setTitle] = useState(initialExpense?.title || '');
@@ -22,42 +35,50 @@ const ExpenseForm: React.FC<Props> = ({ onAdd, onCancel, initialExpense, userPro
   const [splitWith, setSplitWith] = useState<Participant[]>(initialExpense?.splitWith || userProfiles.map(u => u.id));
   const [category, setCategory] = useState(initialExpense?.category || '食事');
   const [isFetchingRate, setIsFetchingRate] = useState(false);
+  // バリデーションエラー表示用
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const selectedCurrency = CURRENCIES.find(c => c.code === currency) || CURRENCIES[0];
 
+  // JPYリアルタイム換算 (U2): 金額・レートに連動して表示
+  const amountNum = parseFloat(amount) || 0;
+  const jpyPreview = currency === 'JPY'
+    ? amountNum
+    : Math.round(convertToJPY(amountNum, currency as any, rate));
+
+  // B4修正: setIntervalを廃止し、通貨変更時に1回だけAPIを叩く
   useEffect(() => {
-    if (!initialExpense || currency !== initialExpense.currency) {
-      setRate(selectedCurrency.defaultRate);
+    if (currency === 'JPY') {
+      setRate(1);
+      return;
     }
-  }, [currency]);
-
-  // リアルタイムレート取得（15秒ごとに更新）
-  useEffect(() => {
-    if (currency === 'JPY') return;
-
-    const updateRate = async () => {
-      const latestRate = await fetchExchangeRate(currency);
-      if (latestRate) {
-        setRate(latestRate);
+    // 既存の編集で通貨が変わっていない場合はAPIを叩かない
+    if (initialExpense && currency === initialExpense.currency) {
+      setRate(initialExpense.exchangeRate);
+      return;
+    }
+    // 通貨変更時に1回だけ取得
+    const fetchOnce = async () => {
+      setIsFetchingRate(true);
+      try {
+        const latestRate = await fetchExchangeRate(currency);
+        if (latestRate) setRate(latestRate);
+        else setRate(selectedCurrency.defaultRate);
+      } catch {
+        setRate(selectedCurrency.defaultRate);
+      } finally {
+        setIsFetchingRate(false);
       }
     };
-
-    // 初回実行
-    updateRate();
-
-    // 定期実行 (15秒)
-    const intervalId = setInterval(updateRate, 15000);
-    return () => clearInterval(intervalId);
-  }, [currency]);
+    fetchOnce();
+  }, [currency]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleFetchLatestRate = async () => {
     if (currency === 'JPY' || isFetchingRate) return;
     setIsFetchingRate(true);
     try {
       const latestRate = await fetchExchangeRate(currency);
-      if (latestRate) {
-        setRate(latestRate);
-      }
+      if (latestRate) setRate(latestRate);
     } catch (err) {
       console.error(err);
     } finally {
@@ -65,164 +86,287 @@ const ExpenseForm: React.FC<Props> = ({ onAdd, onCancel, initialExpense, userPro
     }
   };
 
+  // B1・B2・B3 修正: バリデーション強化
+  const validate = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    if (!title.trim()) newErrors.title = 'タイトルを入力してください';
+    if (!amount || amountNum <= 0) newErrors.amount = '0より大きい金額を入力してください';
+    if (!paidBy) newErrors.paidBy = '支払った人を選択してください';
+    if (splitWith.length === 0) newErrors.splitWith = '割り勘する人を1人以上選択してください';
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title || !amount) return;
-    onAdd({ title, amount: parseFloat(amount), currency, exchangeRate: rate, sourceUrl, date, paidBy, splitWith, category });
+    if (!validate()) return;
+    onAdd({
+      title: title.trim(),
+      amount: amountNum,
+      currency,
+      exchangeRate: rate,
+      sourceUrl,
+      date,
+      paidBy,
+      splitWith,
+      category
+    });
   };
 
   const handleToggleSplit = (p: Participant) => {
     setSplitWith(prev => prev.includes(p) ? prev.filter(item => item !== p) : [...prev, p]);
   };
 
-  const getDisplayName = (id: string) => {
-    return userProfiles.find(p => p.id === id)?.displayName || id;
-  };
-
   return (
-    <div className="bg-white p-6 rounded-[32px] space-y-6 border border-surface-gray-mid shadow-sm">
-      <div className="flex justify-between items-center border-b border-surface-gray-mid pb-5">
-        <h2 className="text-xl font-sans font-bold text-ink">{initialExpense ? '支出を編集' : '新しい支出'}</h2>
-        <div className="bg-primary-light px-3 py-1 rounded-full">
-          <span className="text-[10px] font-bold text-primary uppercase tracking-tighter">入力</span>
+    <div className="bg-white rounded-[32px] border border-surface-gray-mid shadow-sm overflow-hidden">
+      {/* ヘッダー */}
+      <div className="bg-ocean-dark px-6 py-5 flex justify-between items-center">
+        <div>
+          <p className="text-[10px] font-bold text-white/50 uppercase tracking-widest mb-0.5">
+            {initialExpense ? '編集モード' : '新規登録'}
+          </p>
+          <h2 className="text-xl font-sans font-bold text-white">
+            {initialExpense ? '支出を編集' : '💳 新しい支出'}
+          </h2>
         </div>
+        <button
+          type="button"
+          onClick={onCancel}
+          className="w-9 h-9 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-colors active:scale-95"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* タイトル */}
-        <div>
-          <label className="block text-[10px] font-bold text-ink-sub mb-2 uppercase tracking-widest">タイトル</label>
-          <input
-            type="text"
-            value={title}
-            onChange={e => setTitle(e.target.value)}
-            className="w-full bg-surface-gray border border-surface-gray-mid rounded-2xl px-4 py-4 text-[16px] text-ink focus:border-primary outline-none transition-colors"
-            placeholder="例: 夕食, タクシー代..."
-            required
-          />
-        </div>
+      <form onSubmit={handleSubmit} className="p-6 space-y-7">
 
-        {/* 金額・通貨 */}
-        <div className="grid grid-cols-2 gap-4">
+        {/* ─── グループ1: 何に使ったか ─── */}
+        <div className="space-y-5">
+          <p className="text-[9px] font-black text-ink-light uppercase tracking-[0.25em] flex items-center gap-2">
+            <span className="flex-1 h-px bg-surface-gray-mid" />
+            何に使ったか
+            <span className="flex-1 h-px bg-surface-gray-mid" />
+          </p>
+
+          {/* タイトル */}
           <div>
-            <label className="block text-[10px] font-bold text-ink-sub mb-2 uppercase tracking-widest">金額</label>
+            <label className="block text-[10px] font-bold text-ink-sub mb-2 uppercase tracking-widest">
+              タイトル <span className="text-rose-400">*</span>
+            </label>
             <input
-              type="number"
-              inputMode="decimal"
-              step="0.01"
-              value={amount}
-              onChange={e => setAmount(e.target.value)}
-              className="w-full bg-surface-gray border border-surface-gray-mid rounded-2xl px-4 py-4 text-[16px] text-ink outline-none"
-              placeholder="0.00"
-              required
+              type="text"
+              value={title}
+              onChange={e => { setTitle(e.target.value); setErrors(p => ({ ...p, title: '' })); }}
+              className={`w-full bg-surface-gray border-2 rounded-2xl px-4 py-4 text-[16px] text-ink outline-none transition-colors ${errors.title ? 'border-rose-400' : 'border-transparent focus:border-primary/40'}`}
+              placeholder="例: 夕食、タクシー代、お土産..."
             />
+            {errors.title && <p className="text-xs text-rose-500 font-bold mt-1.5 ml-1">{errors.title}</p>}
           </div>
+
+          {/* カテゴリー - U1: アイコン付きボタングリッド */}
           <div>
-            <label className="block text-[10px] font-bold text-ink-sub mb-2 uppercase tracking-widest">通貨</label>
-            <select
-              value={currency}
-              onChange={e => setCurrency(e.target.value)}
-              className="w-full bg-surface-gray border border-surface-gray-mid rounded-2xl px-4 py-4 text-[16px] text-ink outline-none appearance-none"
-            >
-              {CURRENCIES.map(c => <option key={c.code} value={c.code}>{c.flag} {c.code}</option>)}
-            </select>
-          </div>
-        </div>
-
-        {/* 為替レート */}
-        {currency !== 'JPY' && (
-          <div className="p-4 rounded-2xl border border-primary/20 bg-primary-light flex flex-col gap-2">
-            <div className="flex justify-between items-center">
-              <span className="text-[10px] font-bold text-primary uppercase tracking-wider">レート (1 {currency} = ?)</span>
-              <div className="flex items-center gap-2">
-                <input
-                  type="number"
-                  step="0.01"
-                  value={rate}
-                  onChange={e => setRate(parseFloat(e.target.value))}
-                  className="w-20 bg-transparent text-right font-bold text-lg text-ink outline-none border-b border-primary/30 focus:border-primary"
-                />
-                <span className="text-xs font-bold text-ink-sub">円</span>
-              </div>
+            <label className="block text-[10px] font-bold text-ink-sub mb-3 uppercase tracking-widest">カテゴリー</label>
+            <div className="grid grid-cols-4 gap-2">
+              {CATEGORIES.map(c => (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => setCategory(c)}
+                  className={`flex flex-col items-center gap-1.5 py-3 px-1 rounded-2xl border-2 font-bold transition-all active:scale-95 ${category === c
+                      ? 'border-primary bg-primary/10 text-primary shadow-sm'
+                      : 'border-surface-gray-mid bg-surface-gray text-ink-sub hover:border-primary/30'
+                    }`}
+                >
+                  <span className="text-xl leading-none">{CATEGORY_ICONS[c] || '📌'}</span>
+                  <span className="text-[9px] font-bold leading-none">{c}</span>
+                </button>
+              ))}
             </div>
-            <button
-              type="button"
-              onClick={handleFetchLatestRate}
-              disabled={isFetchingRate}
-              className="self-end text-[10px] font-bold text-accent uppercase tracking-widest hover:text-primary disabled:opacity-40 transition-opacity"
-            >
-              {isFetchingRate ? `レート更新中...` : `最新レートを取得 (15秒毎に自動更新)`}
-            </button>
-          </div>
-        )}
-
-        {/* 支払った人 */}
-        <div className="space-y-3">
-          <label className="block text-[10px] font-bold text-ink-sub uppercase tracking-widest">支払った人</label>
-          <div className="flex gap-2">
-            {userProfiles.map(p => (
-              <button
-                key={p.id}
-                type="button"
-                onClick={() => setPaidBy(p.id)}
-                className={`flex-1 py-3 rounded-xl border font-bold transition-all text-xs ${paidBy === p.id ? 'border-primary bg-primary text-white' : 'border-surface-gray-mid bg-surface-gray text-ink-sub'}`}
-              >
-                {p.displayName}
-              </button>
-            ))}
           </div>
         </div>
 
-        {/* 割り勘する人 */}
-        <div className="space-y-3">
-          <label className="block text-[10px] font-bold text-ink-sub uppercase tracking-widest">割り勘する人</label>
-          <div className="flex gap-2">
-            {userProfiles.map(p => (
-              <button
-                key={p.id}
-                type="button"
-                onClick={() => handleToggleSplit(p.id)}
-                className={`flex-1 py-3 rounded-xl border font-bold transition-all text-xs ${splitWith.includes(p.id) ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-surface-gray-mid bg-surface-gray text-ink-sub'}`}
-              >
-                {p.displayName}
-              </button>
-            ))}
-          </div>
-        </div>
+        {/* ─── グループ2: 金額 ─── */}
+        <div className="space-y-5">
+          <p className="text-[9px] font-black text-ink-light uppercase tracking-[0.25em] flex items-center gap-2">
+            <span className="flex-1 h-px bg-surface-gray-mid" />
+            金額
+            <span className="flex-1 h-px bg-surface-gray-mid" />
+          </p>
 
-        {/* 日付・カテゴリー */}
-        <div className="grid grid-cols-2 gap-4">
+          {/* 金額・通貨 */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[10px] font-bold text-ink-sub mb-2 uppercase tracking-widest">
+                金額 <span className="text-rose-400">*</span>
+              </label>
+              <input
+                type="number"
+                inputMode="decimal"
+                step="0.01"
+                min="0"
+                value={amount}
+                onChange={e => { setAmount(e.target.value); setErrors(p => ({ ...p, amount: '' })); }}
+                className={`w-full bg-surface-gray border-2 rounded-2xl px-4 py-4 text-[16px] text-ink outline-none transition-colors ${errors.amount ? 'border-rose-400' : 'border-transparent focus:border-primary/40'}`}
+                placeholder="0.00"
+              />
+              {errors.amount && <p className="text-xs text-rose-500 font-bold mt-1.5 ml-1">{errors.amount}</p>}
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold text-ink-sub mb-2 uppercase tracking-widest">通貨</label>
+              <select
+                value={currency}
+                onChange={e => setCurrency(e.target.value)}
+                className="w-full bg-surface-gray border-2 border-transparent focus:border-primary/40 rounded-2xl px-4 py-4 text-[16px] text-ink outline-none appearance-none transition-colors"
+              >
+                {CURRENCIES.map(c => <option key={c.code} value={c.code}>{c.flag} {c.code}</option>)}
+              </select>
+            </div>
+          </div>
+
+          {/* U2: JPYリアルタイム換算プレビュー */}
+          {amountNum > 0 && (
+            <div className="bg-primary/5 border border-primary/20 rounded-2xl px-5 py-3 flex justify-between items-center animate-in fade-in duration-200">
+              <span className="text-[10px] font-bold text-primary uppercase tracking-widest">JPY換算</span>
+              <span className="text-xl font-sans font-black text-primary">
+                ≈ ¥{jpyPreview.toLocaleString()}
+              </span>
+            </div>
+          )}
+
+          {/* 為替レート（JPY以外のとき） */}
+          {currency !== 'JPY' && (
+            <div className="p-4 rounded-2xl border border-surface-gray-mid bg-surface-gray flex flex-col gap-2">
+              <div className="flex justify-between items-center">
+                <span className="text-[10px] font-bold text-ink-sub uppercase tracking-wider">
+                  レート (1 {currency} =)
+                </span>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={rate}
+                    onChange={e => setRate(parseFloat(e.target.value))}
+                    className="w-20 bg-transparent text-right font-bold text-lg text-ink outline-none border-b-2 border-primary/30 focus:border-primary transition-colors"
+                  />
+                  <span className="text-xs font-bold text-ink-sub">円</span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={handleFetchLatestRate}
+                disabled={isFetchingRate}
+                className="self-end text-[10px] font-bold text-primary uppercase tracking-widest hover:opacity-70 disabled:opacity-40 transition-opacity"
+              >
+                {isFetchingRate ? '取得中...' : '最新レートに更新'}
+              </button>
+            </div>
+          )}
+
+          {/* 日付 */}
           <div>
             <label className="block text-[10px] font-bold text-ink-sub mb-2 uppercase tracking-widest">日付</label>
             <input
               type="date"
               value={date}
               onChange={e => setDate(e.target.value)}
-              className="w-full bg-surface-gray border border-surface-gray-mid rounded-2xl px-4 py-4 text-[16px] text-ink outline-none"
+              className="w-full bg-surface-gray border-2 border-transparent focus:border-primary/40 rounded-2xl px-4 py-4 text-[16px] text-ink outline-none transition-colors"
             />
-          </div>
-          <div>
-            <label className="block text-[10px] font-bold text-ink-sub mb-2 uppercase tracking-widest">カテゴリー</label>
-            <select
-              value={category}
-              onChange={e => setCategory(e.target.value)}
-              className="w-full bg-surface-gray border border-surface-gray-mid rounded-2xl px-4 py-4 text-[16px] text-ink outline-none appearance-none"
-            >
-              {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-            </select>
           </div>
         </div>
 
+        {/* ─── グループ3: 誰が・誰と ─── */}
+        <div className="space-y-5">
+          <p className="text-[9px] font-black text-ink-light uppercase tracking-[0.25em] flex items-center gap-2">
+            <span className="flex-1 h-px bg-surface-gray-mid" />
+            誰が・誰と
+            <span className="flex-1 h-px bg-surface-gray-mid" />
+          </p>
+
+          {/* 支払った人 */}
+          <div className="space-y-3">
+            <label className="block text-[10px] font-bold text-ink-sub uppercase tracking-widest">
+              支払った人 <span className="text-rose-400">*</span>
+            </label>
+            <div className="flex gap-2 flex-wrap">
+              {userProfiles.map(p => (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => { setPaidBy(p.id); setErrors(prev => ({ ...prev, paidBy: '' })); }}
+                  className={`flex-1 min-w-[60px] py-3.5 rounded-2xl border-2 font-bold transition-all text-sm active:scale-95 ${paidBy === p.id
+                      ? 'border-primary bg-primary text-white shadow-md shadow-primary/20'
+                      : 'border-surface-gray-mid bg-surface-gray text-ink-sub hover:border-primary/30'
+                    }`}
+                >
+                  {p.displayName}
+                </button>
+              ))}
+            </div>
+            {errors.paidBy && <p className="text-xs text-rose-500 font-bold">{errors.paidBy}</p>}
+          </div>
+
+          {/* 割り勘する人 */}
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+              <label className="block text-[10px] font-bold text-ink-sub uppercase tracking-widest">
+                割り勘する人 <span className="text-rose-400">*</span>
+              </label>
+              <span className="text-[9px] font-bold text-ink-light">
+                {splitWith.length}人 / {userProfiles.length}人
+              </span>
+            </div>
+            <div className="flex gap-2 flex-wrap">
+              {userProfiles.map(p => (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => { handleToggleSplit(p.id); setErrors(prev => ({ ...prev, splitWith: '' })); }}
+                  className={`flex-1 min-w-[60px] py-3.5 rounded-2xl border-2 font-bold transition-all text-sm active:scale-95 ${splitWith.includes(p.id)
+                      ? 'border-emerald-500 bg-emerald-500 text-white shadow-md shadow-emerald-500/20'
+                      : 'border-surface-gray-mid bg-surface-gray text-ink-sub hover:border-emerald-300'
+                    }`}
+                >
+                  {p.displayName}
+                </button>
+              ))}
+            </div>
+            {errors.splitWith && <p className="text-xs text-rose-500 font-bold">{errors.splitWith}</p>}
+          </div>
+        </div>
+
+        {/* ─── グループ4: メモ（任意） ─── */}
+        {/* U3: sourceUrlラベルをわかりやすく変更 */}
+        <div>
+          <label className="block text-[10px] font-bold text-ink-sub mb-2 uppercase tracking-widest">
+            メモ・URL（任意）
+          </label>
+          <input
+            type="text"
+            value={sourceUrl}
+            onChange={e => setSourceUrl(e.target.value)}
+            className="w-full bg-surface-gray border-2 border-transparent focus:border-primary/40 rounded-2xl px-4 py-3.5 text-sm text-ink outline-none transition-colors"
+            placeholder="レシートのURL、備考など..."
+          />
+        </div>
+
         {/* ボタン */}
-        <div className="pt-4 flex gap-3">
-          <button type="button" onClick={onCancel} className="flex-1 py-4 text-ink-sub font-bold text-sm hover:text-ink">
+        <div className="flex gap-3 pt-2">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="flex-1 py-4 text-ink-sub font-bold text-sm border-2 border-surface-gray-mid rounded-2xl hover:bg-surface-gray transition-colors active:scale-95"
+          >
             キャンセル
           </button>
           <button
             type="submit"
-            className="flex-[2] py-5 bg-primary text-white font-bold text-lg rounded-[24px] shadow-lg shadow-primary/20 active:scale-95 transition-all"
+            className="flex-[2] py-5 bg-primary text-white font-bold text-lg rounded-2xl shadow-lg shadow-primary/20 active:scale-95 transition-all hover:bg-primary/90"
           >
-            {initialExpense ? '更新する' : '保存する'}
+            {initialExpense ? '✓ 更新する' : '💾 保存する'}
           </button>
         </div>
       </form>

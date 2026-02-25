@@ -55,6 +55,9 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
   const [weatherData, setWeatherData] = useState<WeatherData[]>([]);
   const imageInputRef = useRef<HTMLInputElement>(null);
 
+  // A3: destinationをメモ化して、場所が変わったときだけ天気APIを叩く
+  const destination = useMemo(() => items.find(i => i.location)?.location || '', [items]);
+
   // 旅行期間の日付配列を生成
   const dateRange = useMemo(() => {
     if (!tripStartDate) return [];
@@ -81,14 +84,11 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dateRange]);
 
-  // 天気情報の取得
+  // A3: 天気情報の取得 - destination (場所名) が変わったときだけAPIを叩く
   useEffect(() => {
     const loadWeather = async () => {
       try {
-        // 全日程の代表的な場所を特定（最初に見つかった場所）
-        const destination = items.find(i => i.location)?.location;
         if (!destination) return;
-
         const loc = await searchLocation(destination);
         if (loc) {
           const weather = await fetchWeather(loc.latitude, loc.longitude);
@@ -99,7 +99,7 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
       }
     };
     loadWeather();
-  }, [items, tripStartDate]); // 加えて旅行開始日が設定された時も実行
+  }, [destination, tripStartDate]); // 場所名か旅行開始日が変わったときだけ実行
 
   // 選択日の予定を時刻順に並べる
   const filteredItems = useMemo(() => {
@@ -273,17 +273,19 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
     });
   };
 
-  // URL入力後にOGPを自動取得（0.8秒のデバウンス）
+  // A2: URL入力後にOGPを自動取得（0.8秒のデバウンス）
+  // 優先順位: 関連リンク[0] > link > mapUrl の順でOGP取得を試みる
   useEffect(() => {
-    // 優先順位: 1.関連リンク[0] > 2.link > 3.mapUrl
-    // Reinaのフィードバックに基づき、より具体的な情報のありそうなリンクを優先
     const url = (formData.links && formData.links.length > 0 ? formData.links[0].url : '') || formData.link || formData.mapUrl;
 
     if (!url || !url.startsWith('http')) return;
 
-    // すでに画像がある場合でも、「リンクから優先取得」がONなら上書きを試みる
+    // preferOgpがONか、まだ画像がない場合に取得（mapUrlもトリガー対象に含める）
     const canFetch = (formData as any).preferOgp || !formData.imageUrl;
     if (!canFetch) return;
+
+    // Googleマップ検索URLはOGP画像がないのでスキップ
+    if (url.includes('google.com/maps/search')) return;
 
     const timer = setTimeout(async () => {
       setIsFetchingOgp(true);
@@ -440,7 +442,7 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
         </div>
       </div>
 
-      {/* 今日の天気サマリー (7日以内) */}
+      {/* U1: 天気サマリー（英語ラベルを日本語化） */}
       {
         selectedDate && weatherData.length > 0 && (() => {
           const dayWeather = weatherData.find(w => w.date === selectedDate);
@@ -451,13 +453,13 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
                 <div className="flex items-center gap-3">
                   <WeatherIcon code={dayWeather.weatherCode} className="w-8 h-8" />
                   <div>
-                    <p className="text-[8px] font-bold text-ink-sub uppercase tracking-widest">Forecast</p>
-                    <p className="text-[10px] font-bold text-ink">今日の予報</p>
+                    <p className="text-[8px] font-bold text-ink-sub uppercase tracking-widest">天気予報</p>
+                    <p className="text-[10px] font-bold text-ink">{selectedDate === new Date().toISOString().split('T')[0] ? '今日の予報' : 'この日の予報'}</p>
                   </div>
                 </div>
                 <div className="text-right">
                   <p className="text-sm font-black text-ink">{dayWeather.tempMax}° / {dayWeather.tempMin}°</p>
-                  <p className="text-[8px] font-bold text-ink-light uppercase">Celsius</p>
+                  <p className="text-[8px] font-bold text-ink-light">最高 / 最低気温</p>
                 </div>
               </div>
             </div>
@@ -467,9 +469,20 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
 
       {/* タイムライン表示 */}
       <div className="flex-1 overflow-y-auto px-4 pb-20 relative">
+        {/* U2: 空状態を改善して追加ボタンを目立たせる */}
         {filteredItems.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 opacity-40">
-            <p className="text-sm">予定はありません</p>
+          <div className="flex flex-col items-center justify-center py-16 text-center">
+            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+              <span className="text-3xl">🗓️</span>
+            </div>
+            <p className="text-sm font-bold text-ink mb-1">この日の予定はまだありません</p>
+            <p className="text-xs text-ink-light mb-6">「+ 予定を追加」から旅の計画を立てましょう</p>
+            <button
+              onClick={handleOpenAdd}
+              className="px-6 py-3 bg-primary text-white text-sm font-bold rounded-full shadow-lg shadow-primary/20 active:scale-95 transition-all"
+            >
+              + 予定を追加
+            </button>
           </div>
         ) : (
           <div className="relative">
@@ -635,11 +648,11 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
                       <div className="relative z-0 flex-shrink-0 flex items-center justify-center">
                         <div className="w-[2px] h-full bg-surface-gray-mid absolute left-1/2 -translate-x-1/2 -top-6 -bottom-6"></div>
                       </div>
+                      {/* U1: 空き時間カードの英語ラベルを削除 */}
                       <div className="flex-1">
                         <div className="bg-ocean-light/10 border-2 border-dashed border-ocean-light/30 rounded-2xl p-4 flex items-center justify-center gap-3 animate-in fade-in duration-500">
                           <span className="text-xl">🕑</span>
                           <div className="text-center">
-                            <p className="text-[10px] font-bold text-ocean-dark/60 uppercase tracking-widest mb-0.5">Idle Time</p>
                             <p className="text-sm font-bold text-ocean-dark">
                               空き時間 {gaps[item.id]}
                             </p>
@@ -756,52 +769,58 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
                   </div>
                 </div>
 
-                {/* 場所名 + Googleマップ */}
-                <div className="grid grid-cols-1 gap-3">
+                {/* A1: 場所名入力 → リアルタイムでGoogleマップリンクを自動生成・プレビュー表示 */}
+                <div className="space-y-2">
                   <div>
                     <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">場所名</label>
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        placeholder="例: 浅草寺、新宿駅"
-                        className="flex-1 bg-surface-gray border border-surface-gray-mid rounded-xl p-3 text-sm text-ink outline-none focus:border-primary"
-                        value={formData.location || ''}
-                        onChange={e => {
-                          const newLoc = e.target.value;
-                          setFormData(prev => ({
-                            ...prev,
-                            location: newLoc,
-                            // 場所名が入力され、かつGoogleマップURLがまだ空の場合のみ自動生成
-                            mapUrl: (!prev.mapUrl || prev.mapUrl.includes('google.com/maps/search'))
-                              ? (newLoc ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(newLoc)}` : '')
-                              : prev.mapUrl
-                          }));
-                          setValidationError('');
-                        }}
-                      />
-                      {formData.location && (
-                        <button
-                          type="button"
-                          onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(formData.location || '')}`, '_blank')}
-                          className="px-3 bg-rose-50 border border-rose-200 rounded-xl text-xs font-bold text-rose-500 hover:bg-rose-100 transition-colors"
-                        >
-                          検索
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest text-rose-500">
-                      <AppIcon name="map" className="w-3 h-3 inline-block mr-1" /> GoogleマップURL
-                    </label>
                     <input
-                      type="url"
-                      placeholder="https://maps.app.goo.gl/..."
-                      className="w-full bg-rose-50 border border-rose-200 rounded-xl p-3 text-sm text-ink outline-none focus:border-rose-400"
-                      value={formData.mapUrl || ''}
-                      onChange={e => setFormData({ ...formData, mapUrl: e.target.value })}
+                      type="text"
+                      placeholder="例: 浅草寺、新宿駅"
+                      className="w-full bg-surface-gray border border-surface-gray-mid rounded-xl p-3 text-sm text-ink outline-none focus:border-primary"
+                      value={formData.location || ''}
+                      onChange={e => {
+                        const newLoc = e.target.value;
+                        setFormData(prev => ({
+                          ...prev,
+                          location: newLoc,
+                          // 場所名が入力されたらGoogleマップURL（検索型）を自動生成
+                          // ユーザーが手動でURLを上書きしていた場合はそのまま保持
+                          mapUrl: (!prev.mapUrl || prev.mapUrl.includes('google.com/maps/search'))
+                            ? (newLoc ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(newLoc)}` : '')
+                            : prev.mapUrl
+                        }));
+                        setValidationError('');
+                      }}
                     />
                   </div>
+
+                  {/* A1: 場所名が入力されたらリアルタイムで「マップで確認」ボタンを表示 */}
+                  {formData.location && (
+                    <a
+                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(formData.location)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-2 w-full py-2 bg-rose-50 border border-rose-200 rounded-xl text-xs font-bold text-rose-600 hover:bg-rose-100 transition-colors animate-in fade-in duration-200"
+                    >
+                      <span>📍</span> Googleマップで確認する
+                    </a>
+                  )}
+
+                  {/* U4: GoogleマップURLは場所名入力後のみ表示 + 詳細URLをカスタマイズしたい場合に使う */}
+                  {formData.location && (
+                    <div>
+                      <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest text-rose-500">
+                        <AppIcon name="map" className="w-3 h-3 inline-block mr-1" /> マップURL（変更する場合）
+                      </label>
+                      <input
+                        type="url"
+                        placeholder="https://maps.app.goo.gl/..."
+                        className="w-full bg-rose-50 border border-rose-200 rounded-xl p-3 text-sm text-ink outline-none focus:border-rose-400"
+                        value={formData.mapUrl || ''}
+                        onChange={e => setFormData({ ...formData, mapUrl: e.target.value })}
+                      />
+                    </div>
+                  )}
                 </div>
 
                 {/* Links (複数対応) */}
@@ -882,21 +901,21 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
                   />
                 </div>
 
-                {/* ボタン */}
-                <div className="flex gap-3 pt-1">
+                {/* U3: 保存ボタンを大きくしてタップしやすく */}
+                <div className="flex gap-3 pt-2">
                   <button
                     type="button"
                     onClick={() => { setIsModalOpen(false); setValidationError(''); }}
-                    className="flex-1 py-3 rounded-xl text-xs font-bold text-ink-sub hover:bg-surface-gray border border-surface-gray-mid transition-colors"
+                    className="flex-1 py-3.5 rounded-2xl text-sm font-bold text-ink-sub hover:bg-surface-gray border border-surface-gray-mid transition-colors active:scale-95"
                   >
                     キャンセル
                   </button>
                   <button
                     type="button"
                     onClick={(e) => { e.stopPropagation(); handleSubmit(); }}
-                    className="flex-1 py-3 rounded-xl bg-primary text-white text-xs font-bold shadow-lg hover:bg-primary/90 active:scale-95 transition-all"
+                    className="flex-[2] py-4 rounded-2xl bg-primary text-white text-sm font-bold shadow-lg shadow-primary/20 hover:bg-primary/90 active:scale-95 transition-all"
                   >
-                    保存
+                    💾 保存する
                   </button>
                 </div>
               </div>
@@ -904,7 +923,7 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
           </div>
         )
       }
-    </div >
+    </div>
   );
 };
 

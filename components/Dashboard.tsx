@@ -53,7 +53,9 @@ const Dashboard: React.FC<Props> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const totalJPY = expenses.reduce((sum, e) => sum + convertToJPY(e.amount, e.currency, e.exchangeRate), 0);
-  const budgetPercentage = Math.min((totalJPY / budget) * 100, 100);
+  // #2: budget=0のとき0除算でNaNになるのを防ぐガード
+  const budgetPercentage = budget > 0 ? Math.min((totalJPY / budget) * 100, 100) : 0;
+  const remaining = budget - totalJPY;
 
   // --- Calculations ---
   const memberStats = useMemo(() => {
@@ -367,26 +369,20 @@ const Dashboard: React.FC<Props> = ({
           </div>
         </div>
 
-        <div className={`grid ${isTablet ? 'grid-cols-4' : 'grid-cols-2'} gap-3`}>
-          <div className="glass p-4 rounded-2xl border-white/40">
-            <p className="text-[8px] font-bold text-ink-light uppercase tracking-widest mb-1">合計支出額</p>
-            <p className="text-lg font-sans font-bold text-ink leading-tight">{Math.round(totalJPY).toLocaleString()}<span className="text-[9px] ml-1 opacity-50">JPY</span></p>
-          </div>
+
+        {/* #3: 重複していた4枚のサマリーカードを削除し、残り予算のみ表示 */}
+        <div className={`grid ${isTablet ? 'grid-cols-3' : 'grid-cols-3'} gap-3`}>
           <div className="glass p-4 rounded-2xl border-white/40">
             <p className="text-[8px] font-bold text-ink-light uppercase tracking-widest mb-1">決済件数</p>
-            <p className="text-lg font-sans font-bold text-ink leading-tight">{summaryData.totalCount}<span className="text-[9px] ml-1 opacity-50">回</span></p>
+            <p className="text-lg font-sans font-bold text-ink leading-tight">{summaryData.totalCount}<span className="text-[9px] ml-1 opacity-50">件</span></p>
           </div>
           <div className="glass p-4 rounded-2xl border-white/40">
-            <p className="text-[8px] font-bold text-ink-light uppercase tracking-widest mb-1">1人あたりの負担</p>
+            <p className="text-[8px] font-bold text-ink-light uppercase tracking-widest mb-1">1人あたり</p>
             <p className="text-lg font-sans font-bold text-ink leading-tight">{Math.round(summaryData.averagePerPerson).toLocaleString()}<span className="text-[9px] ml-1 opacity-50">JPY</span></p>
           </div>
-          <div className="glass p-4 rounded-2xl border-white/40 bg-gradient-to-br from-white/40 to-premium-gold/5">
-            <p className="text-[8px] font-bold text-ink-light uppercase tracking-widest mb-1">外貨での支出</p>
-            <div className="flex flex-col gap-0.5">
-              {summaryData.foreignCurrencies.length > 0 ? summaryData.foreignCurrencies.map(fc => (
-                <p key={fc.currency} className="text-xs font-sans font-bold text-ink">{fc.currency} {fc.amount.toLocaleString()}</p>
-              )) : <p className="text-xs font-bold text-ink-light">外貨の支出なし</p>}
-            </div>
+          <div className={`glass p-4 rounded-2xl border-white/40 ${remaining < 0 ? 'bg-rose-50/60' : ''}`}>
+            <p className="text-[8px] font-bold text-ink-light uppercase tracking-widest mb-1">残り予算</p>
+            <p className={`text-lg font-sans font-bold leading-tight ${remaining < 0 ? 'text-rose-500' : 'text-emerald-600'}`}>{remaining < 0 ? '-' : ''}{Math.abs(Math.round(remaining)).toLocaleString()}<span className="text-[9px] ml-1 opacity-50">JPY</span></p>
           </div>
         </div>
 
@@ -577,8 +573,9 @@ const Dashboard: React.FC<Props> = ({
                 {selectedMemberId === 'ALL' ? (
                   <>
                     <div className="flex justify-between items-end">
-                      <div><p className="text-[9px] font-bold text-ink-sub uppercase tracking-widest mb-1">Total Spending</p><h4 className="text-2xl font-sans font-black text-ink">{Math.round(totalJPY).toLocaleString()}<span className="text-xs font-bold ml-1 opacity-50">JPY</span></h4></div>
-                      <div className="text-right"><p className="text-[9px] font-bold text-ink-sub uppercase tracking-widest mb-1">Budget Use</p><span className={`text-xs font-black ${budgetPercentage > 100 ? 'text-rose-500' : 'text-ocean-dark'}`}>{budgetPercentage.toFixed(1)}%</span></div>
+                      {/* #4: 英語ラベルを日本語化 */}
+                      <div><p className="text-[9px] font-bold text-ink-sub uppercase tracking-widest mb-1">支出合計</p><h4 className="text-2xl font-sans font-black text-ink">{Math.round(totalJPY).toLocaleString()}<span className="text-xs font-bold ml-1 opacity-50">JPY</span></h4></div>
+                      <div className="text-right"><p className="text-[9px] font-bold text-ink-sub uppercase tracking-widest mb-1">予算消化率</p><span className={`text-xs font-black ${budgetPercentage > 100 ? 'text-rose-500' : 'text-ocean-dark'}`}>{budgetPercentage.toFixed(1)}%</span></div>
                     </div>
                     <div className="w-full bg-surface-gray-mid h-2 rounded-full overflow-hidden"><div className={`h-full transition-all duration-1000 ${totalJPY > budget ? 'bg-rose-500' : 'bg-ocean-light'}`} style={{ width: `${budgetPercentage}%` }} /></div>
                   </>
@@ -607,8 +604,15 @@ const Dashboard: React.FC<Props> = ({
                     ))
                   ) : (
                     <>
+                      {/* #5: 支出が0件のとき空状態を表示 */}
+                      {detailData.iPaidForOthers.length === 0 && detailData.othersPaidForMe.length === 0 && (
+                        <div className="py-6 text-center">
+                          <p className="text-2xl mb-2">💸</p>
+                          <p className="text-xs font-bold text-ink-light">まだ支出の記録がありません</p>
+                        </div>
+                      )}
                       {detailData.iPaidForOthers.map(i => (
-                        <div key={i.id} className="flex justify-between items-center p-3.5 rounded-xl bg-emerald-50 border border-emerald-100"><span className="text-xs font-bold">{getProfile(i.id).displayName} さんの分</span><span className="text-xs font-black text-emerald-600">+{Math.round(i.value).toLocaleString()}</span></div>
+                        <div key={i.id} className="flex justify-between items-center p-3.5 rounded-xl bg-emerald-50 border border-emerald-100"><span className="text-xs font-bold">{getProfile(i.id).displayName} さんの分を立替</span><span className="text-xs font-black text-emerald-600">+{Math.round(i.value).toLocaleString()}</span></div>
                       ))}
                       {detailData.othersPaidForMe.map(o => (
                         <div key={o.id} className="flex justify-between items-center p-3.5 rounded-xl bg-rose-50 border border-rose-100"><span className="text-xs font-bold">{getProfile(o.id).displayName} さんが支出</span><span className="text-xs font-black text-rose-500">-{Math.round(o.value).toLocaleString()}</span></div>

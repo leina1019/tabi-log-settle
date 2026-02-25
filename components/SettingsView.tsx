@@ -95,7 +95,7 @@ const SettingsView: React.FC<Props> = ({
         alert('無効なJSONファイルです。');
       }
     };
-    reader.readAsDataURL(file);
+    reader.readAsText(file);
   };
 
   return (
@@ -361,7 +361,7 @@ const SettingsView: React.FC<Props> = ({
             </div>
           </button>
 
-          {localStorage.getItem('oz-wari-last-backup-key') && (
+          {localStorage.getItem('tabilog-last-backup-key') && (
             <button
               onClick={onRestoreData}
               className="w-full bg-emerald-50 border-2 border-emerald-100/50 p-6 rounded-[32px] flex items-center justify-center gap-4 hover:bg-emerald-100 transition-all shadow-sm active:scale-95 group"

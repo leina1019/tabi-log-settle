@@ -3,9 +3,10 @@ import { Expense, ItineraryItem, Ticket, UserProfile } from '../types';
 import { convertToJPY } from '../utils/currency';
 import { MEMBER_COLORS } from '../constants';
 
+// GAS WebApp の URL（1本のURLで全tripIdを管理）
 const GAS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbxMLrlCb3WphIRPzcnnoqKA615GJT0bylB-rMuUMZtEf85GK9yybzdlxhauUhypFAr1XQ/exec';
 
-// Special Category Constants to distinguish data types in the single sheet
+// シート内でデータ種別を区別するための特殊カテゴリ定数
 const CAT_ITINERARY = '__ITINERARY__';
 const CAT_TICKET = '__TICKET__';
 const CAT_PROFILE = '__PROFILE__';
@@ -19,7 +20,7 @@ interface CloudData {
   tripSettings: any | null;
 }
 
-// Helper to safely parse JSON from sourceUrl or return empty object
+// sourceUrlに格納されたJSON文字列を安全にパースするヘルパー
 const parseExtraData = (jsonStr: string | undefined) => {
   if (!jsonStr) return {};
   try {
@@ -29,13 +30,21 @@ const parseExtraData = (jsonStr: string | undefined) => {
   }
 };
 
-export async function fetchAllData(): Promise<CloudData> {
+/**
+ * データ取得 - tripIdに対応するスプレッドシートからデータを取得する
+ */
+export async function fetchAllData(tripId: string): Promise<CloudData> {
+  if (!tripId) throw new Error('tripId is required');
+
   try {
-    const response = await fetch(`${GAS_WEBAPP_URL}?t=${Date.now()}`);
+    // GETリクエストにtripIdを付与して対象シートのデータを取得
+    const response = await fetch(`${GAS_WEBAPP_URL}?tripId=${encodeURIComponent(tripId)}&t=${Date.now()}`);
     if (!response.ok) throw new Error('Network response was not ok');
     const rawData = await response.json();
 
-    if (!Array.isArray(rawData)) return { expenses: [], itinerary: [], tickets: [], profiles: [], tripSettings: null };
+    if (!Array.isArray(rawData)) {
+      return { expenses: [], itinerary: [], tickets: [], profiles: [], tripSettings: null };
+    }
 
     const result: CloudData = {
       expenses: [],
@@ -81,14 +90,14 @@ export async function fetchAllData(): Promise<CloudData> {
         result.profiles.push({
           id,
           displayName: String(item.title),
-          avatarUrl: item.sourceUrl, // Storing avatar URL directly in sourceUrl
-          color: MEMBER_COLORS[result.profiles.length % MEMBER_COLORS.length], // Fallback color
+          avatarUrl: item.sourceUrl,
+          color: MEMBER_COLORS[result.profiles.length % MEMBER_COLORS.length],
           updatedAt
         });
       } else if (category === CAT_TRIP_SETTINGS) {
         result.tripSettings = parseExtraData(item.sourceUrl);
       } else {
-        // Standard Expense
+        // 通常の支出データ
         result.expenses.push({
           id: String(item.id),
           date: String(item.date),
@@ -115,24 +124,29 @@ export async function fetchAllData(): Promise<CloudData> {
   }
 }
 
-// Generic Sync Function
-async function syncGenericItem(payload: any): Promise<boolean> {
+/**
+ * 汎用POST送信ヘルパー（tripIdを必ず含める）
+ */
+async function syncGenericItem(tripId: string, payload: any): Promise<boolean> {
   try {
     await fetch(GAS_WEBAPP_URL, {
       method: 'POST',
       mode: 'no-cors',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
+      // payloadにtripIdを付加してGASに送信
+      body: JSON.stringify({ ...payload, tripId }),
     });
     return true;
   } catch (error) {
-    console.error("Sync failed", error);
+    console.error('Sync failed', error);
     return false;
   }
 }
 
-export async function syncExpenseToSheet(expense: Expense): Promise<boolean> {
-  return syncGenericItem({
+// --- 個別データの同期関数 ---
+
+export async function syncExpenseToSheet(tripId: string, expense: Expense): Promise<boolean> {
+  return syncGenericItem(tripId, {
     id: expense.id,
     date: expense.date,
     title: expense.title,
@@ -149,15 +163,9 @@ export async function syncExpenseToSheet(expense: Expense): Promise<boolean> {
   });
 }
 
-export async function syncItineraryToSheet(item: ItineraryItem): Promise<boolean> {
-  const extras = {
-    time: item.time,
-    location: item.location,
-    memo: item.memo,
-    link: item.link,
-    type: item.type
-  };
-  return syncGenericItem({
+export async function syncItineraryToSheet(tripId: string, item: ItineraryItem): Promise<boolean> {
+  const extras = { time: item.time, location: item.location, memo: item.memo, link: item.link, type: item.type };
+  return syncGenericItem(tripId, {
     id: `ITINERARY_${item.id}`,
     date: item.date,
     title: item.title,
@@ -174,16 +182,12 @@ export async function syncItineraryToSheet(item: ItineraryItem): Promise<boolean
   });
 }
 
-export async function syncTicketToSheet(item: Ticket): Promise<boolean> {
+export async function syncTicketToSheet(tripId: string, item: Ticket): Promise<boolean> {
   const extras = {
-    type: item.type,
-    provider: item.provider,
-    time: item.time,
-    referenceNumber: item.referenceNumber,
-    notes: item.notes,
-    link: item.link
+    type: item.type, provider: item.provider, time: item.time,
+    referenceNumber: item.referenceNumber, notes: item.notes, link: item.link
   };
-  return syncGenericItem({
+  return syncGenericItem(tripId, {
     id: `TICKET_${item.id}`,
     date: item.date,
     title: item.title,
@@ -200,12 +204,10 @@ export async function syncTicketToSheet(item: Ticket): Promise<boolean> {
   });
 }
 
-export async function syncProfileToSheet(profile: UserProfile): Promise<boolean> {
-  // CAUTION: Avatar URL can be large. If too large, GAS/Sheet might truncate or fail.
-  // We recommend using URLs instead of Base64 if possible, but we'll attempt sync.
-  return syncGenericItem({
+export async function syncProfileToSheet(tripId: string, profile: UserProfile): Promise<boolean> {
+  return syncGenericItem(tripId, {
     id: `PROFILE_${profile.id}`,
-    date: '2024-01-01', // Dummy
+    date: '2024-01-01',
     title: profile.displayName,
     category: CAT_PROFILE,
     paidBy: profile.id,
@@ -220,64 +222,36 @@ export async function syncProfileToSheet(profile: UserProfile): Promise<boolean>
   });
 }
 
-export async function syncTripSettingsToSheet(settings: any): Promise<boolean> {
-  return syncGenericItem({
-    id: 'TRIP_SETTINGS',
-    date: '2024-01-01',
-    title: 'Trip Settings',
-    category: CAT_TRIP_SETTINGS,
-    paidBy: 'SYSTEM',
-    amount: 0,
-    currency: 'JPY',
-    exchangeRate: 1,
-    amountJPY: 0,
-    splitWith: '',
-    sourceUrl: JSON.stringify(settings),
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  });
+export async function deleteItemFromSheet(tripId: string, id: string): Promise<boolean> {
+  return syncGenericItem(tripId, { action: 'DELETE', id });
 }
 
-export async function deleteItemFromSheet(id: string): Promise<boolean> {
-  try {
-    await fetch(GAS_WEBAPP_URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'DELETE', id }),
-    });
-    return true;
-  } catch (error) {
+export async function resetSheetData(tripId: string): Promise<boolean> {
+  return syncGenericItem(tripId, { action: 'RESET' });
+}
+
+/**
+ * 全データを一括同期 - tripIdに対応するスプレッドシートへ全件書き込む
+ */
+export async function syncAllDataToSheet(data: CloudData, tripId: string): Promise<boolean> {
+  if (!tripId) {
+    console.error('[GSheet] tripIdが未設定のため同期をスキップします');
     return false;
   }
-}
 
-export async function resetSheetData(): Promise<boolean> {
   try {
-    await fetch(GAS_WEBAPP_URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'RESET' }),
-    });
-    return true;
-  } catch (error) {
-    return false;
-  }
-}
+    // 1. 対象スプレッドシートをリセット
+    await resetSheetData(tripId);
 
-export async function syncAllDataToSheet(data: CloudData): Promise<boolean> {
-  try {
-    // 1. Reset sheet first (optional but cleaner for full sync)
-    await resetSheetData();
-
-    // 2. Prepare bulk payload
-    const payload: { action: string; data: any[] } = {
+    // 2. 全データをまとめてBULK_SAVEで送信
+    const payload: { action: string; tripId: string; data: any[] } = {
       action: 'BULK_SAVE',
+      tripId, // ← tripIdをペイロードに含める
       data: [
+        // メンバープロフィール
         ...data.profiles.map(p => ({
           id: `PROFILE_${p.id}`,
-          date: '2024-01-01', // Dummy date for profiles
+          date: '2024-01-01',
           title: p.displayName,
           category: CAT_PROFILE,
           paidBy: p.id,
@@ -290,6 +264,7 @@ export async function syncAllDataToSheet(data: CloudData): Promise<boolean> {
           createdAt: new Date().toISOString(),
           updatedAt: p.updatedAt || new Date().toISOString()
         })),
+        // 支出データ
         ...data.expenses.map(e => ({
           id: e.id,
           date: e.date,
@@ -305,6 +280,7 @@ export async function syncAllDataToSheet(data: CloudData): Promise<boolean> {
           createdAt: e.createdAt,
           updatedAt: e.updatedAt
         })),
+        // スケジュールデータ
         ...data.itinerary.map(item => ({
           id: `ITINERARY_${item.id}`,
           date: item.date,
@@ -317,15 +293,13 @@ export async function syncAllDataToSheet(data: CloudData): Promise<boolean> {
           amountJPY: 0,
           splitWith: '',
           sourceUrl: JSON.stringify({
-            time: item.time,
-            location: item.location,
-            memo: item.memo,
-            link: item.link,
-            type: item.type
+            time: item.time, location: item.location,
+            memo: item.memo, link: item.link, type: item.type
           }),
           createdAt: new Date().toISOString(),
           updatedAt: item.updatedAt || new Date().toISOString()
         })),
+        // チケットデータ
         ...data.tickets.map(item => ({
           id: `TICKET_${item.id}`,
           date: item.date,
@@ -338,12 +312,8 @@ export async function syncAllDataToSheet(data: CloudData): Promise<boolean> {
           amountJPY: 0,
           splitWith: '',
           sourceUrl: JSON.stringify({
-            type: item.type,
-            provider: item.provider,
-            time: item.time,
-            referenceNumber: item.referenceNumber,
-            notes: item.notes,
-            link: item.link
+            type: item.type, provider: item.provider, time: item.time,
+            referenceNumber: item.referenceNumber, notes: item.notes, link: item.link
           }),
           createdAt: new Date().toISOString(),
           updatedAt: item.updatedAt || new Date().toISOString()
@@ -351,6 +321,7 @@ export async function syncAllDataToSheet(data: CloudData): Promise<boolean> {
       ]
     };
 
+    // 旅行設定データがあれば追加
     if (data.tripSettings) {
       payload.data.push({
         id: 'TRIP_SETTINGS',
@@ -369,6 +340,7 @@ export async function syncAllDataToSheet(data: CloudData): Promise<boolean> {
       });
     }
 
+    // GASへPOST送信
     await fetch(GAS_WEBAPP_URL, {
       method: 'POST',
       mode: 'no-cors',
@@ -378,9 +350,7 @@ export async function syncAllDataToSheet(data: CloudData): Promise<boolean> {
 
     return true;
   } catch (error) {
-    console.error('Bulk sync failed:', error);
+    console.error('[GSheet] Bulk sync failed:', error);
     return false;
   }
 }
-
-
