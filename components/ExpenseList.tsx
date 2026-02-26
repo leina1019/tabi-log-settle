@@ -17,6 +17,8 @@ const ExpenseList: React.FC<Props> = ({ expenses, onDelete, onEdit, onResetAll, 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [selectedPayer, setSelectedPayer] = useState<string>('All');
+  // インライン削除確認用
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (resetStage === 'confirm') {
@@ -47,8 +49,12 @@ const ExpenseList: React.FC<Props> = ({ expenses, onDelete, onEdit, onResetAll, 
 
   if (expenses.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 text-ink-light">
-        <p className="font-medium text-lg">まだ記録がありません</p>
+      <div className="flex flex-col items-center justify-center py-20 text-center">
+        <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+          <span className="text-4xl">🧾</span>
+        </div>
+        <p className="font-bold text-ink mb-1">支出の記録がまだありません</p>
+        <p className="text-xs text-ink-light">「+ 支出を追加」から記録してみましょう</p>
       </div>
     );
   }
@@ -99,7 +105,7 @@ const ExpenseList: React.FC<Props> = ({ expenses, onDelete, onEdit, onResetAll, 
             onClick={() => setSelectedCategory('All')}
             className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-[10px] font-bold border transition-colors ${selectedCategory === 'All' ? 'bg-primary border-primary text-white' : 'bg-white border-surface-gray-mid text-ink-sub'}`}
           >
-            ALL CATEGORIES
+            すべてのカテゴリ
           </button>
           {CATEGORIES.map(cat => (
             <button
@@ -124,7 +130,7 @@ const ExpenseList: React.FC<Props> = ({ expenses, onDelete, onEdit, onResetAll, 
               <div className="p-5">
                 {exp.hasConflict && (
                   <div className="mb-3 bg-red-500/10 p-2 rounded-lg border border-red-500/20 text-[10px] text-red-500 font-bold">
-                    ⚠️ Sync Conflict Detected
+                    ⚠️ 同期の競合が検出されました
                   </div>
                 )}
                 <div className="flex justify-between items-start mb-3">
@@ -178,7 +184,7 @@ const ExpenseList: React.FC<Props> = ({ expenses, onDelete, onEdit, onResetAll, 
                 </div>
               </div>
 
-              {/* アクションボタン */}
+              {/* アクションボタン - インライン削除確認 */}
               <div className="flex border-t border-surface-gray-mid bg-surface-gray relative z-20">
                 <button
                   type="button"
@@ -187,13 +193,32 @@ const ExpenseList: React.FC<Props> = ({ expenses, onDelete, onEdit, onResetAll, 
                 >
                   編集
                 </button>
-                <button
-                  type="button"
-                  onClick={(e) => { e.stopPropagation(); if (window.confirm('本当に削除しますか？')) onDelete(exp.id); }}
-                  className="flex-1 py-4 flex items-center justify-center text-[10px] uppercase tracking-widest text-rose-500 font-bold hover:bg-rose-50 active:bg-rose-100 transition-colors cursor-pointer"
-                >
-                  削除
-                </button>
+                {deletingId === exp.id ? (
+                  <div className="flex flex-1 animate-in fade-in duration-200">
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); onDelete(exp.id); setDeletingId(null); }}
+                      className="flex-1 py-4 flex items-center justify-center text-[10px] font-black tracking-widest text-white bg-rose-500 hover:bg-rose-600 transition-colors cursor-pointer"
+                    >
+                      削除する
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); setDeletingId(null); }}
+                      className="flex-1 py-4 flex items-center justify-center text-[10px] font-bold tracking-widest text-ink-sub hover:bg-surface-gray-mid transition-colors cursor-pointer border-l border-surface-gray-mid"
+                    >
+                      戻る
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); setDeletingId(exp.id); }}
+                    className="flex-1 py-4 flex items-center justify-center text-[10px] uppercase tracking-widest text-rose-500 font-bold hover:bg-rose-50 active:bg-rose-100 transition-colors cursor-pointer"
+                  >
+                    削除
+                  </button>
+                )}
               </div>
             </div>
           );

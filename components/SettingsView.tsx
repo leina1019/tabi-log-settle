@@ -32,6 +32,8 @@ const SettingsView: React.FC<Props> = ({
 }) => {
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const jsonImportRef = useRef<HTMLInputElement>(null);
+  // window.confirm/alert 廃止用
+  const [importFeedback, setImportFeedback] = React.useState<string | null>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, id: string) => {
     const file = e.target.files?.[0];
@@ -87,12 +89,13 @@ const SettingsView: React.FC<Props> = ({
     reader.onload = (event) => {
       try {
         const data = JSON.parse(event.target?.result as string);
-        if (window.confirm('データをインポートしますか？現在のデータは上書きされます。')) {
-          onImportFullData(data);
-          alert('インポートが完了しました。');
-        }
+        // window.confirm廃止: ファイルを選択した時点で意図確認済みとみなしインポートを実行
+        onImportFullData(data);
+        setImportFeedback('✓ インポート完了しました');
+        setTimeout(() => setImportFeedback(null), 3000);
       } catch (err) {
-        alert('無効なJSONファイルです。');
+        setImportFeedback('⚠️ 無効なJSONファイルです');
+        setTimeout(() => setImportFeedback(null), 3000);
       }
     };
     reader.readAsText(file);
@@ -110,7 +113,7 @@ const SettingsView: React.FC<Props> = ({
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" /></svg>
           </button>
-          <h2 className="text-2xl font-sans font-black text-ink tracking-tight">App Settings</h2>
+          <h2 className="text-2xl font-sans font-black text-ink tracking-tight">アプリ設定</h2>
         </div>
         <div className="text-[10px] font-bold text-ink-light bg-surface-gray px-3 py-1.5 rounded-full uppercase tracking-widest border border-surface-gray-mid/50 shadow-sm">
           Ver 1.2
@@ -121,7 +124,7 @@ const SettingsView: React.FC<Props> = ({
       <section className="space-y-4">
         <div className="flex items-center gap-2 px-2">
           <span className="text-xl">👤</span>
-          <h3 className="text-xs font-black text-ink uppercase tracking-[0.2em]">Profile Editing</h3>
+          <h3 className="text-xs font-black text-ink uppercase tracking-[0.2em]">プロフィール編集</h3>
         </div>
         <div className="grid grid-cols-1 gap-4">
           {userProfiles.map(profile => {
@@ -145,7 +148,7 @@ const SettingsView: React.FC<Props> = ({
                         </svg>
                       )}
                       <div className="absolute inset-0 bg-ink/40 flex items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-opacity backdrop-blur-[2px]">
-                        <span className="text-[10px] font-black text-white tracking-widest">CHANGE</span>
+                        <span className="text-[10px] font-black text-white tracking-widest">変更</span>
                       </div>
                     </div>
                     <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-white rounded-full shadow-md flex items-center justify-center border border-surface-gray-mid">
@@ -156,7 +159,7 @@ const SettingsView: React.FC<Props> = ({
                   {/* 詳細 */}
                   <div className="flex-1 w-full space-y-5">
                     <div>
-                      <label className="text-[10px] font-bold text-ink-sub uppercase tracking-widest mb-2 block">Display Name</label>
+                      <label className="text-[10px] font-bold text-ink-sub uppercase tracking-widest mb-2 block">表示名</label>
                       <input
                         type="text"
                         value={profile.displayName}
@@ -166,7 +169,7 @@ const SettingsView: React.FC<Props> = ({
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] font-bold text-ink-sub uppercase tracking-widest mb-2 block">Member Color</label>
+                      <label className="text-[10px] font-bold text-ink-sub uppercase tracking-widest mb-2 block">メンバーカラー</label>
                       <div className="flex flex-wrap gap-2.5">
                         {MEMBER_COLORS.map(color => (
                           <button
@@ -200,7 +203,7 @@ const SettingsView: React.FC<Props> = ({
       <section className="space-y-4">
         <div className="flex items-center gap-2 px-2">
           <span className="text-xl">📱</span>
-          <h3 className="text-xs font-black text-ink uppercase tracking-[0.2em]">Display Settings</h3>
+          <h3 className="text-xs font-black text-ink uppercase tracking-[0.2em]">表示設定</h3>
         </div>
         <div className="bg-white rounded-[32px] p-6 shadow-xl shadow-ink/5 border border-surface-gray-mid/50">
           <p className="text-[11px] text-ink-sub leading-relaxed font-bold mb-6 px-1">
@@ -233,7 +236,7 @@ const SettingsView: React.FC<Props> = ({
       <section className="space-y-4">
         <div className="flex items-center gap-2 px-2">
           <span className="text-xl">☁️</span>
-          <h3 className="text-xs font-black text-ink uppercase tracking-[0.2em]">Cloud Sync</h3>
+          <h3 className="text-xs font-black text-ink uppercase tracking-[0.2em]">クラウド同期</h3>
         </div>
         <div className="bg-gradient-to-br from-ocean-dark to-primary p-7 rounded-[32px] text-white shadow-xl shadow-ocean-dark/20 relative overflow-hidden">
           <div className="absolute -right-8 -top-8 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
@@ -243,7 +246,7 @@ const SettingsView: React.FC<Props> = ({
                 <svg xmlns="http://www.w3.org/2000/svg" className="w-7 h-7" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" /><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" /><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" /><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" /><path fill="none" d="M0 0h48v48H0z" /></svg>
               </div>
               <div>
-                <h4 className="text-sm font-black uppercase tracking-widest mb-1">Spreadsheet Sync</h4>
+                <h4 className="text-sm font-black uppercase tracking-widest mb-1">スプレッドシート同期</h4>
                 <p className="text-[10px] opacity-70 font-bold leading-tight">Googleスプレッドシートとデータを<br />リアルタイムで同期します。</p>
               </div>
             </div>
@@ -307,7 +310,7 @@ const SettingsView: React.FC<Props> = ({
       <section className="space-y-4">
         <div className="flex items-center gap-2 px-2">
           <span className="text-xl">📁</span>
-          <h3 className="text-xs font-black text-ink uppercase tracking-[0.2em]">Data Management</h3>
+          <h3 className="text-xs font-black text-ink uppercase tracking-[0.2em]">データ管理</h3>
         </div>
         <div className="bg-white rounded-[32px] p-6 shadow-xl shadow-ink/5 border border-surface-gray-mid/50">
           <div className="grid grid-cols-2 gap-4">
@@ -318,7 +321,7 @@ const SettingsView: React.FC<Props> = ({
               <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm">
                 <AppIcon name="save" className="w-6 h-6 text-primary" />
               </div>
-              <span className="text-[10px] font-black uppercase tracking-widest text-ink">JSON Export</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-ink">JSON エクスポート</span>
             </button>
             <button
               onClick={() => jsonImportRef.current?.click()}
@@ -327,8 +330,15 @@ const SettingsView: React.FC<Props> = ({
               <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm">
                 <AppIcon name="folder" className="w-6 h-6 text-primary" />
               </div>
-              <span className="text-[10px] font-black uppercase tracking-widest text-ink">JSON Import</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-ink">JSON インポート</span>
             </button>
+            {/* インポート結果フィードバック */}
+            {importFeedback && (
+              <div className={`col-span-2 text-center text-xs font-bold py-2 px-4 rounded-xl transition-all animate-in fade-in duration-200 ${importFeedback.startsWith('✓') ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' : 'bg-rose-50 text-rose-600 border border-rose-200'
+                }`}>
+                {importFeedback}
+              </div>
+            )}
             <input
               type="file"
               ref={jsonImportRef}
@@ -344,7 +354,7 @@ const SettingsView: React.FC<Props> = ({
       <section className="space-y-4">
         <div className="flex items-center gap-2 px-2">
           <span className="text-xl">🚀</span>
-          <h3 className="text-xs font-black text-ink uppercase tracking-[0.2em]">Demo Data</h3>
+          <h3 className="text-xs font-black text-ink uppercase tracking-[0.2em]">デモデータ</h3>
         </div>
         <div className="px-1 space-y-4">
           <button
@@ -356,7 +366,7 @@ const SettingsView: React.FC<Props> = ({
               ✈️
             </div>
             <div className="text-center relative z-10">
-              <p className="text-sm font-black text-primary tracking-tight">Load Sample Trip Data</p>
+              <p className="text-sm font-black text-primary tracking-tight">サンプル旅行データを読み込む</p>
               <p className="text-[10px] text-ink-light font-bold mt-1 opacity-60">アプリの機能を体験するためのデモデータを読み込みます。</p>
             </div>
           </button>
@@ -370,7 +380,7 @@ const SettingsView: React.FC<Props> = ({
                 <AppIcon name="back" className="w-6 h-6" />
               </div>
               <div className="text-left">
-                <p className="text-xs font-black text-emerald-700 uppercase tracking-widest">Restore Previous Data</p>
+                <p className="text-xs font-black text-emerald-700 uppercase tracking-widest">前のデータを復元</p>
                 <p className="text-[9px] text-emerald-600/60 font-bold">デモ読み込み前のデータに復元します。</p>
               </div>
             </button>
@@ -385,7 +395,7 @@ const SettingsView: React.FC<Props> = ({
           onClick={onBack}
           className="w-full py-5 bg-ink text-white rounded-[24px] text-xs font-black uppercase tracking-[0.3em] shadow-xl shadow-ink/20 active:scale-95 transition-all"
         >
-          Back to Dashboard
+          ダッシュボードに戻る
         </button>
       </div>
     </div>

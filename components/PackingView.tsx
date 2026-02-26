@@ -123,7 +123,7 @@ const PackingView: React.FC<Props> = ({ items, userProfiles, onUpdate, isTablet 
     };
 
     const deleteItem = (id: string) => {
-        if (!window.confirm('このアイテムを削除しますか？')) return;
+        // window.confirm廃止: 編集モーダル内の削除ボタンは直接実行（モーダル自体が確認手順の役割を果たしている）
         onUpdate(prev => prev.filter(item => item.id !== id));
         setEditingItem(null);
     };
@@ -163,11 +163,11 @@ const PackingView: React.FC<Props> = ({ items, userProfiles, onUpdate, isTablet 
                     <div className="relative z-10">
                         <div className="flex justify-between items-end mb-4">
                             <div>
-                                <p className="text-[10px] font-bold uppercase tracking-[0.2em] opacity-80 mb-1">Total Progress</p>
-                                <h3 className="text-4xl font-sans font-black">{stats.percent}%<span className="text-lg ml-1 opacity-60">Complete</span></h3>
+                                <p className="text-[10px] font-bold uppercase tracking-[0.2em] opacity-80 mb-1">全体進捗</p>
+                                <h3 className="text-4xl font-sans font-black">{stats.percent}%<span className="text-lg ml-1 opacity-60">完了</span></h3>
                             </div>
                             <div className="text-right">
-                                <p className="text-[10px] font-bold opacity-80 uppercase tracking-widest mb-1">Items</p>
+                                <p className="text-[10px] font-bold opacity-80 uppercase tracking-widest mb-1">個数</p>
                                 <p className="text-sm font-bold">{stats.packed} / {stats.total}</p>
                             </div>
                         </div>
@@ -230,7 +230,7 @@ const PackingView: React.FC<Props> = ({ items, userProfiles, onUpdate, isTablet 
                     <div className="space-y-5">
                         <div className="flex justify-between items-center">
                             <h4 className="text-sm font-black text-ink">新規アイテム追加</h4>
-                            <span className="text-[10px] font-bold text-ink-light bg-surface-gray px-2 py-1 rounded-md uppercase tracking-wider">New Item</span>
+                            <span className="text-[10px] font-bold text-ink-light bg-surface-gray px-2 py-1 rounded-md uppercase tracking-wider">新規</span>
                         </div>
                         <div>
                             <label className="text-[10px] font-bold text-ink-sub uppercase tracking-widest mb-2 block">アイテム名</label>
@@ -298,11 +298,11 @@ const PackingView: React.FC<Props> = ({ items, userProfiles, onUpdate, isTablet 
             <div className={`px-1 space-y-10`}>
                 {items.length === 0 ? (
                     <div className="text-center py-20 bg-white/50 rounded-[40px] border border-dashed border-surface-gray-mid">
-                        <div className="mb-4 opacity-10 grayscale scale-150 transform rotate-12">
+                        <div className="mb-4 opacity-20">
                             <span className="text-8xl">🎒</span>
                         </div>
-                        <h4 className="text-sm font-black text-ink uppercase tracking-widest">No Items Yet</h4>
-                        <p className="text-[10px] text-ink-light mt-2 px-10">旅行の準備を始めましょう！<br />上のボタンから持ち物を追加してください。</p>
+                        <h4 className="text-sm font-black text-ink">まだアイテムがありません</h4>
+                        <p className="text-[10px] text-ink-light mt-2 px-10">旅行の準備を始めましょう！<br />上の「持ち物を追加」ボタンから追加できます。</p>
                     </div>
                 ) : (
                     (Object.entries(categorizedItems) as [string, PackingItem[]][]).map(([category, catItems]) => {
@@ -391,7 +391,7 @@ const PackingView: React.FC<Props> = ({ items, userProfiles, onUpdate, isTablet 
                                                                 <div className={`w-6 h-6 rounded-lg flex items-center justify-center border-2 transition-all ${item.isPacked ? 'bg-emerald-500 border-emerald-500 shadow-sm' : 'bg-white border-surface-gray-mid'}`}>
                                                                     {item.isPacked && <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3.5} d="M5 13l4 4L19 7" /></svg>}
                                                                 </div>
-                                                                <span className="text-[10px] font-black uppercase tracking-widest">{item.isPacked ? 'PREPARED' : 'UNCHECKED'}</span>
+                                                                <span className="text-[10px] font-black uppercase tracking-widest">{item.isPacked ? '準備完了' : '未チェック'}</span>
                                                                 <div className="w-5 h-5 rounded-full overflow-hidden border border-white" style={{ backgroundColor: profile?.color }}>
                                                                     {profile?.avatarUrl ? <img src={profile.avatarUrl} className="w-full h-full object-cover" /> : <span className="text-[8px] text-white font-bold ml-1.5">{profile?.displayName[0]}</span>}
                                                                 </div>

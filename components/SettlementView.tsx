@@ -14,6 +14,8 @@ interface Props {
 
 const SettlementView: React.FC<Props> = ({ settlements, expenses, onBack, userProfiles }) => {
   const [selectedPId, setSelectedPId] = useState<string | null>(null);
+  // F1: 送金プランのコピーフィードバック用
+  const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
 
   const balances = useMemo(() => {
     const b: Record<string, number> = {};
@@ -68,6 +70,16 @@ const SettlementView: React.FC<Props> = ({ settlements, expenses, onBack, userPr
     return userProfiles.find(p => p.id === id)?.avatarUrl || '';
   };
 
+  // F1: 送金プランのコピー処理（getDisplayName定義後に配置）
+  const handleCopySettlement = (s: Settlement) => {
+    const from = getDisplayName(s.from);
+    const to = getDisplayName(s.to);
+    const amount = Math.round(s.amount).toLocaleString();
+    navigator.clipboard.writeText(`${from} → ${to}  ¥${amount}`);
+    setCopyFeedback(s.from + s.to);
+    setTimeout(() => setCopyFeedback(null), 2000);
+  };
+
   return (
     <div className="space-y-6 pt-2 pb-10">
       <div className="flex items-center gap-2 mb-4">
@@ -85,35 +97,49 @@ const SettlementView: React.FC<Props> = ({ settlements, expenses, onBack, userPr
         <p className="text-[10px] text-ink-light mb-6 font-bold uppercase tracking-widest">推奨される送金方法</p>
 
         {settlements.length === 0 ? (
-          <div className="text-center py-10 text-ink-light text-sm">
-            <div className="flex flex-col items-center gap-2">
-              <AppIcon name="celebrate" className="w-8 h-8 text-primary" />
-              <p>清算は完了しています</p>
+          <div className="text-center py-12">
+            <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="text-4xl">🎉</span>
             </div>
+            <p className="text-base font-bold text-emerald-600 mb-1">清算完了！</p>
+            <p className="text-xs text-ink-light">全員の収支が均等です。お疲れさまでした🌿</p>
           </div>
         ) : (
           <div className="space-y-4">
-            {settlements.map((s, idx) => (
-              <div key={idx} className="flex items-center gap-4 bg-surface-gray p-5 rounded-2xl border border-surface-gray-mid relative overflow-hidden">
-                <div className="absolute left-0 top-0 bottom-0 w-1 bg-accent"></div>
-                <div className="flex-1">
-                  <p className="text-[8px] font-bold text-rose-500 uppercase tracking-tighter mb-0.5">FROM</p>
-                  <p className="text-sm font-bold text-ink">{getDisplayName(s.from)}</p>
+            {settlements.map((s, idx) => {
+              const key = s.from + s.to;
+              const isCopied = copyFeedback === key;
+              return (
+                <div key={idx} className="flex items-center gap-3 bg-surface-gray p-4 rounded-2xl border border-surface-gray-mid relative overflow-hidden">
+                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-accent"></div>
+                  <div className="flex-1 pl-1">
+                    <p className="text-[8px] font-bold text-rose-500 uppercase tracking-tighter mb-0.5">支払い元</p>
+                    <p className="text-sm font-bold text-ink">{getDisplayName(s.from)}</p>
+                  </div>
+                  <div className="text-ink-light">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                    </svg>
+                  </div>
+                  <div className="flex-1 text-right">
+                    <p className="text-[8px] font-bold text-emerald-600 uppercase tracking-tighter mb-0.5">受取人</p>
+                    <p className="text-sm font-bold text-ink">{getDisplayName(s.to)}</p>
+                  </div>
+                  <div className="pl-3 border-l border-surface-gray-mid ml-1">
+                    <p className="text-lg font-sans font-bold text-ink">{Math.round(s.amount).toLocaleString()}<span className="text-[10px] ml-0.5 font-sans">円</span></p>
+                  </div>
+                  {/* F1: 送金プランのコピーボタン */}
+                  <button
+                    type="button"
+                    onClick={() => handleCopySettlement(s)}
+                    className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all text-sm ${isCopied ? 'bg-emerald-500 text-white' : 'bg-white hover:bg-primary/10 text-ink-light hover:text-primary border border-surface-gray-mid'}`}
+                    title="コピー"
+                  >
+                    {isCopied ? '✓' : '📋'}
+                  </button>
                 </div>
-                <div className="text-ink-light">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                  </svg>
-                </div>
-                <div className="flex-1 text-right">
-                  <p className="text-[8px] font-bold text-emerald-600 uppercase tracking-tighter mb-0.5">TO</p>
-                  <p className="text-sm font-bold text-ink">{getDisplayName(s.to)}</p>
-                </div>
-                <div className="pl-4 border-l border-surface-gray-mid ml-2">
-                  <p className="text-lg font-sans font-bold text-ink">{Math.round(s.amount).toLocaleString()}<span className="text-[10px] ml-0.5 font-sans">円</span></p>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
@@ -147,6 +173,8 @@ const SettlementView: React.FC<Props> = ({ settlements, expenses, onBack, userPr
               <div className="text-right flex items-center gap-2">
                 <p className={`font-bold font-sans ${balances[p.id] >= 0 ? 'text-emerald-600' : 'text-rose-500'}`}>
                   {balances[p.id] >= 0 ? '+' : ''}{Math.round(balances[p.id]).toLocaleString()}
+                  {/* U3: 「円」単位追加 */}
+                  <span className="text-[10px] ml-0.5">円</span>
                 </p>
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-ink-light" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
               </div>
@@ -167,7 +195,7 @@ const SettlementView: React.FC<Props> = ({ settlements, expenses, onBack, userPr
               >
                 ×
               </button>
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em] opacity-80 mb-1">Calculation Details</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] opacity-80 mb-1">計算明細</p>
               <h3 className="text-xl font-bold">{getDisplayName(selectedPId)} の精算根拠</h3>
             </div>
 
@@ -218,7 +246,7 @@ const SettlementView: React.FC<Props> = ({ settlements, expenses, onBack, userPr
               {/* 最終計算 */}
               <div className="pt-4 border-t-2 border-dashed border-surface-gray-mid">
                 <div className="bg-surface-gray p-4 rounded-2xl">
-                  <p className="text-[10px] font-bold text-ink-sub mb-2 uppercase tracking-widest text-center">Final Result</p>
+                  <p className="text-[10px] font-bold text-ink-sub mb-2 uppercase tracking-widest text-center">集計結果</p>
                   <div className="flex flex-col items-center gap-1">
                     <div className="flex items-center gap-2 text-sm">
                       <span className="text-emerald-600 font-bold">{participantDetails.totalPaid.toLocaleString()}</span>
@@ -238,7 +266,7 @@ const SettlementView: React.FC<Props> = ({ settlements, expenses, onBack, userPr
             <button
               type="button"
               onClick={() => setSelectedPId(null)}
-              className="w-full py-5 bg-surface-gray hover:bg-surface-gray-mid text-ink font-bold text-xs uppercase tracking-widest transition-colors"
+              className="w-full py-5 bg-surface-gray hover:bg-surface-gray-mid text-ink font-bold text-sm tracking-widest transition-colors rounded-b-[32px]"
             >
               閉じる
             </button>

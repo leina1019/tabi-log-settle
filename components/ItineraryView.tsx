@@ -273,18 +273,18 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
     });
   };
 
-  // A2: URL入力後にOGPを自動取得（0.8秒のデバウンス）
-  // 優先順位: 関連リンク[0] > link > mapUrl の順でOGP取得を試みる
+  // カバー画像の自動取得（0.8秒デバウンス）
+  // 優先順位: 関連リンク[0] > link > mapUrl の順でOGP取得
+  // チェックボックス廃止 → 常に自動取得（画像がない場合）
   useEffect(() => {
     const url = (formData.links && formData.links.length > 0 ? formData.links[0].url : '') || formData.link || formData.mapUrl;
 
     if (!url || !url.startsWith('http')) return;
 
-    // preferOgpがONか、まだ画像がない場合に取得（mapUrlもトリガー対象に含める）
-    const canFetch = (formData as any).preferOgp || !formData.imageUrl;
-    if (!canFetch) return;
+    // すでに画像がある場合はスキップ（ユーザーがアップロードした画像を上書きしない）
+    if (formData.imageUrl) return;
 
-    // Googleマップ検索URLはOGP画像がないのでスキップ
+    // GoogleマップSearch URLはOGP画像がないのでスキップ
     if (url.includes('google.com/maps/search')) return;
 
     const timer = setTimeout(async () => {
@@ -301,7 +301,7 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
 
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formData.mapUrl, formData.link, formData.links, (formData as any).preferOgp]);
+  }, [formData.mapUrl, formData.link, formData.links]);
 
   // 日付タブのラベル生成
   const getDayLabel = (dateStr: string, index: number) => {
@@ -806,21 +806,19 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
                     </a>
                   )}
 
-                  {/* U4: GoogleマップURLは場所名入力後のみ表示 + 詳細URLをカスタマイズしたい場合に使う */}
-                  {formData.location && (
-                    <div>
-                      <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest text-rose-500">
-                        <AppIcon name="map" className="w-3 h-3 inline-block mr-1" /> マップURL（変更する場合）
-                      </label>
-                      <input
-                        type="url"
-                        placeholder="https://maps.app.goo.gl/..."
-                        className="w-full bg-rose-50 border border-rose-200 rounded-xl p-3 text-sm text-ink outline-none focus:border-rose-400"
-                        value={formData.mapUrl || ''}
-                        onChange={e => setFormData({ ...formData, mapUrl: e.target.value })}
-                      />
-                    </div>
-                  )}
+                  {/* マップURLは場所名の有無に関わらず常時表示 */}
+                  <div>
+                    <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest text-rose-500">
+                      <AppIcon name="map" className="w-3 h-3 inline-block mr-1" /> マップURL
+                    </label>
+                    <input
+                      type="url"
+                      placeholder="https://maps.app.goo.gl/..."
+                      className="w-full bg-rose-50 border border-rose-200 rounded-xl p-3 text-sm text-ink outline-none focus:border-rose-400"
+                      value={formData.mapUrl || ''}
+                      onChange={e => setFormData({ ...formData, mapUrl: e.target.value })}
+                    />
+                  </div>
                 </div>
 
                 {/* Links (複数対応) */}
@@ -874,19 +872,9 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
                   </div>
                 </div>
 
-                {/* OGP取得設定 */}
-                <div className="pt-2">
-                  <p className="text-[9px] font-bold text-ink-sub uppercase mb-2">カバー画像の取得設定</p>
-                  <label className="flex items-center gap-2 cursor-pointer p-3 bg-surface-gray rounded-xl border border-surface-gray-mid transition-colors hover:bg-white">
-                    <input
-                      type="checkbox"
-                      className="w-4 h-4 rounded text-primary focus:ring-primary"
-                      checked={!!(formData as any).preferOgp}
-                      onChange={e => setFormData({ ...formData, [('preferOgp' as any)]: e.target.checked })}
-                    />
-                    <span className="text-xs font-bold text-ink">入力されたリンクから画像を自動取得する</span>
-                  </label>
-                  <p className="text-[8px] text-ink-light mt-1 ml-1">※チェックを入れると、保存時にリンク先の画像を優先的に取得・設定します</p>
+                {/* カバー画像: リンクから自動取得（チェックボックス廃止・常時自動） */}
+                <div className="pt-1 px-1">
+                  <p className="text-[8px] text-ink-light">📷 リンクまたはマップURLからカバー画像を自動取得します（画像がない場合のみ）</p>
                 </div>
 
                 {/* メモ */}
