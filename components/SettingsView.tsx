@@ -14,6 +14,8 @@ interface Props {
   tripEndDate: string;
   coverImage: string;
   onUpdateProfile: (id: Participant, updates: Partial<UserProfile>) => void;
+  onAddMember: (name: string, color: string) => void;     // 新規メンバー追加
+  onRemoveMember: (id: string) => void;                   // メンバー削除
   onLoadSampleData: () => void;
   onRestoreData: () => void;
   onBack: () => void;
@@ -27,13 +29,27 @@ interface Props {
 
 const SettingsView: React.FC<Props> = ({
   userProfiles, expenses, itinerary, tickets, budget, tripName, tripStartDate, tripEndDate, coverImage,
-  onUpdateProfile, onLoadSampleData, onRestoreData, onBack, viewModeSize, onUpdateViewModeSize,
+  onUpdateProfile, onAddMember, onRemoveMember, onLoadSampleData, onRestoreData, onBack, viewModeSize, onUpdateViewModeSize,
   onImportFullData, onSyncToSheet, onFetchFromSheet, isSyncing
 }) => {
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const jsonImportRef = useRef<HTMLInputElement>(null);
   // window.confirm/alert 廃止用
   const [importFeedback, setImportFeedback] = React.useState<string | null>(null);
+  // メンバー追加モーダル
+  const [isAddingMember, setIsAddingMember] = React.useState(false);
+  const [newMemberName, setNewMemberName] = React.useState('');
+  const [newMemberColor, setNewMemberColor] = React.useState(MEMBER_COLORS[0]);
+  // メンバー削除確認
+  const [removingMemberId, setRemovingMemberId] = React.useState<string | null>(null);
+
+  const handleAddMemberSubmit = () => {
+    if (!newMemberName.trim()) return;
+    onAddMember(newMemberName.trim(), newMemberColor);
+    setNewMemberName('');
+    setNewMemberColor(MEMBER_COLORS[0]);
+    setIsAddingMember(false);
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, id: string) => {
     const file = e.target.files?.[0];
@@ -182,6 +198,24 @@ const SettingsView: React.FC<Props> = ({
                         ))}
                       </div>
                     </div>
+                    {/* メンバー削除 */}
+                    {userProfiles.length > 1 && (
+                      removingMemberId === pId ? (
+                        <div className="flex items-center gap-2 p-3 bg-rose-50 rounded-2xl border border-rose-200">
+                          <p className="flex-1 text-xs font-bold text-rose-600">「{profile.displayName}」を削除しますか？</p>
+                          <button onClick={() => { onRemoveMember(pId); setRemovingMemberId(null); }} className="px-3 py-1.5 bg-rose-500 text-white text-xs font-black rounded-xl active:scale-95">削除</button>
+                          <button onClick={() => setRemovingMemberId(null)} className="px-3 py-1.5 bg-white text-ink-sub text-xs font-bold rounded-xl border border-surface-gray-mid active:scale-95">キャンセル</button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setRemovingMemberId(pId)}
+                          className="text-[10px] font-bold text-rose-400 hover:text-rose-600 transition-colors flex items-center gap-1"
+                        >
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                          このメンバーを削除
+                        </button>
+                      )
+                    )}
                   </div>
                 </div>
 
@@ -197,6 +231,50 @@ const SettingsView: React.FC<Props> = ({
             );
           })}
         </div>
+
+        {/* メンバー追加ボタン */}
+        {!isAddingMember ? (
+          <button
+            onClick={() => setIsAddingMember(true)}
+            className="w-full py-4 border-2 border-dashed border-primary/30 rounded-3xl text-sm font-bold text-primary hover:border-primary/60 hover:bg-primary/5 active:scale-95 transition-all flex items-center justify-center gap-2"
+          >
+            <span className="text-lg">+</span> メンバーを追加
+          </button>
+        ) : (
+          <div className="bg-white rounded-[32px] p-6 shadow-xl border border-primary/20 space-y-4 animate-in slide-in-from-bottom-4 fade-in duration-200">
+            <h4 className="text-sm font-black text-ink">新しいメンバーを追加</h4>
+            <div>
+              <label className="text-[10px] font-bold text-ink-sub uppercase tracking-widest mb-2 block">名前</label>
+              <input
+                type="text"
+                autoFocus
+                placeholder="例: たろう"
+                value={newMemberName}
+                onChange={e => setNewMemberName(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleAddMemberSubmit()}
+                className="w-full bg-surface-gray border-2 border-transparent focus:border-primary/20 focus:bg-white rounded-2xl px-5 py-3.5 text-sm font-bold text-ink outline-none transition-all shadow-inner"
+              />
+            </div>
+            <div>
+              <label className="text-[10px] font-bold text-ink-sub uppercase tracking-widest mb-2 block">カラー</label>
+              <div className="flex flex-wrap gap-2.5">
+                {MEMBER_COLORS.map(color => (
+                  <button
+                    key={color}
+                    type="button"
+                    onClick={() => setNewMemberColor(color)}
+                    className={`w-8 h-8 rounded-full border-4 transition-all active:scale-75 ${newMemberColor === color ? 'border-ink/20 scale-110 shadow-md' : 'border-transparent opacity-80 hover:opacity-100'}`}
+                    style={{ backgroundColor: color }}
+                  />
+                ))}
+              </div>
+            </div>
+            <div className="flex gap-3 pt-2">
+              <button onClick={() => setIsAddingMember(false)} className="flex-1 py-3 rounded-2xl text-xs font-bold text-ink-sub bg-surface-gray hover:bg-surface-gray-mid transition-colors">キャンセル</button>
+              <button onClick={handleAddMemberSubmit} disabled={!newMemberName.trim()} className="flex-1 py-3 rounded-2xl text-xs font-bold bg-primary text-white shadow-lg disabled:opacity-40 active:scale-95 transition-all">追加する</button>
+            </div>
+          </div>
+        )}
       </section>
 
       {/* 2. 表示設定 */}

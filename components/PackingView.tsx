@@ -15,40 +15,34 @@ const CATEGORIES = ['必需品', '衣類', '洗面用具', '電子機器', '日�
 const PackingView: React.FC<Props> = ({ items, userProfiles, onUpdate, isTablet = false }) => {
     const [newItemTitle, setNewItemTitle] = useState('');
     const [newItemCategory, setNewItemCategory] = useState<string>(CATEGORIES[0]);
-    const [newItemParticipantId, setNewItemParticipantId] = useState<string | undefined>(undefined);
+    const [newItemAssignees, setNewItemAssignees] = useState<string[]>([]); // 空=全員
     const [showAddForm, setShowAddForm] = useState(false);
     const [editingItem, setEditingItem] = useState<PackingItem | null>(null);
     const [filterMemberId, setFilterMemberId] = useState<string | 'ALL'>('ALL');
 
+    // 複数選択トグルのヘルパー
+    const toggleAssignee = (list: string[], id: string): string[] =>
+        list.includes(id) ? list.filter(x => x !== id) : [...list, id];
+
     const stats = useMemo(() => {
         const total = items.length;
-        // 進捗計算のロジックを調整：
-        // 全員用アイテムの場合、全員のチェック合計数で計算するか、1つの完了として計算するか
-        // ここでは単純なアイテム単位の完了数（全員用なら全員完了で1カウント）を維持しつつ表示を豪華にする
         const packed = items.filter(i => i.isPacked).length;
 
-        // メンバーごとの進捗も計算
         const memberStats = userProfiles.map(p => {
-            const memberItems = items.filter(i => !i.participantId || i.participantId === p.id);
+            // assignees配列が空or未設定か、含まれていたら対象アイテム
+            const memberItems = items.filter(i => {
+                const a = i.assignees || [];
+                return a.length === 0 || a.includes(p.id);
+            });
             const memberPacked = memberItems.filter(i => {
-                if (i.participantId === p.id) return i.isPacked;
+                // 複数担当の場合は自分がpackedByに含まれているか
+                if ((i.assignees || []).length > 0) return i.packedBy?.includes(p.id);
                 return i.packedBy?.includes(p.id);
             }).length;
-            return {
-                id: p.id,
-                name: p.displayName,
-                color: p.color,
-                packed: memberPacked,
-                total: memberItems.length
-            };
+            return { id: p.id, name: p.displayName, color: p.color, packed: memberPacked, total: memberItems.length };
         });
 
-        return {
-            total,
-            packed,
-            percent: total > 0 ? Math.round((packed / total) * 100) : 0,
-            memberStats
-        };
+        return { total, packed, percent: total > 0 ? Math.round((packed / total) * 100) : 0, memberStats };
     }, [items, userProfiles]);
 
     const categorizedItems = useMemo(() => {
@@ -64,20 +58,24 @@ const PackingView: React.FC<Props> = ({ items, userProfiles, onUpdate, isTablet 
         e.preventDefault();
         if (!newItemTitle.trim()) return;
 
+        const assigneeIds = newItemAssignees; // 空=全員
+        const isShared = assigneeIds.length === 0;
+
         const newItem: PackingItem = {
             id: crypto.randomUUID(),
             title: newItemTitle,
             category: newItemCategory,
-            participantId: newItemParticipantId,
+            assignees: assigneeIds,
+            participantId: assigneeIds.length === 1 ? assigneeIds[0] : undefined, // 後方互換
             isPacked: false,
-            packedBy: newItemParticipantId ? undefined : [], // 全員用なら空配列で初期化
+            packedBy: isShared ? [] : undefined,
             updatedAt: new Date().toISOString()
         };
 
         onUpdate(prev => [...prev, newItem]);
         setNewItemTitle('');
         setNewItemCategory(CATEGORIES[0]);
-        setNewItemParticipantId(undefined);
+        setNewItemAssignees([]);
         setShowAddForm(false);
     };
 
@@ -93,15 +91,13 @@ const PackingView: React.FC<Props> = ({ items, userProfiles, onUpdate, isTablet 
                 newPackedBy.push(memberId);
             }
 
-            // 全員がチェックしたら isPacked を true にする
-            const allChecked = userProfiles.every(p => newPackedBy.includes(p.id));
+            // 担当者全員がチェックしたら isPacked を true にする
+            const targetProfiles = (item.assignees && item.assignees.length > 0)
+                ? userProfiles.filter(p => item.assignees!.includes(p.id))
+                : userProfiles;
+            const allChecked = targetProfiles.length > 0 && targetProfiles.every(p => newPackedBy.includes(p.id));
 
-            return {
-                ...item,
-                packedBy: newPackedBy,
-                isPacked: allChecked,
-                updatedAt: new Date().toISOString()
-            };
+            return { ...item, packedBy: newPackedBy, isPacked: allChecked, updatedAt: new Date().toISOString() };
         }));
     };
 
@@ -245,29 +241,29 @@ const PackingView: React.FC<Props> = ({ items, userProfiles, onUpdate, isTablet 
                         </div>
                         <div>
                             <label className="text-[10px] font-bold text-ink-sub uppercase tracking-widest mb-2 block">このアイテムが必要なのは？</label>
-                            <div className="grid grid-cols-3 gap-2">
-                                <button
-                                    type="button"
-                                    onClick={() => setNewItemParticipantId(undefined)}
-                                    className={`py-3 rounded-xl text-[10px] font-bold border transition-all ${!newItemParticipantId ? 'bg-ink text-white border-ink shadow-md' : 'bg-surface-gray text-ink-sub border-surface-gray-mid hover:bg-white'}`}
-                                >
-                                    メンバー全員
-                                </button>
-                                {userProfiles.map(p => (
-                                    <button
-                                        key={p.id}
-                                        type="button"
-                                        onClick={() => setNewItemParticipantId(p.id)}
-                                        className={`py-3 rounded-xl text-[10px] font-bold border transition-all flex flex-col items-center gap-1.5 justify-center ${newItemParticipantId === p.id ? 'text-white border-transparent shadow-md' : 'bg-surface-gray text-ink-sub border-surface-gray-mid hover:bg-white'}`}
-                                        style={newItemParticipantId === p.id ? { backgroundColor: p.color } : {}}
-                                    >
-                                        <div className="w-4 h-4 rounded-full overflow-hidden border border-white/20">
-                                            {p.avatarUrl ? <img src={p.avatarUrl} className="w-full h-full object-cover" /> : <span>👤</span>}
-                                        </div>
-                                        {p.displayName}
-                                    </button>
-                                ))}
+                            <p className="text-[10px] text-ink-light mb-3">複数選択OK。選択なし=全員の共有持ち物になります。</p>
+                            <div className="flex flex-wrap gap-2">
+                                {userProfiles.map(p => {
+                                    const selected = newItemAssignees.includes(p.id);
+                                    return (
+                                        <button
+                                            key={p.id}
+                                            type="button"
+                                            onClick={() => setNewItemAssignees(prev => toggleAssignee(prev, p.id))}
+                                            className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold border-2 transition-all active:scale-95 ${selected ? 'text-white border-transparent shadow-md' : 'bg-surface-gray text-ink-sub border-surface-gray-mid/50 hover:bg-white'}`}
+                                            style={selected ? { backgroundColor: p.color } : {}}
+                                        >
+                                            <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${selected ? 'bg-white/30 border-white/50' : 'bg-white border-surface-gray-mid'}`}>
+                                                {selected && <svg xmlns="http://www.w3.org/2000/svg" className="h-2.5 w-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3.5} d="M5 13l4 4L19 7" /></svg>}
+                                            </div>
+                                            {p.displayName}
+                                        </button>
+                                    );
+                                })}
                             </div>
+                            {newItemAssignees.length === 0 && (
+                                <p className="mt-2 text-[10px] font-bold text-emerald-600">✓ 全員の共有持ち物として追加されます</p>
+                            )}
                         </div>
                         <div>
                             <label className="text-[10px] font-bold text-ink-sub uppercase tracking-widest mb-2 block">カテゴリー選択</label>
@@ -309,7 +305,9 @@ const PackingView: React.FC<Props> = ({ items, userProfiles, onUpdate, isTablet 
                         // フィルター適用
                         const filteredCatItems = catItems.filter(item => {
                             if (filterMemberId === 'ALL') return true;
-                            return !item.participantId || item.participantId === filterMemberId;
+                            const a = item.assignees || [];
+                            // assignees空=全員 or 選択メンバーが含まれている
+                            return a.length === 0 || a.includes(filterMemberId);
                         });
 
                         if (filteredCatItems.length === 0) return null;
@@ -342,7 +340,12 @@ const PackingView: React.FC<Props> = ({ items, userProfiles, onUpdate, isTablet 
                                                             </h5>
                                                             <div className="mt-1 flex items-center gap-2">
                                                                 <span className="text-[9px] font-bold text-ink-light uppercase tracking-tighter opacity-60">
-                                                                    {isCommunal ? '全員の共有持ち物' : `${profile?.displayName}の専用品`}
+                                                                    {(() => {
+                                                                        const a = item.assignees || [];
+                                                                        if (a.length === 0) return '全員の共有持ち物';
+                                                                        const names = a.map(id => userProfiles.find(p => p.id === id)?.displayName || id);
+                                                                        return names.join('・') + 'が持参';
+                                                                    })()}
                                                                 </span>
                                                             </div>
                                                         </div>
@@ -354,11 +357,14 @@ const PackingView: React.FC<Props> = ({ items, userProfiles, onUpdate, isTablet 
                                                         </button>
                                                     </div>
 
-                                                    {/* チェック部分の出し分け */}
+                                                    {/* チェック部分：担当メンバー全員のサークルを表示 */}
                                                     <div className="flex flex-wrap items-center gap-3 pt-3 border-t border-surface-gray-mid/30">
-                                                        {isCommunal ? (
-                                                            // 共有アイテム：全員分のサークルを表示
-                                                            userProfiles.map(p => {
+                                                        {(() => {
+                                                            const a = item.assignees || [];
+                                                            const targetProfiles = a.length > 0
+                                                                ? userProfiles.filter(p => a.includes(p.id))
+                                                                : userProfiles;
+                                                            return targetProfiles.map(p => {
                                                                 const isChecked = item.packedBy?.includes(p.id);
                                                                 return (
                                                                     <button
@@ -375,28 +381,13 @@ const PackingView: React.FC<Props> = ({ items, userProfiles, onUpdate, isTablet 
                                                                             ) : (
                                                                                 <span className="text-[10px] font-black opacity-30 uppercase">{p.displayName[0]}</span>
                                                                             )}
-                                                                            {/* ホバー時のオーバーレイ */}
                                                                             {!isChecked && <div className="absolute inset-0 bg-primary opacity-0 group-hover/check:opacity-10 transition-opacity"></div>}
                                                                         </div>
                                                                         <span className={`text-[8px] font-black uppercase tracking-tighter ${isChecked ? 'text-ink font-black' : 'text-ink-light opacity-50'}`}>{p.displayName}</span>
                                                                     </button>
                                                                 );
-                                                            })
-                                                        ) : (
-                                                            // 個人アイテム：大きな1つのチェックボタンを表示
-                                                            <button
-                                                                onClick={(e) => toggleItemPersonal(item.id, e)}
-                                                                className={`flex items-center gap-3 px-4 py-2 rounded-xl border-2 transition-all active:scale-95 ${item.isPacked ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-surface-gray/50 border-surface-gray-mid text-ink-sub hover:border-primary/50'}`}
-                                                            >
-                                                                <div className={`w-6 h-6 rounded-lg flex items-center justify-center border-2 transition-all ${item.isPacked ? 'bg-emerald-500 border-emerald-500 shadow-sm' : 'bg-white border-surface-gray-mid'}`}>
-                                                                    {item.isPacked && <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3.5} d="M5 13l4 4L19 7" /></svg>}
-                                                                </div>
-                                                                <span className="text-[10px] font-black uppercase tracking-widest">{item.isPacked ? '準備完了' : '未チェック'}</span>
-                                                                <div className="w-5 h-5 rounded-full overflow-hidden border border-white" style={{ backgroundColor: profile?.color }}>
-                                                                    {profile?.avatarUrl ? <img src={profile.avatarUrl} className="w-full h-full object-cover" /> : <span className="text-[8px] text-white font-bold ml-1.5">{profile?.displayName[0]}</span>}
-                                                                </div>
-                                                            </button>
-                                                        )}
+                                                            });
+                                                        })()}
                                                     </div>
                                                 </div>
                                             </div>
@@ -437,30 +428,39 @@ const PackingView: React.FC<Props> = ({ items, userProfiles, onUpdate, isTablet 
                             </div>
 
                             <div>
-                                <label className="text-[10px] font-bold text-ink-sub uppercase tracking-widest mb-2 block">担当設定</label>
-                                <div className="grid grid-cols-2 gap-2">
-                                    <button
-                                        type="button"
-                                        onClick={() => setEditingItem({ ...editingItem, participantId: undefined, packedBy: [] })}
-                                        className={`py-3.5 rounded-xl text-[10px] font-bold border transition-all ${!editingItem.participantId ? 'bg-ink text-white border-ink shadow-lg' : 'bg-surface-gray text-ink-sub border-surface-gray-mid hover:bg-white'}`}
-                                    >
-                                        全員で分担 / 共有
-                                    </button>
-                                    {userProfiles.map(p => (
-                                        <button
-                                            key={p.id}
-                                            type="button"
-                                            onClick={() => setEditingItem({ ...editingItem, participantId: p.id, packedBy: undefined })}
-                                            className={`py-3.5 rounded-xl text-[10px] font-bold border transition-all flex flex-col items-center gap-1 px-2 ${editingItem.participantId === p.id ? 'text-white border-transparent shadow-lg' : 'bg-surface-gray text-ink-sub border-surface-gray-mid hover:bg-white'}`}
-                                            style={editingItem.participantId === p.id ? { backgroundColor: p.color } : {}}
-                                        >
-                                            <div className="w-4 h-4 rounded-full overflow-hidden bg-white/20">
-                                                {p.avatarUrl ? <img src={p.avatarUrl} className="w-full h-full object-cover" /> : <span>👤</span>}
-                                            </div>
-                                            {p.displayName} の専用
-                                        </button>
-                                    ))}
+                                <label className="text-[10px] font-bold text-ink-sub uppercase tracking-widest mb-2 block">担当者設定（複数可）</label>
+                                <p className="text-[10px] text-ink-light mb-3">選択なし=全員の共有持ち物</p>
+                                <div className="flex flex-wrap gap-2">
+                                    {userProfiles.map(p => {
+                                        const currentAssignees = editingItem.assignees || [];
+                                        const selected = currentAssignees.includes(p.id);
+                                        return (
+                                            <button
+                                                key={p.id}
+                                                type="button"
+                                                onClick={() => {
+                                                    const newAssignees = toggleAssignee(currentAssignees, p.id);
+                                                    setEditingItem({
+                                                        ...editingItem,
+                                                        assignees: newAssignees,
+                                                        participantId: newAssignees.length === 1 ? newAssignees[0] : undefined,
+                                                        packedBy: newAssignees.length === 0 ? (editingItem.packedBy || []) : editingItem.packedBy
+                                                    });
+                                                }}
+                                                className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold border-2 transition-all active:scale-95 ${selected ? 'text-white border-transparent shadow-md' : 'bg-surface-gray text-ink-sub border-surface-gray-mid/50 hover:bg-white'}`}
+                                                style={selected ? { backgroundColor: p.color } : {}}
+                                            >
+                                                <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${selected ? 'bg-white/30 border-white/50' : 'bg-white border-surface-gray-mid'}`}>
+                                                    {selected && <svg xmlns="http://www.w3.org/2000/svg" className="h-2.5 w-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3.5} d="M5 13l4 4L19 7" /></svg>}
+                                                </div>
+                                                {p.displayName}
+                                            </button>
+                                        );
+                                    })}
                                 </div>
+                                {(editingItem.assignees || []).length === 0 && (
+                                    <p className="mt-2 text-[10px] font-bold text-emerald-600">✓ 全員の共有持ち物</p>
+                                )}
                             </div>
 
                             <div>

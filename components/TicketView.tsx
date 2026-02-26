@@ -532,30 +532,39 @@ const TicketView: React.FC<Props> = ({ tickets, userProfiles, onSave, onDelete, 
                 </div>
               )}
 
-              {/* 担当者 */}
+              {/* 搭乗者・利用者（複数選択） */}
               <div>
-                <label className="block text-[11px] font-black text-ink-sub mb-4 uppercase tracking-[0.25em] px-1">担当メンバー</label>
-                <div className="flex gap-3 overflow-x-auto scrollbar-hide py-1">
-                  <button
-                    type="button"
-                    onClick={() => setFormData({ ...formData, participantId: undefined })}
-                    className={`flex-shrink-0 px-6 py-4 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all border-2 ${!formData.participantId ? 'bg-ink text-white border-ink shadow-xl shadow-ink/20 scale-105' : 'bg-surface-gray text-ink-sub border-transparent hover:border-surface-gray-mid'}`}
-                  >
-                    🌎 全員
-                  </button>
-                  {userProfiles.map(p => (
-                    <button
-                      key={p.id}
-                      type="button"
-                      onClick={() => setFormData({ ...formData, participantId: p.id })}
-                      className={`flex-shrink-0 px-6 py-4 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all border-2 ${formData.participantId === p.id ? 'text-white border-transparent shadow-xl scale-105' : 'bg-surface-gray text-ink-sub border-transparent hover:border-surface-gray-mid'}`}
-                      style={formData.participantId === p.id ? { backgroundColor: p.color, boxShadow: `0 12px 24px ${p.color}44` } : {}}
-                    >
-                      {p.displayName}
-                    </button>
-                  ))}
+                <label className="block text-[11px] font-black text-ink-sub mb-1 uppercase tracking-[0.25em] px-1">搭乗者・利用者</label>
+                <p className="text-[10px] text-ink-light mb-4 px-1">複数選択OK。選択なし=全員対象</p>
+                <div className="flex flex-wrap gap-2.5">
+                  {userProfiles.map(p => {
+                    const passengers = (formData as any).passengerIds as string[] || [];
+                    const selected = passengers.includes(p.id);
+                    return (
+                      <button
+                        key={p.id}
+                        type="button"
+                        onClick={() => {
+                          const curr: string[] = (formData as any).passengerIds || [];
+                          const next = curr.includes(p.id) ? curr.filter((x: string) => x !== p.id) : [...curr, p.id];
+                          setFormData({ ...formData, passengerIds: next } as any);
+                        }}
+                        className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-[11px] font-black border-2 transition-all active:scale-95 ${selected ? 'text-white border-transparent shadow-lg' : 'bg-surface-gray text-ink-sub border-transparent hover:border-surface-gray-mid'}`}
+                        style={selected ? { backgroundColor: p.color, boxShadow: `0 8px 20px ${p.color}44` } : {}}
+                      >
+                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${selected ? 'bg-white/30 border-white/50' : 'bg-white border-surface-gray-mid'}`}>
+                          {selected && <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3.5} d="M5 13l4 4L19 7" /></svg>}
+                        </div>
+                        {p.displayName}
+                      </button>
+                    );
+                  })}
                 </div>
+                {((formData as any).passengerIds || []).length === 0 && (
+                  <p className="mt-2 text-[10px] font-bold text-emerald-600">✓ 全員対象のチケット</p>
+                )}
               </div>
+
 
               {/* 種類 */}
               <div>

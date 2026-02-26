@@ -65,7 +65,8 @@ export interface Ticket {
   notes?: string;
   link?: string; // Drive link or e-ticket URL
   mapUrl?: string; // 📍 関連マップリンク
-  participantId?: string; // 特定メンバーのチケット。undefinedの場合は「全員」
+  participantId?: string; // 後方互換: 単数指定（非推奨）
+  passengerIds?: string[]; // 乗車・利用メンバー（複数選択可、未設定=全員）
   updatedAt?: string; // For sync
 }
 
@@ -75,7 +76,8 @@ export interface PackingItem {
   title: string;
   isPacked: boolean; // 従来通り：個人用ならそのまま、全員用なら「全員完了」を意味
   packedBy?: string[]; // 全員用アイテムにおいて、誰が完了したかをIDの配列で保持
-  participantId?: string; // 担当者、undefinedの場合は「全員共通」
+  participantId?: string; // 後方互換: 単数指定（非推奨）
+  assignees?: string[]; // 担当メンバー（複数選択可、未設定=全員共通）
   updatedAt?: string;
 }
 

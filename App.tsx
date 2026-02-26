@@ -276,6 +276,24 @@ const App: React.FC = () => {
     });
   };
 
+  // メンバー追加（設定画面から呕ける）
+  const handleAddMember = (name: string, color: string) => {
+    const newProfile: UserProfile = {
+      id: crypto.randomUUID(),
+      displayName: name,
+      color: color,
+      updatedAt: new Date().toISOString()
+    };
+    updateUserProfiles(prev => [...prev, newProfile]);
+  };
+
+  // メンバー削除（最低1名は必ず残す）
+  const handleRemoveMember = (id: string) => {
+    updateUserProfiles(prev =>
+      prev.length > 1 ? prev.filter(p => p.id !== id) : prev
+    );
+  };
+
   const updatePackingList = (val: PackingItem[] | ((prev: PackingItem[]) => PackingItem[])) => {
     setPackingList(prev => {
       const newVal = typeof val === 'function' ? val(prev) : val;
@@ -831,6 +849,8 @@ const App: React.FC = () => {
             <SettingsView
               userProfiles={userProfiles}
               onUpdateProfile={updateProfile}
+              onAddMember={handleAddMember}
+              onRemoveMember={handleRemoveMember}
               onLoadSampleData={handleLoadSampleData}
               onRestoreData={handleRestoreData}
               onBack={() => setView('home')}
