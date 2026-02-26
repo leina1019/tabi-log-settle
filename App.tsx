@@ -12,7 +12,7 @@ import TicketView from './components/TicketView';
 import SettingsView from './components/SettingsView';
 import PackingView from './components/PackingView';
 import { createNewTrip, subscribeToTrip, updateTripData } from './services/firebaseService';
-import { fetchAllData, syncAllDataToSheet } from './services/googleSheetService';
+import { fetchAllData, syncAllDataToSheet, exportToMasterSheet, getMasterSheetUrl } from './services/googleSheetService';
 import { SAMPLE_PROFILES, SAMPLE_ITINERARY, SAMPLE_EXPENSES, SAMPLE_TICKETS, SAMPLE_PACKING } from './utils/sampleData';
 import WelcomeView from './components/WelcomeView';
 
@@ -519,19 +519,22 @@ const App: React.FC = () => {
     }
   };
 
+  // スプレッドシートの一括エクスポート（白紙化 → 全データ書き込み）
   const handleSyncToSheet = async () => {
     setIsSyncing(true);
     try {
-      // tripIdが未設定の場合は同期不可
       if (!tripId) {
         alert('旅行IDが設定されていません。URLから旅行リンクを開いてください。');
         return;
       }
-      const success = await syncAllDataToSheet({
+
+      const success = await exportToMasterSheet({
+        tripId,
         profiles: userProfiles,
         expenses,
         itinerary,
         tickets,
+        packingList,
         tripSettings: {
           tripName,
           tripStartDate,
@@ -539,9 +542,19 @@ const App: React.FC = () => {
           coverImage: tripCoverImage,
           budget
         }
-      }, tripId);
-      if (success) alert('Googleスプレッドシートへの同期が完了しました！\n（tripId: ' + tripId + '）');
-      else alert('同期に失敗しました。');
+      });
+
+      if (success) {
+        alert([
+          'Googleスプレッドシートへのエクスポートが完了しました！',
+          '',
+          '✔ 内容：支出・荷物・チケット・スケジュール・メンバー',
+          '⚠️ マスターシートは読み取り専用です',
+          '   編集する場合はダウンロードしてください'
+        ].join('\n'));
+      } else {
+        alert('エクスポートに失敗しました。再度お試しください。');
+      }
     } catch (e) {
       console.error(e);
       alert('エラーが発生しました。');
@@ -859,11 +872,13 @@ const App: React.FC = () => {
               expenses={expenses}
               itinerary={itinerary}
               tickets={tickets}
+              packingList={packingList}
               budget={budget}
               tripName={tripName}
               tripStartDate={tripStartDate}
               tripEndDate={tripEndDate}
               coverImage={tripCoverImage}
+              masterSheetUrl={getMasterSheetUrl() || undefined}
               onImportFullData={handleImportFullData}
               onSyncToSheet={handleSyncToSheet}
               onFetchFromSheet={handleFetchFromSheet}

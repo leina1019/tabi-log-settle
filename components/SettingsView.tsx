@@ -8,11 +8,13 @@ interface Props {
   expenses: any[];
   itinerary: any[];
   tickets: any[];
+  packingList?: any[]; // 荷物リストエクスポート用
   budget: number;
   tripName: string;
   tripStartDate: string;
   tripEndDate: string;
   coverImage: string;
+  masterSheetUrl?: string; // マスターシートへのリンク
   onUpdateProfile: (id: Participant, updates: Partial<UserProfile>) => void;
   onAddMember: (name: string, color: string) => void;     // 新規メンバー追加
   onRemoveMember: (id: string) => void;                   // メンバー削除
@@ -28,7 +30,7 @@ interface Props {
 }
 
 const SettingsView: React.FC<Props> = ({
-  userProfiles, expenses, itinerary, tickets, budget, tripName, tripStartDate, tripEndDate, coverImage,
+  userProfiles, expenses, itinerary, tickets, packingList = [], budget, tripName, tripStartDate, tripEndDate, coverImage, masterSheetUrl,
   onUpdateProfile, onAddMember, onRemoveMember, onLoadSampleData, onRestoreData, onBack, viewModeSize, onUpdateViewModeSize,
   onImportFullData, onSyncToSheet, onFetchFromSheet, isSyncing
 }) => {
@@ -310,75 +312,79 @@ const SettingsView: React.FC<Props> = ({
         </div>
       </section>
 
-      {/* 3. クラウド同期 */}
+      {/* 3. Googleスプレッドシートエクスポート */}
       <section className="space-y-4">
         <div className="flex items-center gap-2 px-2">
-          <span className="text-xl">☁️</span>
-          <h3 className="text-xs font-black text-ink uppercase tracking-[0.2em]">クラウド同期</h3>
+          <span className="text-xl">📊</span>
+          <h3 className="text-xs font-black text-ink uppercase tracking-[0.2em]">Googleスプレッドシートエクスポート</h3>
         </div>
-        <div className="bg-gradient-to-br from-ocean-dark to-primary p-7 rounded-[32px] text-white shadow-xl shadow-ocean-dark/20 relative overflow-hidden">
+
+        <div className="bg-gradient-to-br from-emerald-600 to-teal-500 p-7 rounded-[32px] text-white shadow-xl shadow-emerald-600/20 relative overflow-hidden">
           <div className="absolute -right-8 -top-8 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
-          <div className="relative z-10">
-            <div className="flex items-center gap-4 mb-5">
+          <div className="relative z-10 space-y-5">
+            {/* ヘッダー */}
+            <div className="flex items-center gap-4">
               <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center">
                 <svg xmlns="http://www.w3.org/2000/svg" className="w-7 h-7" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" /><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" /><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" /><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" /><path fill="none" d="M0 0h48v48H0z" /></svg>
               </div>
               <div>
-                <h4 className="text-sm font-black uppercase tracking-widest mb-1">スプレッドシート同期</h4>
-                <p className="text-[10px] opacity-70 font-bold leading-tight">Googleスプレッドシートとデータを<br />リアルタイムで同期します。</p>
+                <h4 className="text-sm font-black uppercase tracking-widest mb-1">一括エクスポート</h4>
+                <p className="text-[10px] opacity-80 font-bold leading-relaxed">
+                  マスターシートを白紙にしてから<br />全データを一気に書き込みます
+                </p>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-3">
-              <button
-                onClick={onSyncToSheet}
-                disabled={isSyncing}
-                className="group flex items-center justify-between p-4 bg-white/10 hover:bg-white/20 active:bg-white/30 backdrop-blur-md border border-white/20 rounded-2xl transition-all disabled:opacity-50"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center shadow-lg group-active:scale-90 transition-transform">
-                    <AppIcon name="export" className="w-5 h-5 text-white" />
-                  </div>
-                  <span className="text-[11px] font-black uppercase tracking-widest">保存・同期を実行</span>
+            {/* データカウント */}
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { label: '支出', count: expenses.length, icon: '💴' },
+                { label: '持ち物', count: packingList.length, icon: '🎒' },
+                { label: 'チケット', count: tickets.length, icon: '🎫' },
+              ].map(item => (
+                <div key={item.label} className="bg-white/10 rounded-2xl p-3 text-center backdrop-blur-sm">
+                  <p className="text-xl mb-1">{item.icon}</p>
+                  <p className="text-lg font-black leading-none">{item.count}</p>
+                  <p className="text-[9px] opacity-70 font-bold mt-0.5">{item.label}</p>
                 </div>
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" /></svg>
-              </button>
-
-              <button
-                onPointerDown={(e) => {
-                  const timer = setTimeout(() => {
-                    onFetchFromSheet(true);
-                  }, 1000);
-                  const cancel = () => {
-                    clearTimeout(timer);
-                    e.target.removeEventListener('pointerup', cancel);
-                    e.target.removeEventListener('pointerleave', cancel);
-                  };
-                  e.target.addEventListener('pointerup', cancel);
-                  e.target.addEventListener('pointerleave', cancel);
-                }}
-                onClick={() => onFetchFromSheet(false)}
-                disabled={isSyncing}
-                className="group flex items-center justify-between p-4 bg-white/10 hover:bg-white/20 active:bg-white/30 backdrop-blur-md border border-white/20 rounded-2xl transition-all disabled:opacity-50"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-ocean-light rounded-lg flex items-center justify-center shadow-lg group-active:scale-90 transition-transform">
-                    <AppIcon name="import" className="w-5 h-5 text-white" />
-                  </div>
-                  <span className="text-[11px] font-black uppercase tracking-widest">最新データを取得</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  {isSyncing && <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" /></svg>
-                </div>
-              </button>
+              ))}
             </div>
 
-            <div className="mt-4 flex items-start gap-2 text-white/50 bg-black/10 p-3 rounded-xl border border-white/5">
-              <span className="text-xs">💡</span>
-              <p className="text-[9px] font-bold leading-relaxed">
-                [最新を取得] ボタンを **1秒以上長押し** すると、ローカルの変更を破棄してスプレッドシートから強制再取得できます。
-              </p>
+            {/* エクスポートボタン */}
+            <button
+              onClick={onSyncToSheet}
+              disabled={isSyncing}
+              className="w-full group flex items-center justify-center gap-3 py-4 bg-white text-emerald-700 font-black text-sm rounded-2xl shadow-xl active:scale-95 transition-all disabled:opacity-50"
+            >
+              {isSyncing ? (
+                <><div className="w-5 h-5 border-2 border-emerald-200 border-t-emerald-600 rounded-full animate-spin" />エクスポート中...</>
+              ) : (
+                <><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>マスターシートへエクスポート</>
+              )}
+            </button>
+
+            {/* マスターシートを開くリンク */}
+            {masterSheetUrl && (
+              <a
+                href={masterSheetUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 py-3 bg-white/10 hover:bg-white/20 border border-white/20 rounded-2xl text-xs font-bold transition-all active:scale-95"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                マスターシートを開く（読み取り専用）
+              </a>
+            )}
+
+            {/* 注意書き */}
+            <div className="bg-black/10 border border-white/10 rounded-xl p-3 space-y-1.5">
+              <p className="text-[9px] font-bold opacity-80">📋 エクスポートの仕組み</p>
+              <ul className="text-[9px] font-bold opacity-60 space-y-1 list-disc list-inside">
+                <li>毎回マスターシートを白紙にしてから書き込みます</li>
+                <li>他のグループのデータには影響しません</li>
+                <li>マスターシートは読み取り専用です</li>
+                <li>編集したい場合はダウンロードしてください</li>
+              </ul>
             </div>
           </div>
         </div>

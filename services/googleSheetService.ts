@@ -1,16 +1,24 @@
 
-import { Expense, ItineraryItem, Ticket, UserProfile } from '../types';
+import { Expense, ItineraryItem, Ticket, UserProfile, PackingItem } from '../types';
 import { convertToJPY } from '../utils/currency';
 import { MEMBER_COLORS } from '../constants';
 
 // GAS WebApp の URL（1本のURLで全tripIdを管理）
 const GAS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbxMLrlCb3WphIRPzcnnoqKA615GJT0bylB-rMuUMZtEf85GK9yybzdlxhauUhypFAr1XQ/exec';
 
+// マスタースプレッドシートID（ここに設定することでURLを生成できる）
+export const MASTER_SPREADSHEET_ID = ''; // TODO: 実際のSpreadsheet IDを入れる
+export const getMasterSheetUrl = () =>
+  MASTER_SPREADSHEET_ID
+    ? `https://docs.google.com/spreadsheets/d/${MASTER_SPREADSHEET_ID}/view`
+    : null;
+
 // シート内でデータ種別を区別するための特殊カテゴリ定数
 const CAT_ITINERARY = '__ITINERARY__';
 const CAT_TICKET = '__TICKET__';
 const CAT_PROFILE = '__PROFILE__';
 const CAT_TRIP_SETTINGS = '__TRIP_SETTINGS__';
+const CAT_PACKING = '__PACKING__'; // 荷物リスト
 
 interface CloudData {
   expenses: Expense[];
@@ -351,6 +359,164 @@ export async function syncAllDataToSheet(data: CloudData, tripId: string): Promi
     return true;
   } catch (error) {
     console.error('[GSheet] Bulk sync failed:', error);
+    return false;
+  }
+}
+
+/**
+ * 一括エクスポート (白紙化 → 全データ書き込み)
+ * - 毎回マスターシートを白紙にしてから全データを書き込む
+ * - 他のグループへの情報漏洩を防ぐ
+ * - packingListもエクスポート対象に含む
+ */
+export async function exportToMasterSheet(params: {
+  tripId: string;
+  profiles: UserProfile[];
+  expenses: Expense[];
+  itinerary: ItineraryItem[];
+  tickets: Ticket[];
+  packingList: PackingItem[];
+  tripSettings: {
+    tripName: string;
+    tripStartDate: string;
+    tripEndDate: string;
+    coverImage: string;
+    budget: number;
+  };
+}): Promise<boolean> {
+  const { tripId, profiles, expenses, itinerary, tickets, packingList, tripSettings } = params;
+
+  if (!tripId) {
+    console.error('[GSheet] tripIdが未設定');
+    return false;
+  }
+
+  try {
+    // Step1: マスターシートを白紙化
+    await resetSheetData(tripId);
+
+    // Step2: 全データをBULK_SAVEで送信
+    const rows: any[] = [
+      // 旅行設定
+      {
+        id: 'TRIP_SETTINGS',
+        date: '2024-01-01',
+        title: tripSettings.tripName || '無題',
+        category: CAT_TRIP_SETTINGS,
+        paidBy: 'SYSTEM',
+        amount: 0,
+        currency: 'JPY',
+        exchangeRate: 1,
+        amountJPY: 0,
+        splitWith: '',
+        sourceUrl: JSON.stringify(tripSettings),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      },
+      // メンバー
+      ...profiles.map(p => ({
+        id: `PROFILE_${p.id}`,
+        date: '2024-01-01',
+        title: p.displayName,
+        category: CAT_PROFILE,
+        paidBy: p.id,
+        amount: 0,
+        currency: 'JPY',
+        exchangeRate: 1,
+        amountJPY: 0,
+        splitWith: '',
+        sourceUrl: p.avatarUrl || '',
+        createdAt: new Date().toISOString(),
+        updatedAt: p.updatedAt || new Date().toISOString()
+      })),
+      // 支出
+      ...expenses.map(e => ({
+        id: e.id,
+        date: e.date,
+        title: e.title,
+        category: e.category,
+        paidBy: e.paidBy,
+        amount: e.amount,
+        currency: e.currency,
+        exchangeRate: e.exchangeRate,
+        amountJPY: convertToJPY(e.amount, e.currency, e.exchangeRate),
+        splitWith: e.splitWith.join(', '),
+        sourceUrl: e.sourceUrl || '',
+        createdAt: e.createdAt,
+        updatedAt: e.updatedAt
+      })),
+      // スケジュール
+      ...itinerary.map(item => ({
+        id: `ITINERARY_${item.id}`,
+        date: item.date,
+        title: item.title,
+        category: CAT_ITINERARY,
+        paidBy: 'SYSTEM',
+        amount: 0,
+        currency: 'JPY',
+        exchangeRate: 1,
+        amountJPY: 0,
+        splitWith: '',
+        sourceUrl: JSON.stringify({
+          time: item.time, location: item.location,
+          memo: item.memo, link: item.link, type: item.type
+        }),
+        createdAt: new Date().toISOString(),
+        updatedAt: item.updatedAt || new Date().toISOString()
+      })),
+      // チケット
+      ...tickets.map(item => ({
+        id: `TICKET_${item.id}`,
+        date: item.date,
+        title: item.title,
+        category: CAT_TICKET,
+        paidBy: 'SYSTEM',
+        amount: 0,
+        currency: 'JPY',
+        exchangeRate: 1,
+        amountJPY: 0,
+        splitWith: '',
+        sourceUrl: JSON.stringify({
+          type: item.type, provider: item.provider, time: item.time,
+          referenceNumber: item.referenceNumber, notes: item.notes, link: item.link,
+          passengerIds: item.passengerIds
+        }),
+        createdAt: new Date().toISOString(),
+        updatedAt: item.updatedAt || new Date().toISOString()
+      })),
+      // 荷物リスト
+      ...packingList.map(item => ({
+        id: `PACKING_${item.id}`,
+        date: '2024-01-01',
+        title: item.title,
+        category: CAT_PACKING,
+        paidBy: 'SYSTEM',
+        amount: 0,
+        currency: 'JPY',
+        exchangeRate: 1,
+        amountJPY: 0,
+        splitWith: '',
+        sourceUrl: JSON.stringify({
+          category: item.category,
+          isPacked: item.isPacked,
+          assignees: item.assignees || [],
+          packedBy: item.packedBy || []
+        }),
+        createdAt: new Date().toISOString(),
+        updatedAt: item.updatedAt || new Date().toISOString()
+      }))
+    ];
+
+    await fetch(GAS_WEBAPP_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'BULK_SAVE', tripId, data: rows })
+    });
+
+    return true;
+  } catch (error) {
+    console.error('[GSheet] exportToMasterSheet failed:', error);
     return false;
   }
 }
