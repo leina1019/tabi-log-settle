@@ -316,15 +316,46 @@ const TicketView: React.FC<Props> = ({ tickets, userProfiles, onSave, onDelete, 
                 {/* プレミアム・ボーディングパス装飾 */}
                 <div className="absolute top-0 left-0 w-full h-3 bg-gradient-to-r from-ocean-dark via-primary to-accent/60 opacity-90" />
 
-                {/* メンバーバッジ */}
-                {profile && (
-                  <div className="absolute top-6 right-8 z-20 flex items-center gap-2 pr-4 pl-2 py-2 rounded-full bg-surface-gray/90 backdrop-blur-md border border-white/50 shadow-sm">
-                    <div className="w-6 h-6 rounded-full overflow-hidden bg-white shadow-inner">
-                      {profile.avatarUrl ? <img src={profile.avatarUrl} className="w-full h-full object-cover" /> : <div className="w-full h-full" style={{ backgroundColor: profile.color }} />}
+                {/* メンバーバッジ（複数対応スタック表示） */}
+                {(() => {
+                  const pIds = (ticket as any).passengerIds || (ticket.participantId ? [ticket.participantId] : []);
+                  if (pIds.length === 0) {
+                    return (
+                      <div className="absolute top-6 right-8 z-20 flex items-center gap-2 px-4 py-2 rounded-full bg-surface-gray/90 backdrop-blur-md border border-white/50 shadow-sm">
+                        <span className="text-[11px] font-black text-emerald-600 uppercase tracking-widest">🌎 全員</span>
+                      </div>
+                    );
+                  }
+
+                  const profiles = userProfiles.filter(p => pIds.includes(p.id));
+                  return (
+                    <div className="absolute top-6 right-8 z-20 flex -space-x-3 items-center">
+                      {profiles.map((p, i) => (
+                        <div
+                          key={p.id}
+                          className="w-9 h-9 rounded-full border-2 border-white overflow-hidden shadow-lg transform hover:-translate-y-1 transition-transform cursor-help"
+                          style={{ zIndex: 10 - i }}
+                          title={p.displayName}
+                        >
+                          {p.avatarUrl ? (
+                            <img src={p.avatarUrl} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-[10px] text-white font-bold" style={{ backgroundColor: p.color }}>
+                              {p.displayName[0]}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                      {profiles.length > 0 && (
+                        <div className="ml-2 bg-surface-gray/80 backdrop-blur-sm px-2 py-1 rounded-md border border-white/50 shadow-sm">
+                          <span className="text-[9px] font-black text-ink-sub uppercase tracking-tighter">
+                            {profiles.length === 1 ? profiles[0].displayName : `${profiles.length}名`}
+                          </span>
+                        </div>
+                      )}
                     </div>
-                    <span className="text-[11px] font-black text-ink-sub uppercase tracking-wider">{profile.displayName}</span>
-                  </div>
-                )}
+                  );
+                })()}
 
                 {/* チケットパンチ（左右の切り込み） */}
                 <div className="absolute top-[65%] -left-5 w-10 h-10 bg-surface-gray rounded-full border border-surface-gray-mid/50 z-10 shadow-[inset_-4px_0_8px_rgba(0,0,0,0.05)]"></div>
