@@ -705,7 +705,7 @@ const App: React.FC = () => {
         {view === 'onboarding' && (
           <WelcomeView
             onDemoStart={handleLoadSampleData}
-            onStart={async (data) => {
+            onStart={async (data, onComplete) => {
               setTripName(data.name);
               setTripStartDate(data.startDate);
               setTripEndDate(data.endDate);
@@ -729,7 +729,8 @@ const App: React.FC = () => {
                 setTripId(newId);
                 const url = `${window.location.origin}${window.location.pathname}?trip=${newId}`;
                 window.history.pushState({}, '', url);
-                setView('home');
+                // URL確定後、WelcomeViewへコールバックしてstep='share'を表示
+                onComplete(url);
                 setSyncStatus('success');
               } catch (e) {
                 console.error(e);
@@ -741,6 +742,7 @@ const App: React.FC = () => {
             }}
           />
         )}
+
 
         {/* Main Content Area */}
         <main className="flex-1 overflow-y-auto px-4 pb-28 scrollbar-hide">

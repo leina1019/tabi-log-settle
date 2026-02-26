@@ -1,6 +1,5 @@
-
-import React, { useState } from 'react';
-import { UserProfile, Participant, TripData } from '../types';
+﻿import React, { useState } from 'react';
+import { UserProfile } from '../types';
 import { AppIcon } from './AppIcon';
 import { MEMBER_COLORS } from '../constants';
 
@@ -13,19 +12,22 @@ interface OnboardingData {
 }
 
 interface Props {
-    onStart: (data: OnboardingData) => void;
+    onStart: (data: OnboardingData, onComplete: (shareUrl: string) => void) => void;
     onDemoStart?: () => void;
 }
 
 const WelcomeView: React.FC<Props> = ({ onStart, onDemoStart }) => {
-    const [step, setStep] = useState<'welcome' | 'info' | 'members'>('welcome');
+    const [step, setStep] = useState<'welcome' | 'info' | 'members' | 'share'>('welcome');
     const [name, setName] = useState('');
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
     const [tempMembers, setTempMembers] = useState<{ id: string; name: string; color: string }[]>([
         { id: crypto.randomUUID(), name: '', color: MEMBER_COLORS[0] }
     ]);
-    const [coverImage, setCoverImage] = useState('https://images.unsplash.com/photo-1527631746610-bca00a040d60?q=80&w=800&auto=format&fit=crop');
+    const [coverImage] = useState('https://images.unsplash.com/photo-1527631746610-bca00a040d60?q=80&w=800&auto=format&fit=crop');
+    const [shareUrl, setShareUrl] = useState('');
+    const [copyFeedback, setCopyFeedback] = useState(false);
+    const [isCreating, setIsCreating] = useState(false);
 
     const handleNext = () => {
         if (step === 'welcome') setStep('info');
@@ -45,22 +47,56 @@ const WelcomeView: React.FC<Props> = ({ onStart, onDemoStart }) => {
             return;
         }
 
-        // #6: IDにnameを使うと同名メンバーで衝突するため、generateしたm.idを使用
         const userProfiles: UserProfile[] = validMembers.map(m => ({
-            id: m.id, // crypto.randomUUID()で生成済みの一意ID
+            id: m.id,
             displayName: m.name,
             color: m.color,
             avatarUrl: '',
             updatedAt: new Date().toISOString()
         }));
 
-        onStart({
-            name,
-            startDate,
-            endDate,
-            userProfiles,
-            coverImage
-        });
+        setIsCreating(true);
+        onStart(
+            { name, startDate, endDate, userProfiles, coverImage },
+            (url: string) => {
+                setShareUrl(url);
+                setIsCreating(false);
+                setStep('share');
+            }
+        );
+    };
+
+    const handleCopy = async () => {
+        try {
+            await navigator.clipboard.writeText(shareUrl);
+            setCopyFeedback(true);
+            setTimeout(() => setCopyFeedback(false), 2500);
+        } catch {
+            const input = document.createElement('input');
+            input.value = shareUrl;
+            document.body.appendChild(input);
+            input.select();
+            document.execCommand('copy');
+            document.body.removeChild(input);
+            setCopyFeedback(true);
+            setTimeout(() => setCopyFeedback(false), 2500);
+        }
+    };
+
+    const handleNativeShare = async () => {
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: '旅行グループに参加してください！',
+                    text: `「${name}」の旅行グループに招待します。このリンクを開いてください。`,
+                    url: shareUrl
+                });
+            } catch (e) {
+                console.log('Share canceled', e);
+            }
+        } else {
+            handleCopy();
+        }
     };
 
     const addMember = () => {
@@ -73,21 +109,30 @@ const WelcomeView: React.FC<Props> = ({ onStart, onDemoStart }) => {
         }
     };
 
-    const updateMember = (id: string, name: string) => {
-        setTempMembers(tempMembers.map(m => m.id === id ? { ...m, name } : m));
+    const updateMember = (id: string, memberName: string) => {
+        setTempMembers(tempMembers.map(m => m.id === id ? { ...m, name: memberName } : m));
     };
 
     return (
         <div className="fixed inset-0 bg-white z-[100] flex flex-col overflow-y-auto">
-            {/* Background Decor */}
             <div className="absolute top-0 left-0 right-0 h-64 bg-ocean-dark -z-10 rounded-b-[40px] opacity-10"></div>
 
             <div className="flex-1 flex flex-col items-center px-6 py-12 max-w-sm mx-auto w-full">
 
+                {/* Step: Welcome */}
                 {step === 'welcome' && (
                     <div className="flex-1 flex flex-col items-center justify-center text-center animate-in fade-in zoom-in duration-500">
                         <div className="mb-8 animate-bounce">
-                            <img src="/logo_light.png" alt="TabiLog Logo" className="w-48 h-auto drop-shadow-2xl" onError={(e) => { e.currentTarget.style.display = 'none'; if (e.currentTarget.nextSibling) (e.currentTarget.nextSibling as HTMLElement).style.display = 'flex'; }} />
+                            <img
+                                src="/logo_light.png"
+                                alt="TabiLog Logo"
+                                className="w-48 h-auto drop-shadow-2xl"
+                                onError={(e) => {
+                                    e.currentTarget.style.display = 'none';
+                                    const sibling = e.currentTarget.nextSibling as HTMLElement | null;
+                                    if (sibling) sibling.style.display = 'flex';
+                                }}
+                            />
                             <div className="hidden w-24 h-24 bg-primary-light rounded-[32px] items-center justify-center text-5xl shadow-inner">✈️</div>
                         </div>
                         <h2 className="text-4xl font-sans font-black text-ink mb-4 leading-tight tracking-tighter">TabiLogへ<br />ようこそ！</h2>
@@ -112,13 +157,13 @@ const WelcomeView: React.FC<Props> = ({ onStart, onDemoStart }) => {
                     </div>
                 )}
 
+                {/* Step: Info */}
                 {step === 'info' && (
                     <div className="w-full animate-in slide-in-from-right-8 fade-in duration-300">
                         <div className="mb-8">
                             <span className="text-primary font-bold text-xs uppercase tracking-widest">Step 1 / 2</span>
                             <h2 className="text-2xl font-bold text-ink mt-1">旅行の基本情報</h2>
                         </div>
-
                         <div className="space-y-6">
                             <div>
                                 <label className="block text-[10px] font-bold text-ink-sub mb-2 uppercase tracking-widest">旅行のタイトル</label>
@@ -130,7 +175,6 @@ const WelcomeView: React.FC<Props> = ({ onStart, onDemoStart }) => {
                                     onChange={e => setName(e.target.value)}
                                 />
                             </div>
-
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-[10px] font-bold text-ink-sub mb-2 uppercase tracking-widest">開始日</label>
@@ -151,7 +195,6 @@ const WelcomeView: React.FC<Props> = ({ onStart, onDemoStart }) => {
                                     />
                                 </div>
                             </div>
-
                             <div className="pt-8">
                                 <button
                                     onClick={handleNext}
@@ -165,6 +208,7 @@ const WelcomeView: React.FC<Props> = ({ onStart, onDemoStart }) => {
                     </div>
                 )}
 
+                {/* Step: Members */}
                 {step === 'members' && (
                     <div className="w-full animate-in slide-in-from-right-8 fade-in duration-300 pb-20">
                         <div className="mb-8">
@@ -172,7 +216,6 @@ const WelcomeView: React.FC<Props> = ({ onStart, onDemoStart }) => {
                             <h2 className="text-2xl font-bold text-ink mt-1">メンバーを追加</h2>
                             <p className="text-xs text-ink-sub mt-2 leading-relaxed">旅行に参加するメンバーの名前を入力してください。後からでも追加できます。</p>
                         </div>
-
                         <div className="space-y-3">
                             {tempMembers.map((m, idx) => (
                                 <div key={m.id} className="flex items-center gap-3 animate-in slide-in-from-left-4 fade-in" style={{ animationDelay: `${idx * 50}ms` }}>
@@ -194,7 +237,6 @@ const WelcomeView: React.FC<Props> = ({ onStart, onDemoStart }) => {
                                     </button>
                                 </div>
                             ))}
-
                             <button
                                 onClick={addMember}
                                 className="w-full py-4 border-2 border-dashed border-surface-gray-mid rounded-2xl text-xs font-bold text-ink-light hover:border-primary/40 hover:text-primary transition-all flex items-center justify-center gap-2"
@@ -202,16 +244,81 @@ const WelcomeView: React.FC<Props> = ({ onStart, onDemoStart }) => {
                                 <span>+</span> メンバーを追加
                             </button>
                         </div>
-
                         <div className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-white via-white to-transparent max-w-sm mx-auto">
                             <button
                                 onClick={handleFinish}
-                                className="w-full bg-primary text-white py-5 rounded-3xl font-bold shadow-xl shadow-primary/20 active:scale-95 transition-all"
+                                disabled={isCreating}
+                                className="w-full bg-primary text-white py-5 rounded-3xl font-bold shadow-xl shadow-primary/20 active:scale-95 transition-all disabled:opacity-60 flex items-center justify-center gap-2"
                             >
-                                この内容で旅を始める！ <AppIcon name="ticket" className="w-4 h-4" />
+                                {isCreating ? (
+                                    <>
+                                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                        旅行を作成中...
+                                    </>
+                                ) : (
+                                    <>この内容で旅を始める！ <AppIcon name="ticket" className="w-4 h-4" /></>
+                                )}
                             </button>
                             <button onClick={() => setStep('info')} className="w-full mt-2 text-ink-light text-xs font-bold py-2">戻る</button>
                         </div>
+                    </div>
+                )}
+
+                {/* Step: Share（旅行グループURL共有） */}
+                {step === 'share' && (
+                    <div className="w-full animate-in fade-in zoom-in-95 duration-500 flex flex-col items-center text-center">
+                        {/* 完了演出 */}
+                        <div className="mt-4 mb-6">
+                            <div className="w-24 h-24 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner animate-bounce">
+                                <span className="text-5xl">🎉</span>
+                            </div>
+                            <h2 className="text-2xl font-sans font-black text-ink mb-2">旅行グループ作成完了！</h2>
+                            <p className="text-sm text-ink-sub leading-relaxed">
+                                メンバーと <strong className="text-primary">この専用URLを共有</strong> しないと<br />みんなのデータが同期されません！
+                            </p>
+                        </div>
+
+                        {/* 重要バナー */}
+                        <div className="w-full bg-amber-50 border-2 border-amber-300 rounded-2xl p-4 mb-6 text-left">
+                            <p className="text-xs font-black text-amber-700 mb-1">⚠️ 必ず共有してください</p>
+                            <p className="text-[11px] text-amber-600 leading-relaxed">
+                                このURLがあなたのグループ専用リンクです。<br />
+                                メンバー全員がこのリンクからアクセスすることで、支出・スケジュール・荷物リストが自動で同期されます。
+                            </p>
+                        </div>
+
+                        {/* URL表示 + コピーボタン */}
+                        <div className="w-full bg-surface-gray rounded-2xl p-4 mb-4 flex items-center gap-3 border border-surface-gray-mid">
+                            <div className="flex-1 min-w-0">
+                                <p className="text-[10px] text-ink-light font-bold mb-1 uppercase tracking-widest">グループURL</p>
+                                <p className="text-xs font-bold text-ink truncate font-mono">{shareUrl}</p>
+                            </div>
+                            <button
+                                onClick={handleCopy}
+                                className={`flex-shrink-0 px-3 py-2 rounded-xl text-xs font-black transition-all ${copyFeedback ? 'bg-emerald-500 text-white scale-95' : 'bg-white text-primary border border-primary/20 hover:bg-primary/5'}`}
+                            >
+                                {copyFeedback ? '✓ コピー済み' : '📋 コピー'}
+                            </button>
+                        </div>
+
+                        {/* メインCTA: 共有ボタン */}
+                        <button
+                            onClick={handleNativeShare}
+                            className="w-full py-5 bg-gradient-to-r from-ocean-dark to-primary text-white rounded-3xl font-bold shadow-xl shadow-primary/20 active:scale-95 transition-all text-base flex items-center justify-center gap-3 mb-4"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                            </svg>
+                            LINEやメッセージで共有する
+                        </button>
+
+                        {/* スキップ */}
+                        <button
+                            onClick={() => window.location.reload()}
+                            className="text-xs text-ink-light font-bold py-3 opacity-60 hover:opacity-100 transition-opacity"
+                        >
+                            あとで共有する → 旅を始める
+                        </button>
                     </div>
                 )}
 
