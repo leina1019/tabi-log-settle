@@ -321,69 +321,47 @@ const Dashboard: React.FC<Props> = ({
 
       {/* 📊 Spending Summary Section */}
       <section className="space-y-4">
-        <div className="flex justify-between items-end px-2">
-          <div className="flex items-center gap-2">
-            <span className="text-lg">📊</span>
-            <h3 className="text-[10px] font-bold text-ink-sub uppercase tracking-[0.2em]">予算と支出状況</h3>
-          </div>
-          <button
-            onClick={() => { setTempBudget(budget.toString()); setIsEditingBudget(true); }}
-            className="text-[10px] font-bold text-primary flex items-center gap-1 hover:opacity-70 transition-opacity"
-          >
-            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
-            予算を変更
-          </button>
+        <div className="flex items-center gap-2 px-2">
+          <span className="text-lg">📊</span>
+          <h3 className="text-[10px] font-bold text-ink-sub uppercase tracking-[0.2em]">支出サマリー</h3>
         </div>
 
-        <div className="glass p-6 rounded-[32px] border-white/40 shadow-sm space-y-4 relative overflow-hidden">
-          {/* 背景の装飾 */}
-          <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 blur-3xl"></div>
-
-          <div className="flex justify-between items-end relative z-10">
-            <div>
-              <p className="text-[10px] font-bold text-ink-sub uppercase tracking-widest mb-1">現在の支出合計</p>
-              <h4 className="text-3xl font-sans font-black text-ink flex items-baseline gap-1">
-                {Math.round(totalJPY).toLocaleString()}
-                <span className="text-xs font-bold text-ink-light">JPY</span>
-              </h4>
+        {/* 2×2 サマリーカードグリッド（2枚目画像デザイン） */}
+        <div className="grid grid-cols-2 gap-3">
+          {/* 総支出 (円換算) */}
+          <div className="glass p-5 rounded-3xl border-white/40 flex flex-col items-center justify-center text-center shadow-sm">
+            <p className="text-xl font-sans font-black text-primary leading-none">¥{Math.round(totalJPY).toLocaleString()}</p>
+            <p className="text-[9px] font-bold text-ink-light mt-1.5">総支出（円換算）</p>
+          </div>
+          {/* 支払い回数 */}
+          <div className="glass p-5 rounded-3xl border-white/40 flex flex-col items-center justify-center text-center shadow-sm">
+            <p className="text-xl font-sans font-black text-primary leading-none">{summaryData.totalCount}件</p>
+            <p className="text-[9px] font-bold text-ink-light mt-1.5">支払い回数</p>
+          </div>
+          {/* 1人あたり */}
+          <div className="glass p-5 rounded-3xl border-white/40 flex flex-col items-center justify-center text-center shadow-sm">
+            <p className="text-xl font-sans font-black text-primary leading-none">¥{Math.round(summaryData.averagePerPerson).toLocaleString()}</p>
+            <p className="text-[9px] font-bold text-ink-light mt-1.5">1人あたり</p>
+          </div>
+          {/* 外貨合計（最初の外貨 or JPY表示） */}
+          {summaryData.foreignCurrencies.length > 0 ? (
+            <div className="glass p-5 rounded-3xl border-white/40 flex flex-col items-center justify-center text-center shadow-sm">
+              <p className="text-xl font-sans font-black text-primary leading-none">
+                {summaryData.foreignCurrencies[0].currency === 'AUD' ? 'A$' :
+                  summaryData.foreignCurrencies[0].currency === 'USD' ? '$' :
+                    summaryData.foreignCurrencies[0].currency === 'EUR' ? '€' :
+                      summaryData.foreignCurrencies[0].currency === 'GBP' ? '£' :
+                        summaryData.foreignCurrencies[0].currency}
+                {summaryData.foreignCurrencies[0].amount.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+              </p>
+              <p className="text-[9px] font-bold text-ink-light mt-1.5">{summaryData.foreignCurrencies[0].currency}支出合計</p>
             </div>
-            <div className="text-right">
-              <p className="text-[10px] font-bold text-ink-sub uppercase tracking-widest mb-1">予算達成率</p>
-              <span className={`text-lg font-sans font-black ${budgetPercentage > 100 ? 'text-rose-500' : 'text-primary'}`}>
-                {budgetPercentage.toFixed(1)}<span className="text-xs ml-0.5">%</span>
-              </span>
+          ) : (
+            <div className="glass p-5 rounded-3xl border-white/40 flex flex-col items-center justify-center text-center shadow-sm">
+              <p className="text-xl font-sans font-black text-ink-light leading-none">—</p>
+              <p className="text-[9px] font-bold text-ink-light mt-1.5">外貨支出なし</p>
             </div>
-          </div>
-
-          <div className="space-y-2 relative z-10">
-            <div className="w-full bg-surface-gray-mid h-3 rounded-full overflow-hidden shadow-inner">
-              <div
-                className={`h-full transition-all duration-1000 ease-out ${budgetPercentage > 100 ? 'bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.4)]' : 'bg-gradient-to-r from-primary to-ocean-light shadow-[0_0_10px_rgba(0,161,222,0.3)]'}`}
-                style={{ width: `${budgetPercentage}%` }}
-              />
-            </div>
-            <div className="flex justify-between text-[10px] font-bold text-ink-light">
-              <span>¥0</span>
-              <span className="text-ink-sub">目標予算: ¥{budget.toLocaleString()}</span>
-            </div>
-          </div>
-        </div>
-
-
-        {/* #3: 重複していた4枚のサマリーカードを削除し、残り予算のみ表示 */}
-        <div className={`grid ${isTablet ? 'grid-cols-3' : 'grid-cols-3'} gap-3`}>
-          <div className="glass p-4 rounded-2xl border-white/40">
-            <p className="text-[8px] font-bold text-ink-light uppercase tracking-widest mb-1">決済件数</p>
-            <p className="text-lg font-sans font-bold text-ink leading-tight">{summaryData.totalCount}<span className="text-[9px] ml-1 opacity-50">件</span></p>
-          </div>
-          <div className="glass p-4 rounded-2xl border-white/40">
-            <p className="text-[8px] font-bold text-ink-light uppercase tracking-widest mb-1">1人あたり</p>
-            <p className="text-lg font-sans font-bold text-ink leading-tight">{Math.round(summaryData.averagePerPerson).toLocaleString()}<span className="text-[9px] ml-1 opacity-50">JPY</span></p>
-          </div>
-          <div className={`glass p-4 rounded-2xl border-white/40 ${remaining < 0 ? 'bg-rose-50/60' : ''}`}>
-            <p className="text-[8px] font-bold text-ink-light uppercase tracking-widest mb-1">残り予算</p>
-            <p className={`text-lg font-sans font-bold leading-tight ${remaining < 0 ? 'text-rose-500' : 'text-emerald-600'}`}>{remaining < 0 ? '-' : ''}{Math.abs(Math.round(remaining)).toLocaleString()}<span className="text-[9px] ml-1 opacity-50">JPY</span></p>
-          </div>
+          )}
         </div>
 
         <div className="glass p-5 rounded-[32px] space-y-8">
