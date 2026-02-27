@@ -777,7 +777,7 @@ const App: React.FC = () => {
         {/* Welcome / Onboarding View */}
         {view === 'onboarding' && (
           <WelcomeView
-            onDemoStart={handleLoadSampleData}
+            onDemoStart={handleLoadUltimateDemoData}
             onStart={async (data, onComplete) => {
               setTripName(data.name);
               setTripStartDate(data.startDate);
