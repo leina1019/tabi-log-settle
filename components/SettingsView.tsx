@@ -377,16 +377,21 @@ const SettingsView: React.FC<Props> = ({
             </button>
 
             {/* マスターシートを開くリンク */}
-            {masterSheetUrl && (
+            {masterSheetUrl ? (
               <a
                 href={masterSheetUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={`flex items-center justify-center gap-2 py-4 rounded-2xl text-xs font-black transition-all active:scale-95 ${showSheetLink ? 'bg-white text-emerald-700 shadow-xl scale-105 animate-bounce ring-4 ring-white/20' : 'bg-white/10 hover:bg-white/20 border border-white/20 text-white'}`}
+                className={`flex items-center justify-center gap-2 py-4 rounded-2xl text-[11px] font-black tracking-widest transition-all active:scale-95 ${showSheetLink ? 'bg-white text-emerald-700 shadow-xl scale-105 animate-bounce ring-4 ring-white/20' : 'bg-white/10 hover:bg-white/20 border border-white/20 text-white'}`}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
                 {showSheetLink ? '✨ 今すぐマスターシートを確認！' : 'マスターシートを開く'}
               </a>
+            ) : (
+              <div className="flex flex-col items-center justify-center gap-1.5 py-4 rounded-2xl bg-white/5 border border-white/10 text-white/60 text-center">
+                <p className="text-[10px] font-bold tracking-widest">🔗 スプレッドシートID未設定</p>
+                <p className="text-[8px] opacity-70">ソースコードでIDを設定するとここにリンクが表示されます</p>
+              </div>
             )}
 
             {/* 注意書き */}

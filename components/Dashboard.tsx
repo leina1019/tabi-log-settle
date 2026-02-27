@@ -326,6 +326,41 @@ const Dashboard: React.FC<Props> = ({
           <h3 className="text-[10px] font-bold text-ink-sub uppercase tracking-[0.2em]">支出サマリー</h3>
         </div>
 
+        {/* 予算設定プログレス＆トリガーボタン */}
+        <button
+          onClick={() => { setTempBudget(budget.toString()); setIsEditingBudget(true); }}
+          className="w-full text-left glass p-5 rounded-3xl border border-surface-gray-mid/50 hover:border-primary/30 transition-all active:scale-[0.98] group relative overflow-hidden"
+        >
+          <div className="absolute inset-x-0 bottom-0 h-1 bg-surface-gray-mid/30">
+            <div
+              className={`h-full transition-all duration-1000 ${budgetPercentage >= 100 ? 'bg-rose-500' : budgetPercentage > 80 ? 'bg-amber-500' : 'bg-primary'}`}
+              style={{ width: `${budgetPercentage}%` }}
+            />
+          </div>
+          <div className="flex justify-between items-start mb-2 relative z-10">
+            <div>
+              <p className="text-[9px] font-bold text-ink-light uppercase tracking-widest mb-1">旅行の予算</p>
+              <div className="flex items-baseline gap-1">
+                <span className="text-2xl font-sans font-black text-ink leading-none">¥{Math.round(budget).toLocaleString()}</span>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-[9px] font-bold text-ink-light uppercase tracking-widest mb-1">{budgetPercentage >= 100 ? 'オーバー！' : '残額'} (JPY)</p>
+              <p className={`text-base font-sans font-black leading-none ${budgetPercentage >= 100 ? 'text-rose-500' : 'text-primary'}`}>
+                {budgetPercentage >= 100 ? '-' : ''}¥{Math.abs(Math.round(remaining)).toLocaleString()}
+              </p>
+            </div>
+          </div>
+          <div className="flex justify-between items-center mt-3 pt-3 border-t border-surface-gray-mid/50 relative z-10">
+            <p className="text-[10px] font-bold text-ink-sub/70">
+              {budget > 0 ? `${budgetPercentage.toFixed(1)}% 消化` : '予算を設定してください'}
+            </p>
+            <div className="w-6 h-6 rounded-full bg-white/50 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors border border-surface-gray-mid/50">
+              <svg className="w-3 h-3 text-ink-sub group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+            </div>
+          </div>
+        </button>
+
         {/* 2×2 サマリーカードグリッド（2枚目画像デザイン） */}
         <div className="grid grid-cols-2 gap-3">
           {/* 総支出 (円換算) */}

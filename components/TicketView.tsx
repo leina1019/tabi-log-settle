@@ -168,9 +168,30 @@ const TicketView: React.FC<Props> = ({ tickets, userProfiles, onSave, onDelete, 
       // 動的インポートでバンドルサイズを削減
       const Tesseract = await import('tesseract.js');
 
+      let imageSource: File | string = file;
+
+      if (file.type === 'application/pdf') {
+        const pdfjsLib = await import('pdfjs-dist');
+        pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
+
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        const page = await pdf.getPage(1);
+        const viewport = page.getViewport({ scale: 2.0 }); // 精度を高めるために2倍スケール
+
+        const canvas = document.createElement('canvas');
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          await page.render({ canvasContext: ctx, viewport } as any).promise;
+          imageSource = canvas.toDataURL('image/png');
+        }
+      }
+
       // 英語+日本語の両方で認識を試みる
       const result = await Tesseract.recognize(
-        file,
+        imageSource,
         'eng+jpn',
         {
           logger: (m: { status: string; progress: number }) => {
@@ -389,9 +410,11 @@ const TicketView: React.FC<Props> = ({ tickets, userProfiles, onSave, onDelete, 
                     <button
                       onClick={(e) => { e.stopPropagation(); isDeleting ? handleDeleteConfirm(ticket.id) : handleDeleteClick(ticket.id); }}
                       onMouseLeave={() => setDeletingId(null)}
-                      className={`w-12 h-12 sm:h-full flex items-center justify-center rounded-2xl transition-all active:scale-90 ${isDeleting ? 'bg-rose-500 text-white' : 'bg-rose-50/50 text-rose-300 hover:text-rose-600 border border-rose-100'}`}
+                      className={`w-12 h-12 sm:h-full flex items-center justify-center rounded-2xl transition-all active:scale-90 ${isDeleting ? 'bg-rose-500 text-white shadow-lg' : 'bg-rose-50 text-rose-400 hover:text-rose-600 border border-rose-100'}`}
                     >
-                      {isDeleting ? <span className="text-[10px] font-black">DEL</span> : <AppIcon name="delete" className="w-5 h-5" />}
+                      {isDeleting ? <span className="text-[10px] font-black tracking-widest">OK?</span> : (
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                      )}
                     </button>
                   </div>
                 </div>
@@ -433,13 +456,13 @@ const TicketView: React.FC<Props> = ({ tickets, userProfiles, onSave, onDelete, 
               {formData.id ? '✏️ 編集' : '🎫 チケット追加'}
             </h3>
 
-            {/* C1: OCR自動読み取りセクション */}
+            {/* C1: OCR・PDF自動読み取りセクション */}
             <div className="mb-8 p-5 bg-primary/5 border border-primary/20 rounded-[28px]">
               <p className="text-[11px] font-black text-primary uppercase tracking-widest mb-3 flex items-center gap-2">
-                <span>📷</span> 写真からOCR自動入力
+                <span>📷</span> 画像 / PDFから自動入力
               </p>
               <p className="text-[10px] text-ink-sub mb-4 leading-relaxed">
-                チケットや予約確認メールの写真を選択すると、予約番号を自動で読み取ります
+                eチケットのPDFや予約完了メールのスクショを選択すると、予約番号を自動で読み取ります。
               </p>
 
               {/* OCR進行中のプログレスバー */}
@@ -461,7 +484,7 @@ const TicketView: React.FC<Props> = ({ tickets, userProfiles, onSave, onDelete, 
               <input
                 ref={ocrInputRef}
                 type="file"
-                accept="image/*"
+                accept="image/*,application/pdf"
                 className="hidden"
                 onChange={handleOcrImage}
               />
@@ -474,7 +497,7 @@ const TicketView: React.FC<Props> = ({ tickets, userProfiles, onSave, onDelete, 
                   : 'border-primary/40 hover:border-primary hover:bg-primary/5 text-primary'
                   }`}
               >
-                {isOcrRunning ? '🔍 読み取り中...' : '📷 写真を選択してOCR読み取り'}
+                {isOcrRunning ? '🔍 読み取り中...' : '📷 画像 / PDFを選択して自動入力'}
               </button>
             </div>
 
