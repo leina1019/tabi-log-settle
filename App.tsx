@@ -865,8 +865,7 @@ const App: React.FC = () => {
               onUpdateProfile={updateProfile}
               onAddMember={handleAddMember}
               onRemoveMember={handleRemoveMember}
-              onLoadSampleData={handleLoadSampleData}
-              onLoadUltimateDemoData={handleLoadUltimateDemoData}
+              onLoadSample={handleLoadDemoData}
               onRestoreData={handleRestoreData}
               onBack={() => setView('home')}
               viewModeSize={viewModeSize}
