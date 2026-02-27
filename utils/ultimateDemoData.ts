@@ -74,7 +74,7 @@ export const ULTIMATE_PACKING: PackingItem[] = [
 ];
 
 export const GET_ULTIMATE_TRIP = (): TripData => ({
-    name: '🇫🇷 パリ・ロンドン 7日間 (究極デモ) 🇬🇧',
+    name: '🇫🇷 パリ・ロンドン 7日間 🇬🇧',
     startDate: d(0),
     endDate: d(6),
     budget: 500000,

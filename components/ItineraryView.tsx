@@ -47,8 +47,8 @@ interface Props {
 const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete, tripStartDate, tripEndDate }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string>('');
-  const [viewMode, setViewMode] = useState<'overall' | 'individual'>('overall');
-  const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
+  // フィルター用ステート（「全体予定（participantId undefined）」と「各メンバーごとの予定」の独立トグル）
+  const [showOverall, setShowOverall] = useState<boolean>(true);
   const [visibleMemberIds, setVisibleMemberIds] = useState<string[]>(() => userProfiles.map(u => u.id));
   const [formData, setFormData] = useState<Partial<ItineraryItem>>({ type: 'activity', links: [] });
   const [isCopying, setIsCopying] = useState(false);
@@ -106,18 +106,21 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
   // 選択日の予定を時刻順に並べる
   const filteredItems = useMemo(() => {
     if (!selectedDate) return [];
+
+    // 1. 日付で絞り込み
     let list = items.filter(i => i.date === selectedDate);
 
-    if (viewMode === 'individual' && selectedMemberId) {
-      // 個人表示：全体(participantId undefined) + 自分専用
-      list = list.filter(i => !i.participantId || i.participantId === selectedMemberId);
-    } else if (viewMode === 'overall') {
-      // 全体表示：全体(participantId undefined) + 表示設定された個人予定
-      list = list.filter(i => !i.participantId || visibleMemberIds.includes(i.participantId));
-    }
+    // 2. 「全体（participantIdなし）」と「個別のメンバー」の表示設定で絞り込み
+    list = list.filter(i => {
+      if (!i.participantId) {
+        return showOverall; // 「全体」スケジュールの表示/非表示フラグ
+      } else {
+        return visibleMemberIds.includes(i.participantId); // 個人スケジュールの表示/非表示フラグ
+      }
+    });
 
     return list.sort((a, b) => a.time.localeCompare(b.time));
-  }, [items, selectedDate, viewMode, selectedMemberId, visibleMemberIds]);
+  }, [items, selectedDate, showOverall, visibleMemberIds]);
 
   // 空き時間計算
   const gaps = useMemo(() => {
@@ -350,41 +353,45 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
         </div>
       </div>
 
-      {/* メンバー選択（階層ナビゲーション） */}
+      {/* フィルターチップ（階層を廃止し、フラットなトグルに） */}
       <div className="px-4 mb-4 overflow-x-auto scrollbar-hide">
         <div className="flex gap-2 min-w-min">
+          {/* 「全体」スケジュールのトグル */}
           <button
-            onClick={() => { setViewMode('overall'); setSelectedMemberId(null); }}
-            className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-bold transition-all border ${viewMode === 'overall' ? 'bg-ink text-white border-ink' : 'bg-white text-ink-light border-surface-gray-mid'}`}
+            onClick={() => setShowOverall(prev => !prev)}
+            className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-bold transition-all border flex items-center gap-1.5 ${showOverall ? 'text-white border-transparent' : 'bg-white text-ink-light border-surface-gray-mid/50 hover:border-surface-gray-mid'}`}
+            style={showOverall ? { backgroundColor: '#111827' /* ink color */ } : {}}
           >
-            🌎 全体
+            <div className="w-4 h-4 rounded-full overflow-hidden bg-white/20 flex items-center justify-center">
+              <span>🌎</span>
+            </div>
+            全体
+            <div className={`ml-1 w-3 h-3 rounded-sm border flex items-center justify-center ${showOverall ? 'bg-white/20 border-white/30' : 'bg-transparent border-surface-gray-mid'}`}>
+              {showOverall && <div className="w-1.5 h-1.5 bg-white rounded-full"></div>}
+            </div>
           </button>
+
+          {/* 各メンバーごとのトグル */}
           {userProfiles.map(profile => {
-            const isVisible = viewMode === 'overall' ? visibleMemberIds.includes(profile.id) : selectedMemberId === profile.id;
+            const isVisible = visibleMemberIds.includes(profile.id);
             return (
               <button
                 key={profile.id}
                 onClick={() => {
-                  if (viewMode === 'overall') {
-                    setVisibleMemberIds(prev =>
-                      prev.includes(profile.id) ? prev.filter(id => id !== profile.id) : [...prev, profile.id]
-                    );
-                  } else {
-                    setSelectedMemberId(profile.id);
-                  }
+                  setVisibleMemberIds(prev =>
+                    prev.includes(profile.id) ? prev.filter(id => id !== profile.id) : [...prev, profile.id]
+                  );
                 }}
-                className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-bold transition-all border flex items-center gap-1.5 ${isVisible ? 'text-white border-transparent' : 'bg-white text-ink-light border-surface-gray-mid'}`}
+                className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-bold transition-all border flex items-center gap-1.5 ${isVisible ? 'text-white border-transparent' : 'bg-white text-ink-light border-surface-gray-mid/50 hover:border-surface-gray-mid'}`}
                 style={isVisible ? { backgroundColor: profile.color } : {}}
               >
                 <div className="w-4 h-4 rounded-full overflow-hidden bg-white/20 flex items-center justify-center">
-                  {profile.avatarUrl ? <img src={profile.avatarUrl} className="w-full h-full object-cover" /> : <span>👤</span>}
+                  {profile.avatarUrl ? <img src={profile.avatarUrl} className="w-full h-full object-cover" /> : <span className="text-[10px]">{profile.displayName[0]}</span>}
                 </div>
                 {profile.displayName}
-                {viewMode === 'overall' && (
-                  <div className={`ml-1 w-3 h-3 rounded-sm border border-white/30 flex items-center justify-center ${isVisible ? 'bg-white/20' : 'bg-transparent'}`}>
-                    {isVisible && <div className="w-1.5 h-1.5 bg-white rounded-full"></div>}
-                  </div>
-                )}
+                <div className={`ml-1 w-3 h-3 rounded-sm border flex items-center justify-center ${isVisible ? 'bg-white/20 border-white/30' : 'bg-transparent border-surface-gray-mid'}`}>
+                  {isVisible && <div className="w-1.5 h-1.5 bg-white rounded-full"></div>}
+                </div>
               </button>
             );
           })}
@@ -410,13 +417,12 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
                   }`}
               >
                 {isToday && (
-                  <span className="absolute top-2 right-2 flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-accent"></span>
-                  </span>
+                  <div className="absolute top-0 inset-x-0 h-4 bg-emerald-500 flex items-center justify-center">
+                    <span className="text-[8px] font-black text-white tracking-widest">TODAY</span>
+                  </div>
                 )}
 
-                <span className={`text-[9px] font-black uppercase tracking-tighter mb-1.5 ${isSelected ? 'text-white/70' : 'text-ink-sub'}`}>
+                <span className={`text-[9px] font-black uppercase tracking-tighter mb-1.5 ${isSelected ? 'text-white/70' : 'text-ink-sub'} ${isToday ? 'mt-3' : ''}`}>
                   {label.day}
                 </span>
 

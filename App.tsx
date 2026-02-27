@@ -304,51 +304,8 @@ const App: React.FC = () => {
     });
   };
 
-  const handleLoadSampleData = async () => {
-    if (!window.confirm('サンプルデータを読み込みますか？現在のデータは一時的にバックアップされ、後で戻すことができます。')) return;
-
-    // 現在のデータをバックアップ
-    const backupKey = `tabilog-backup-${new Date().getTime()}`;
-    const currentData = { expenses, itinerary, tickets, packingList, userProfiles, budget, tripName, tripStartDate, tripEndDate, tripCoverImage };
-    localStorage.setItem(backupKey, JSON.stringify(currentData));
-    localStorage.setItem('tabilog-last-backup-key', backupKey); // 最新のバックアップキーを保存
-    console.log(`Backup saved to ${backupKey} `);
-
-    // サンプルデータをセット
-    setExpenses(SAMPLE_EXPENSES);
-    setItinerary(SAMPLE_ITINERARY);
-    setTickets(SAMPLE_TICKETS);
-    setPackingList(SAMPLE_PACKING || []);
-    setUserProfiles(SAMPLE_PROFILES);
-    setTripName('オーストラリア 6Days Demo');
-    const startDate = new Date().toISOString().split('T')[0];
-    setTripStartDate(startDate);
-    // 6日間（5泊）
-    const endDate = new Date(new Date().getTime() + 5 * 86400000).toISOString().split('T')[0];
-    setTripEndDate(endDate);
-    setTripCoverImage('https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?q=80&w=1200&auto=format&fit=crop');
-
-    // Firebaseへ同期
-    if (tripId) {
-      pushUpdate({
-        expenses: SAMPLE_EXPENSES,
-        itinerary: SAMPLE_ITINERARY,
-        tickets: SAMPLE_TICKETS,
-        packingList: SAMPLE_PACKING || [],
-        userProfiles: SAMPLE_PROFILES,
-        name: 'オーストラリア 6Days Demo',
-        startDate: startDate,
-        endDate: endDate,
-        coverImage: 'https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?q=80&w=1200&auto=format&fit=crop'
-      });
-    }
-
-    alert('TabiLogのサンプルデータを読み込みました！設定画面から元のデータに戻すことも可能です。');
-    setView('home');
-  };
-
-  const handleLoadUltimateDemoData = async () => {
-    if (!window.confirm('「パリ・ロンドン海外旅行版」の究極デモデータを読み込みますか？現在のデータは一時的にバックアップされます。')) return;
+  const handleLoadDemoData = async () => {
+    if (!window.confirm('「パリ・ロンドン海外旅行版」のデモデータを読み込みますか？現在のデータは一時的にバックアップされます。')) return;
 
     // バックアップ
     const backupKey = `tabilog-backup-${new Date().getTime()}`;
@@ -733,8 +690,9 @@ const App: React.FC = () => {
                       userProfiles,
                       budget
                     });
-                    setTripId(newId);
-                    const url = `${window.location.origin}${window.location.pathname}?trip=${newId}`;
+                    const finalId = newId || crypto.randomUUID();
+                    setTripId(finalId);
+                    const url = `${window.location.origin}${window.location.pathname}?trip=${finalId}`;
                     window.history.pushState({}, '', url);
 
                     if (navigator.share) {
@@ -777,7 +735,7 @@ const App: React.FC = () => {
         {/* Welcome / Onboarding View */}
         {view === 'onboarding' && (
           <WelcomeView
-            onDemoStart={handleLoadUltimateDemoData}
+            onDemoStart={handleLoadDemoData}
             onStart={async (data, onComplete) => {
               setTripName(data.name);
               setTripStartDate(data.startDate);
@@ -799,8 +757,9 @@ const App: React.FC = () => {
                   packingList: [],
                   budget: 1000000 // Default 1M
                 });
-                setTripId(newId);
-                const url = `${window.location.origin}${window.location.pathname}?trip=${newId}`;
+                const finalId = newId || crypto.randomUUID();
+                setTripId(finalId);
+                const url = `${window.location.origin}${window.location.pathname}?trip=${finalId}`;
                 window.history.pushState({}, '', url);
                 // URL確定後、WelcomeViewへコールバックしてstep='share'を表示
                 onComplete(url);
