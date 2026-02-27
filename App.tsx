@@ -686,7 +686,7 @@ const App: React.FC = () => {
                       expenses,
                       itinerary,
                       tickets,
-                      packingList: [],
+                      packingList,
                       userProfiles,
                       budget
                     });

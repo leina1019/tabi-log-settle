@@ -41,8 +41,9 @@ export const createNewTrip = async (initialData: Omit<TripData, 'id' | 'createdA
         return null;
     }
     try {
+        const cleanData = JSON.parse(JSON.stringify(initialData));
         const docRef = await addDoc(collection(db, "trips"), {
-            ...initialData,
+            ...cleanData,
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp()
         });
@@ -82,9 +83,10 @@ export const updateTripData = async (tripId: string, data: Partial<TripData>) =>
         return;
     }
     try {
+        const cleanData = JSON.parse(JSON.stringify(data));
         const tripRef = doc(db, "trips", tripId);
         await updateDoc(tripRef, {
-            ...data,
+            ...cleanData,
             updatedAt: serverTimestamp()
         });
     } catch (error) {
