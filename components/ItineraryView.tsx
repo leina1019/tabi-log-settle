@@ -42,9 +42,10 @@ interface Props {
   onDelete: (id: string) => void;
   tripStartDate: string;
   tripEndDate: string;
+  autoOpenAdd?: boolean;
 }
 
-const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete, tripStartDate, tripEndDate }) => {
+const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete, tripStartDate, tripEndDate, autoOpenAdd }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string>('');
   // フィルター用ステート（「全体予定（participantId undefined）」と「各メンバーごとの予定」の独立トグル）
@@ -85,6 +86,21 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dateRange]);
+
+  // 直接追加フォームを開く処理
+  useEffect(() => {
+    if (autoOpenAdd) {
+      const now = new Date();
+      const defaultTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      setFormData({
+        type: 'activity',
+        date: selectedDate || (dateRange[0] || new Date().toISOString().split('T')[0]),
+        time: defaultTime,
+        links: []
+      });
+      setIsModalOpen(true);
+    }
+  }, [autoOpenAdd, selectedDate, dateRange]);
 
   // A3: 天気情報の取得 - destination (場所名) が変わったときだけAPIを叩く
   useEffect(() => {

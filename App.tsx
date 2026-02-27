@@ -18,7 +18,7 @@ import { GET_ULTIMATE_TRIP } from './utils/ultimateDemoData';
 import WelcomeView from './components/WelcomeView';
 import { AppLogo } from './components/AppLogo';
 
-type ViewState = 'onboarding' | 'home' | 'schedule' | 'tickets' | 'packing' | 'history' | 'add_expense' | 'settle' | 'settings';
+type ViewState = 'onboarding' | 'home' | 'history' | 'schedule' | 'tickets' | 'packing' | 'add_expense' | 'settle' | 'settings';
 
 const App: React.FC = () => {
   // --- State Management ---
@@ -44,6 +44,8 @@ const App: React.FC = () => {
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'success' | 'error'>('idle');
   const [tripId, setTripId] = useState<string | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
+  // 直接登録フォームを開くためのフラグ
+  const [autoOpenAdd, setAutoOpenAdd] = useState<{ schedule?: boolean; tickets?: boolean; packing?: boolean }>({});
   // 削除済みIDを一時的に保持して、同期時のゾンビ復活を防ぐ
   const deletedIdsRef = useRef<Set<string>>(new Set());
 
@@ -802,6 +804,8 @@ const App: React.FC = () => {
               }}
               onResetAll={handleResetAll}
               userProfiles={userProfiles}
+              tripStartDate={tripStartDate}
+              tripEndDate={tripEndDate}
             />
           )}
 
@@ -842,6 +846,7 @@ const App: React.FC = () => {
               onDelete={handleDeleteItinerary}
               tripStartDate={tripStartDate}
               tripEndDate={tripEndDate}
+              autoOpenAdd={autoOpenAdd.schedule}
             />
           )}
 
@@ -928,7 +933,7 @@ const App: React.FC = () => {
                     </div>
                   </button>
                   <button
-                    onClick={() => { setView('schedule'); setIsAddMenuOpen(false); }}
+                    onClick={() => { setView('schedule'); setAutoOpenAdd({ schedule: true }); setIsAddMenuOpen(false); setTimeout(() => setAutoOpenAdd({}), 100); }}
                     className="flex items-center gap-3 bg-white pl-5 pr-4 py-3 rounded-2xl shadow-xl border border-surface-gray-mid whitespace-nowrap active:scale-95 transition-transform"
                   >
                     <span className="text-xs font-bold text-ink">予定の追加</span>
@@ -937,7 +942,7 @@ const App: React.FC = () => {
                     </div>
                   </button>
                   <button
-                    onClick={() => { setView('tickets'); setIsAddMenuOpen(false); }}
+                    onClick={() => { setView('tickets'); setAutoOpenAdd({ tickets: true }); setIsAddMenuOpen(false); setTimeout(() => setAutoOpenAdd({}), 100); }}
                     className="flex items-center gap-3 bg-white pl-5 pr-4 py-3 rounded-2xl shadow-xl border border-surface-gray-mid whitespace-nowrap active:scale-95 transition-transform"
                   >
                     <span className="text-xs font-bold text-ink">チケットの追加</span>
@@ -946,7 +951,7 @@ const App: React.FC = () => {
                     </div>
                   </button>
                   <button
-                    onClick={() => { setView('packing'); setIsAddMenuOpen(false); }}
+                    onClick={() => { setView('packing'); setAutoOpenAdd({ packing: true }); setIsAddMenuOpen(false); setTimeout(() => setAutoOpenAdd({}), 100); }}
                     className="flex items-center gap-3 bg-white pl-5 pr-4 py-3 rounded-2xl shadow-xl border border-surface-gray-mid whitespace-nowrap active:scale-95 transition-transform"
                   >
                     <span className="text-xs font-bold text-ink">持ち物の追加</span>
@@ -965,25 +970,30 @@ const App: React.FC = () => {
               </button>
             </div>
 
-            <nav className="fixed bottom-4 left-1/2 -translate-x-1/2 w-[92%] max-w-[400px] h-16 bg-white rounded-full flex justify-between items-center px-6 shadow-lg border border-surface-gray-mid z-[40] safe-pb">
-              <button onClick={() => { setView('home'); setIsAddMenuOpen(false); }} className={`flex flex-col items-center gap-1 transition-all flex-1 ${view === 'home' ? 'text-primary -translate-y-1' : 'text-ink-light'}`}>
-                <AppIcon name="home" className="w-6 h-6" />
-                <span className="text-[9px] font-bold tracking-widest uppercase">HOME</span>
+            <nav className="fixed bottom-4 left-1/2 -translate-x-1/2 w-[92%] max-w-[400px] h-16 bg-white rounded-full flex justify-between items-center px-4 sm:px-6 shadow-lg border border-surface-gray-mid z-[40] safe-pb">
+              <button onClick={() => { setView('home'); setIsAddMenuOpen(false); }} className={`flex flex-col items-center gap-1 transition-all flex-1 ${view === 'home' ? 'text-primary -translate-y-1' : 'text-ink-light hover:text-ink-sub'}`}>
+                <AppIcon name="home" className="w-5 h-5 sm:w-6 sm:h-6" />
+                <span className="text-[8px] sm:text-[9px] font-bold tracking-[0.1em] uppercase">HOME</span>
               </button>
 
-              <button onClick={() => { setView('schedule'); setIsAddMenuOpen(false); }} className={`flex flex-col items-center gap-1 transition-all flex-1 ${view === 'schedule' ? 'text-primary -translate-y-1' : 'text-ink-light'}`}>
-                <AppIcon name="itinerary" className="w-6 h-6" />
-                <span className="text-[9px] font-bold tracking-widest uppercase">PLAN</span>
+              <button onClick={() => { setView('history'); setIsAddMenuOpen(false); }} className={`flex flex-col items-center gap-1 transition-all flex-1 ${view === 'history' || view === 'add_expense' ? 'text-primary -translate-y-1' : 'text-ink-light hover:text-ink-sub'}`}>
+                <AppIcon name="expense" className="w-5 h-5 sm:w-6 sm:h-6" />
+                <span className="text-[8px] sm:text-[9px] font-bold tracking-[0.1em] uppercase">SPEND</span>
               </button>
 
-              <button onClick={() => { setView('tickets'); setIsAddMenuOpen(false); }} className={`flex flex-col items-center gap-1 transition-all flex-1 ${view === 'tickets' ? 'text-primary -translate-y-1' : 'text-ink-light'}`}>
-                <AppIcon name="ticket" className="w-6 h-6" />
-                <span className="text-[9px] font-bold tracking-widest uppercase">TICKETS</span>
+              <button onClick={() => { setView('schedule'); setIsAddMenuOpen(false); }} className={`flex flex-col items-center gap-1 transition-all flex-1 ${view === 'schedule' ? 'text-primary -translate-y-1' : 'text-ink-light hover:text-ink-sub'}`}>
+                <AppIcon name="itinerary" className="w-5 h-5 sm:w-6 sm:h-6" />
+                <span className="text-[8px] sm:text-[9px] font-bold tracking-[0.1em] uppercase">PLAN</span>
               </button>
 
-              <button onClick={() => { setView('packing'); setIsAddMenuOpen(false); }} className={`flex flex-col items-center gap-1 transition-all flex-1 ${view === 'packing' ? 'text-primary -translate-y-1' : 'text-ink-light'}`}>
-                <AppIcon name="packing" className="w-6 h-6" />
-                <span className="text-[9px] font-bold tracking-widest uppercase">PACKING</span>
+              <button onClick={() => { setView('tickets'); setIsAddMenuOpen(false); }} className={`flex flex-col items-center gap-1 transition-all flex-1 ${view === 'tickets' ? 'text-primary -translate-y-1' : 'text-ink-light hover:text-ink-sub'}`}>
+                <AppIcon name="ticket" className="w-5 h-5 sm:w-6 sm:h-6" />
+                <span className="text-[8px] sm:text-[9px] font-bold tracking-[0.1em] uppercase">TICKETS</span>
+              </button>
+
+              <button onClick={() => { setView('packing'); setIsAddMenuOpen(false); }} className={`flex flex-col items-center gap-1 transition-all flex-1 ${view === 'packing' ? 'text-primary -translate-y-1' : 'text-ink-light hover:text-ink-sub'}`}>
+                <AppIcon name="packing" className="w-5 h-5 sm:w-6 sm:h-6" />
+                <span className="text-[8px] sm:text-[9px] font-bold tracking-[0.1em] uppercase">PACKING</span>
               </button>
             </nav>
           </>

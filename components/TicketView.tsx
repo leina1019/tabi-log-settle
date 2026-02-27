@@ -10,6 +10,7 @@ interface Props {
   tripEndDate: string;
   tripStartDate?: string;
   isTablet?: boolean;
+  autoOpenAdd?: boolean;
 }
 
 // チケット種別の日本語マッピング
@@ -21,7 +22,7 @@ const TYPE_LABELS: Record<string, string> = {
   other: 'その他',
 };
 
-const TicketView: React.FC<Props> = ({ tickets, userProfiles, onSave, onDelete, tripStartDate, tripEndDate, isTablet = false }) => {
+const TicketView: React.FC<Props> = ({ tickets, userProfiles, onSave, onDelete, tripStartDate, tripEndDate, isTablet = false, autoOpenAdd }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState<Partial<Ticket>>({ type: 'flight' });
   const [selectedDate, setSelectedDate] = useState<string>('');
@@ -58,6 +59,13 @@ const TicketView: React.FC<Props> = ({ tickets, userProfiles, onSave, onDelete, 
       setSelectedDate(dateRange[0]);
     }
   }, [dateRange, selectedDate]);
+
+  // 直接追加フォームを開く処理
+  React.useEffect(() => {
+    if (autoOpenAdd) {
+      handleOpenAdd();
+    }
+  }, [autoOpenAdd]);
 
   const handleOpenAdd = () => {
     const now = new Date();

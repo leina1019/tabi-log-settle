@@ -8,17 +8,25 @@ interface Props {
     userProfiles: UserProfile[];
     onUpdate: (val: PackingItem[] | ((prev: PackingItem[]) => PackingItem[])) => void;
     isTablet?: boolean;
+    autoOpenAdd?: boolean;
 }
 
 const CATEGORIES = ['必需品', '衣類', '洗面用具', '電子機器', '日用品', '医薬品', '食品', 'その他'] as const;
 
-const PackingView: React.FC<Props> = ({ items, userProfiles, onUpdate, isTablet = false }) => {
+const PackingView: React.FC<Props> = ({ items, userProfiles, onUpdate, isTablet = false, autoOpenAdd }) => {
     const [newItemTitle, setNewItemTitle] = useState('');
     const [newItemCategory, setNewItemCategory] = useState<string>(CATEGORIES[0]);
     const [newItemAssignees, setNewItemAssignees] = useState<string[]>([]); // 空=全員
     const [showAddForm, setShowAddForm] = useState(false);
     const [editingItem, setEditingItem] = useState<PackingItem | null>(null);
     const [filterMemberId, setFilterMemberId] = useState<string | 'ALL'>('ALL');
+
+    // 直接追加フォームを開く処理
+    React.useEffect(() => {
+        if (autoOpenAdd) {
+            setShowAddForm(true);
+        }
+    }, [autoOpenAdd]);
 
     // 複数選択トグルのヘルパー
     const toggleAssignee = (list: string[], id: string): string[] =>
