@@ -1,6 +1,8 @@
-import React, { useState, useRef } from 'react';
-import { Ticket, UserProfile, Participant } from '../types';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
+import { Ticket, UserProfile } from '../types';
 import { AppIcon } from './AppIcon';
+import { useTripDates } from '../hooks/useTripDates';
+import { useMemberFilter } from '../hooks/useMemberFilter';
 
 interface Props {
   tickets: Ticket[];
@@ -24,44 +26,19 @@ const TYPE_LABELS: Record<string, string> = {
 
 const TicketView: React.FC<Props> = ({ tickets, userProfiles, onSave, onDelete, tripStartDate, tripEndDate, isTablet = false, autoOpenAdd }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const { selectedDate, setSelectedDate, dateRange, getDayLabel, isTodayDate } = useTripDates(tripStartDate || '', tripEndDate);
+  const { showOverall, setShowOverall, visibleMemberIds, toggleMember } = useMemberFilter(userProfiles);
   const [formData, setFormData] = useState<Partial<Ticket>>({ type: 'flight' });
-  const [selectedDate, setSelectedDate] = useState<string>('');
-  // F1: 'overall'は全員表示、'personal'は個人フィルタリング
-  const [viewMode, setViewMode] = useState<'overall' | 'personal'>('overall');
-  const [selectedMemberId, setSelectedMemberId] = useState<string>(userProfiles[0]?.id || '');
   const [error, setError] = useState<string | null>(null);
   const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
-  // F2: window.confirm廃止 → インライン削除確認用のstate
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  // C1: OCR状態管理
   const [isOcrRunning, setIsOcrRunning] = useState(false);
   const [ocrProgress, setOcrProgress] = useState<number>(0);
   const ocrInputRef = useRef<HTMLInputElement>(null);
 
-  // 旅行期間の日付配列
-  const dateRange = React.useMemo(() => {
-    if (!tripStartDate) return [];
-    const dates: string[] = [];
-    const start = new Date(tripStartDate);
-    const end = tripEndDate ? new Date(tripEndDate) : new Date(tripStartDate);
-    let current = new Date(start);
-    let count = 0;
-    while (current <= end && count < 31) {
-      dates.push(current.toISOString().split('T')[0]);
-      current.setDate(current.getDate() + 1);
-      count++;
-    }
-    return dates;
-  }, [tripStartDate, tripEndDate]);
-
-  React.useEffect(() => {
-    if (dateRange.length > 0 && !selectedDate) {
-      setSelectedDate(dateRange[0]);
-    }
-  }, [dateRange, selectedDate]);
 
   // 直接追加フォームを開く処理
-  React.useEffect(() => {
+  useEffect(() => {
     if (autoOpenAdd) {
       handleOpenAdd();
     }
@@ -142,35 +119,26 @@ const TicketView: React.FC<Props> = ({ tickets, userProfiles, onSave, onDelete, 
     }
   };
 
-  const getDayLabel = (dateStr: string, index: number) => {
-    const d = new Date(dateStr);
-    const weekDays = ['日', '月', '火', '水', '木', '金', '土'];
-    return {
-      day: `${index + 1}日目`,
-      date: `${d.getDate()}`,
-      week: weekDays[d.getDay()],
-    };
-  };
 
-  // F1修正: overallは全員のチケット（日付フィルタのみ）、personalは個人フィルタリング
-  const filteredTickets = React.useMemo(() => {
+  const filteredTickets = useMemo(() => {
     let list = [...tickets];
 
-    // 1. 全員/個人の切り替え
-    if (viewMode === 'personal' && selectedMemberId) {
+    // 1. メンバーでフィルタリング
+    if (!showOverall) {
       list = list.filter(t => {
         const pIds = t.passengerIds || (t.participantId ? [t.participantId] : []);
-        return pIds.includes(selectedMemberId);
+        if (pIds.length === 0) return true; // 全員向けは常に表示
+        return pIds.some(id => visibleMemberIds.includes(id));
       });
     }
 
-    // 2. 日付での絞り込み
+    // 2. 日付で絞り込み
     if (selectedDate) {
       list = list.filter(t => t.date === selectedDate);
     }
 
     return list.sort((a, b) => (a.time || '').localeCompare(b.time || ''));
-  }, [tickets, viewMode, selectedMemberId, selectedDate]);
+  }, [tickets, showOverall, visibleMemberIds, selectedDate]);
 
   // C1: Tesseract.jsを使ったOCR読み取り
   const handleOcrImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -255,7 +223,7 @@ const TicketView: React.FC<Props> = ({ tickets, userProfiles, onSave, onDelete, 
   };
 
   return (
-    <div className="space-y-6 pt-2 pb-24">
+    <div className="space-y-6 pt-2">
       {/* ヘッダー */}
       <div className="flex justify-between items-center px-4">
         <h2 className="text-2xl font-sans font-black tracking-tight text-ink">チケット</h2>
@@ -268,33 +236,33 @@ const TicketView: React.FC<Props> = ({ tickets, userProfiles, onSave, onDelete, 
         </button>
       </div>
 
-      {/* 画面上部：全員/個人トグル */}
-      <div className="sticky top-0 z-40 bg-surface-gray/95 backdrop-blur-xl border-b border-surface-gray-mid/50 pt-4 pb-2 px-4 shadow-sm">
+      {/* 画面上部：メンバートグル */}
+      <div className="bg-surface-gray border-b border-surface-gray-mid/50 pt-4 pb-2 px-4 shadow-sm">
         <div className="flex bg-white/80 p-1 rounded-full mb-4 mx-auto w-full max-w-[320px] shadow-sm border border-surface-gray-mid/50">
           <button
-            onClick={() => setViewMode('overall')}
-            className={`flex-1 py-3 text-[11px] font-black uppercase tracking-widest rounded-full transition-all duration-500 flex items-center justify-center gap-2.5 ${viewMode === 'overall' ? 'bg-ink text-white shadow-xl shadow-ink/20 scale-[1.02]' : 'bg-transparent text-ink-sub hover:text-ink'}`}
+            onClick={() => setShowOverall(true)}
+            className={`flex-1 py-3 text-[11px] font-black uppercase tracking-widest rounded-full transition-all duration-500 flex items-center justify-center gap-2.5 ${showOverall ? 'bg-ink text-white shadow-xl shadow-ink/20 scale-[1.02]' : 'bg-transparent text-ink-sub hover:text-ink'}`}
           >
             <span className="text-sm">🌎</span>
             全員
           </button>
           <button
-            onClick={() => setViewMode('personal')}
-            className={`flex-1 py-3 text-[11px] font-black uppercase tracking-widest rounded-full transition-all duration-500 flex items-center justify-center gap-2.5 ${viewMode === 'personal' ? 'bg-ink text-white shadow-xl shadow-ink/20 scale-[1.02]' : 'bg-transparent text-ink-sub hover:text-ink'}`}
+            onClick={() => setShowOverall(false)}
+            className={`flex-1 py-3 text-[11px] font-black uppercase tracking-widest rounded-full transition-all duration-500 flex items-center justify-center gap-2.5 ${!showOverall ? 'bg-ink text-white shadow-xl shadow-ink/20 scale-[1.02]' : 'bg-transparent text-ink-sub hover:text-ink'}`}
           >
             <span className="text-sm">👤</span>
             個人
           </button>
         </div>
 
-        {/* メンバー選択（個別モードのみ） */}
-        {viewMode === 'personal' && (
+        {/* メンバー選択 */}
+        {!showOverall && (
           <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-4 mb-1 animate-in fade-in slide-in-from-top-2 duration-500 justify-start sm:justify-center">
             {userProfiles.map(p => (
               <button
                 key={p.id}
-                onClick={() => setSelectedMemberId(p.id)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-full whitespace-nowrap transition-all border-2 shadow-sm ${selectedMemberId === p.id ? 'bg-white border-primary/30 text-ink scale-105' : 'bg-white/40 border-transparent text-ink-light opacity-60 hover:opacity-100'}`}
+                onClick={() => toggleMember(p.id)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-full whitespace-nowrap transition-all border-2 shadow-sm ${visibleMemberIds.includes(p.id) ? 'bg-white border-primary/30 text-ink scale-105' : 'bg-white/40 border-transparent text-ink-light opacity-60 hover:opacity-100'}`}
               >
                 <div className="w-5 h-5 rounded-full overflow-hidden border border-white" style={{ backgroundColor: p.color }}>
                   {p.avatarUrl ? <img src={p.avatarUrl} className="w-full h-full object-cover" alt="" /> : null}
@@ -312,37 +280,37 @@ const TicketView: React.FC<Props> = ({ tickets, userProfiles, onSave, onDelete, 
               {dateRange.map((d, i) => {
                 const label = getDayLabel(d, i);
                 const isSelected = selectedDate === d;
-                const isToday = d === new Date().toISOString().split('T')[0];
+                const isToday = isTodayDate(d);
 
                 return (
-                  <button
-                    key={d}
-                    onClick={() => setSelectedDate(d)}
-                    className={`flex-shrink-0 flex flex-col items-center justify-center w-20 h-24 rounded-[28px] border transition-all active:scale-95 relative ${isSelected
-                      ? 'bg-ink border-ink shadow-xl shadow-ink/20 scale-105 z-10'
-                      : 'bg-white border-surface-gray-mid/50 text-ink-light'
-                      }`}
-                  >
+                  <div key={d} className="relative pt-4 pb-2">
                     {isToday && (
-                      <div className="absolute -top-2 left-1/2 -translate-x-1/2 z-20 bg-white px-2 py-0.5 rounded-full shadow-md border border-primary/10">
+                      <div className="absolute top-1 left-1/2 -translate-x-1/2 z-20 bg-white px-2 py-0.5 rounded-full shadow-md border border-primary/10">
                         <span className="text-[7px] font-black text-primary tracking-widest whitespace-nowrap">TODAY</span>
                       </div>
                     )}
-
-                    <span className={`text-[9px] font-black uppercase tracking-tighter mb-1.5 ${isSelected ? 'text-white/60' : 'text-ink-sub'}`}>
-                      {label.day}
-                    </span>
-
-                    <span className={`text-2xl font-black leading-none ${isSelected ? 'text-white' : 'text-ink'}`}>
-                      {label.date}
-                    </span>
-
-                    <div className="flex items-center gap-1 mt-2">
-                      <span className={`text-[9px] font-bold ${isSelected ? 'text-white/50' : 'text-ink-sub/40'}`}>
-                        {label.week}
+                    <button
+                      onClick={() => setSelectedDate(d)}
+                      className={`flex-shrink-0 flex flex-col items-center justify-center w-20 h-24 rounded-[28px] border transition-all active:scale-95 ${isSelected
+                        ? 'bg-ink border-ink shadow-xl shadow-ink/20 scale-105 z-10'
+                        : 'bg-white border-surface-gray-mid/50 text-ink-light'
+                        }`}
+                    >
+                      <span className={`text-[9px] font-black uppercase tracking-tighter mb-1.5 ${isSelected ? 'text-white/60' : 'text-ink-sub'}`}>
+                        {label.day}
                       </span>
-                    </div>
-                  </button>
+
+                      <span className={`text-2xl font-black leading-none ${isSelected ? 'text-white' : 'text-ink'}`}>
+                        {label.date}
+                      </span>
+
+                      <div className="flex items-center gap-1 mt-2">
+                        <span className={`text-[9px] font-bold ${isSelected ? 'text-white/50' : 'text-ink-sub/40'}`}>
+                          {label.week}
+                        </span>
+                      </div>
+                    </button>
+                  </div>
                 );
               })}
             </div>

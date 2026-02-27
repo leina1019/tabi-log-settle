@@ -1,12 +1,13 @@
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { ItineraryItem, UserProfile, Participant } from '../types';
+import { ItineraryItem, UserProfile } from '../types';
 import { fetchOgpData } from '../services/ogpService';
-import { MEMBER_COLORS } from '../constants';
 import { fetchWeather, WeatherData, searchLocation } from '../services/weatherService';
 import { WeatherIcon } from './WeatherIcon';
-import { AppIcon, type IconName } from './AppIcon';
-import { escapeHtml } from '../utils/security';
+import { AppIcon } from './AppIcon';
+import { useTripDates } from '../hooks/useTripDates';
+import { useMemberFilter } from '../hooks/useMemberFilter';
+import { resizeImage } from '../utils/imageUtils';
 
 // 予定種類の定義（ラベル + アイコン）
 const ITEM_TYPES: { value: ItineraryItem['type']; label: string; icon: string }[] = [
@@ -47,10 +48,8 @@ interface Props {
 
 const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete, tripStartDate, tripEndDate, autoOpenAdd }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<string>('');
-  // フィルター用ステート（「全体予定（participantId undefined）」と「各メンバーごとの予定」の独立トグル）
-  const [showOverall, setShowOverall] = useState<boolean>(true);
-  const [visibleMemberIds, setVisibleMemberIds] = useState<string[]>(() => userProfiles.map(u => u.id));
+  const { selectedDate, setSelectedDate, dateRange, getDayLabel, isTodayDate } = useTripDates(tripStartDate, tripEndDate);
+  const { showOverall, setShowOverall, visibleMemberIds, setVisibleMemberIds } = useMemberFilter(userProfiles);
   const [formData, setFormData] = useState<Partial<ItineraryItem>>({ type: 'activity', links: [] });
   const [isCopying, setIsCopying] = useState(false);
   const [isFetchingOgp, setIsFetchingOgp] = useState(false);
@@ -61,31 +60,6 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
   // A3: destinationをメモ化して、場所が変わったときだけ天気APIを叩く
   const destination = useMemo(() => items.find(i => i.location)?.location || '', [items]);
 
-  // 旅行期間の日付配列を生成
-  const dateRange = useMemo(() => {
-    if (!tripStartDate) return [];
-    const dates: string[] = [];
-    const start = new Date(tripStartDate);
-    const end = tripEndDate ? new Date(tripEndDate) : new Date(tripStartDate);
-    let current = new Date(start);
-    let count = 0;
-    while (current <= end && count < 30) {
-      dates.push(current.toISOString().split('T')[0]);
-      current.setDate(current.getDate() + 1);
-      count++;
-    }
-    return dates;
-  }, [tripStartDate, tripEndDate]);
-
-  // 選択日初期化
-  useEffect(() => {
-    if (dateRange.length > 0 && !selectedDate) {
-      setSelectedDate(dateRange[0]);
-    } else if (dateRange.length === 0 && !selectedDate) {
-      setSelectedDate(new Date().toISOString().split('T')[0]);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dateRange]);
 
   // 直接追加フォームを開く処理
   useEffect(() => {
@@ -223,43 +197,17 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
   };
 
   // 写真ファイルをCanvasでリサイズ・圧縮してformDataにセット
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        const maxSize = 800; // 長辺を800pxに制限
-        let width = img.width;
-        let height = img.height;
-
-        if (width > height) {
-          if (width > maxSize) {
-            height *= maxSize / width;
-            width = maxSize;
-          }
-        } else {
-          if (height > maxSize) {
-            width *= maxSize / height;
-            height = maxSize;
-          }
-        }
-
-        canvas.width = width;
-        canvas.height = height;
-        ctx?.drawImage(img, 0, 0, width, height);
-
-        // JPEG 75% 圧縮で品質と容量のバランスをとる
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.75);
-        setFormData(prev => ({ ...prev, imageUrl: dataUrl }));
-      };
-      img.src = event.target?.result as string;
-    };
-    reader.readAsDataURL(file);
+    try {
+      const dataUrl = await resizeImage(file);
+      setFormData(prev => ({ ...prev, imageUrl: dataUrl }));
+    } catch (err) {
+      console.error('Image processing failed:', err);
+      alert('画像の処理に失敗しました');
+    }
   };
 
   const handleCopySchedule = () => {
@@ -327,16 +275,6 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formData.mapUrl, formData.link, formData.links]);
 
-  // 日付タブのラベル生成
-  const getDayLabel = (dateStr: string, index: number) => {
-    const d = new Date(dateStr);
-    const weekDays = ['日', '月', '火', '水', '木', '金', '土'];
-    return {
-      day: `${index + 1}日目`,
-      date: `${d.getDate()}`,
-      week: weekDays[d.getDay()],
-    };
-  };
 
   if (!tripStartDate) {
     return (
@@ -351,7 +289,7 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
   }
 
   return (
-    <div className="flex flex-col h-full pt-2">
+    <div className="flex flex-col pt-2">
       <div className="flex justify-between items-center px-4 mb-4">
         <h2 className="text-xl font-sans font-bold tracking-wide text-ink">スケジュール</h2>
         <div className="flex gap-2">
@@ -424,46 +362,46 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
             const label = getDayLabel(d, i);
             const isSelected = selectedDate === d;
             const weatherForDate = weatherData.find(w => w.date === d);
-            const isToday = d === new Date().toISOString().split('T')[0];
+            const isToday = isTodayDate(d);
 
             return (
-              <button
-                key={d}
-                onClick={() => setSelectedDate(d)}
-                className={`flex-shrink-0 flex flex-col items-center justify-center w-20 h-24 rounded-[28px] border transition-all active:scale-95 relative ${isSelected
-                  ? 'bg-primary border-primary shadow-xl shadow-primary/20 scale-105 z-10'
-                  : 'bg-white border-surface-gray-mid/50 text-ink-light'
-                  }`}
-              >
+              <div key={d} className="relative pt-4 pb-2">
                 {isToday && (
-                  <div className="absolute -top-2 left-1/2 -translate-x-1/2 z-20 bg-white px-2 py-0.5 rounded-full shadow-md border border-primary/10">
+                  <div className="absolute top-1 left-1/2 -translate-x-1/2 z-20 bg-white px-2 py-0.5 rounded-full shadow-md border border-primary/10">
                     <span className="text-[7px] font-black text-primary tracking-widest whitespace-nowrap">TODAY</span>
                   </div>
                 )}
+                <button
+                  onClick={() => setSelectedDate(d)}
+                  className={`flex-shrink-0 flex flex-col items-center justify-center w-20 h-24 rounded-[28px] border transition-all active:scale-95 ${isSelected
+                    ? 'bg-primary border-primary shadow-xl shadow-primary/20 scale-105 z-10'
+                    : 'bg-white border-surface-gray-mid/50 text-ink-light'
+                    }`}
+                >
+                  <span className={`text-[9px] font-black uppercase tracking-tighter mb-1.5 ${isSelected ? 'text-white/70' : 'text-ink-sub'}`}>
+                    {label.day}
+                  </span>
 
-                <span className={`text-[9px] font-black uppercase tracking-tighter mb-1.5 ${isSelected ? 'text-white/70' : 'text-ink-sub'}`}>
-                  {label.day}
-                </span>
+                  <span className={`text-2xl font-black leading-none ${isSelected ? 'text-white' : 'text-ink'}`}>
+                    {label.date}
+                  </span>
 
-                <span className={`text-2xl font-black leading-none ${isSelected ? 'text-white' : 'text-ink'}`}>
-                  {label.date}
-                </span>
-
-                <div className="flex items-center gap-1 mt-2">
-                  {weatherForDate ? (
-                    <div className="flex flex-col items-center">
-                      <WeatherIcon code={weatherForDate.weatherCode} className="w-5 h-5 text-current" />
-                      <span className={`text-[8px] font-bold ${isSelected ? 'text-white/80' : 'text-ink-sub'}`}>
-                        {weatherForDate.tempMax}°
+                  <div className="flex items-center gap-1 mt-2">
+                    {weatherForDate ? (
+                      <div className="flex flex-col items-center">
+                        <WeatherIcon code={weatherForDate.weatherCode} className="w-5 h-5 text-current" />
+                        <span className={`text-[8px] font-bold ${isSelected ? 'text-white/80' : 'text-ink-sub'}`}>
+                          {weatherForDate.tempMax}°
+                        </span>
+                      </div>
+                    ) : (
+                      <span className={`text-[9px] font-bold ${isSelected ? 'text-white/50' : 'text-ink-sub/40'}`}>
+                        {label.week}
                       </span>
-                    </div>
-                  ) : (
-                    <span className={`text-[9px] font-bold ${isSelected ? 'text-white/50' : 'text-ink-sub/40'}`}>
-                      {label.week}
-                    </span>
-                  )}
-                </div>
-              </button>
+                    )}
+                  </div>
+                </button>
+              </div>
             );
           })}
         </div>
@@ -494,8 +432,8 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
         })()
       }
 
-      {/* タイムライン表示 */}
-      <div className="flex-1 overflow-y-auto px-4 pb-20 relative">
+      {/* 予定表示エリア */}
+      <div className="relative">
         {/* U2: 空状態を改善して追加ボタンを目立たせる */}
         {filteredItems.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">

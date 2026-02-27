@@ -3,6 +3,8 @@ import { Expense, UserProfile } from '../types';
 import { formatCurrency, convertToJPY } from '../utils/currency';
 import { CATEGORIES } from '../constants';
 import { AppIcon } from './AppIcon';
+import { useTripDates } from '../hooks/useTripDates';
+import { useMemberFilter } from '../hooks/useMemberFilter';
 
 interface Props {
   expenses: Expense[];
@@ -17,10 +19,9 @@ interface Props {
 const ExpenseList: React.FC<Props> = ({ expenses, onDelete, onEdit, onResetAll, userProfiles, tripStartDate, tripEndDate }) => {
   const [resetStage, setResetStage] = useState<'idle' | 'confirm'>('idle');
 
-  // 新UI用のステート
-  const [selectedDate, setSelectedDate] = useState<string>('');
-  const [showOverall, setShowOverall] = useState<boolean>(true); // 全体(true) vs メンバー別(false)
-  const [visibleMemberIds, setVisibleMemberIds] = useState<string[]>(() => userProfiles.map(u => u.id));
+  // 共通 Hook
+  const { selectedDate, setSelectedDate, dateRange, getDayLabel, isTodayDate } = useTripDates(tripStartDate, tripEndDate);
+  const { showOverall, setShowOverall, visibleMemberIds, setVisibleMemberIds, toggleMember } = useMemberFilter(userProfiles);
 
   // 既存の検索・フィルタステート
   const [searchQuery, setSearchQuery] = useState('');
@@ -28,42 +29,6 @@ const ExpenseList: React.FC<Props> = ({ expenses, onDelete, onEdit, onResetAll, 
 
   // インライン削除確認用
   const [deletingId, setDeletingId] = useState<string | null>(null);
-
-  // 旅行期間の日付配列を生成
-  const dateRange = useMemo(() => {
-    if (!tripStartDate) return [];
-    const dates: string[] = [];
-    const start = new Date(tripStartDate);
-    const end = tripEndDate ? new Date(tripEndDate) : new Date(tripStartDate);
-    let current = new Date(start);
-    let count = 0;
-    while (current <= end && count < 30) {
-      dates.push(current.toISOString().split('T')[0]);
-      current.setDate(current.getDate() + 1);
-      count++;
-    }
-    return dates;
-  }, [tripStartDate, tripEndDate]);
-
-  // 選択日初期化
-  useEffect(() => {
-    if (dateRange.length > 0 && !selectedDate) {
-      setSelectedDate(dateRange[0]);
-    } else if (dateRange.length === 0 && !selectedDate) {
-      setSelectedDate(new Date().toISOString().split('T')[0]);
-    }
-  }, [dateRange]);
-
-  // 日付タブのラベル生成
-  const getDayLabel = (dateStr: string, index: number) => {
-    const d = new Date(dateStr);
-    const weekDays = ['日', '月', '火', '水', '木', '金', '土'];
-    return {
-      day: `${index + 1}日目`,
-      date: `${d.getDate()}`,
-      week: weekDays[d.getDay()],
-    };
-  };
 
   useEffect(() => {
     if (resetStage === 'confirm') {
@@ -105,18 +70,7 @@ const ExpenseList: React.FC<Props> = ({ expenses, onDelete, onEdit, onResetAll, 
     }).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [expenses, selectedDate, searchQuery, selectedCategory, showOverall, visibleMemberIds]);
 
-  // メンバー選択トグル
-  const toggleMember = (id: string) => {
-    setVisibleMemberIds(prev =>
-      prev.includes(id) ? prev.filter(mId => mId !== id) : [...prev, id]
-    );
-  };
 
-  const isTodayDate = (dateStr: string) => {
-    if (!dateStr) return false;
-    const today = new Date().toISOString().split('T')[0];
-    return dateStr === today;
-  };
 
   // 1件もない場合（完全に空アプリの状態）
   if (expenses.length === 0) {
@@ -223,34 +177,34 @@ const ExpenseList: React.FC<Props> = ({ expenses, onDelete, onEdit, onResetAll, 
                   const isToday = isTodayDate(d);
 
                   return (
-                    <button
-                      key={d}
-                      onClick={() => setSelectedDate(d)}
-                      className={`flex-shrink-0 flex flex-col items-center justify-center w-20 h-24 rounded-[28px] border transition-all active:scale-95 relative ${isSelected
-                        ? 'bg-primary border-primary shadow-xl shadow-primary/20 scale-105 z-10'
-                        : 'bg-white border-surface-gray-mid/50 text-ink-light'
-                        }`}
-                    >
+                    <div key={d} className="relative pt-4 pb-2">
                       {isToday && (
-                        <div className="absolute -top-2 left-1/2 -translate-x-1/2 z-20 bg-white px-2 py-0.5 rounded-full shadow-md border border-primary/10">
+                        <div className="absolute top-1 left-1/2 -translate-x-1/2 z-20 bg-white px-2 py-0.5 rounded-full shadow-md border border-primary/10">
                           <span className="text-[7px] font-black text-primary tracking-widest whitespace-nowrap">TODAY</span>
                         </div>
                       )}
-
-                      <span className={`text-[9px] font-black uppercase tracking-tighter mb-1.5 ${isSelected ? 'text-white/70' : 'text-ink-sub'}`}>
-                        {label.day}
-                      </span>
-
-                      <span className={`text-2xl font-black leading-none ${isSelected ? 'text-white' : 'text-ink'}`}>
-                        {label.date}
-                      </span>
-
-                      <div className="flex items-center gap-1 mt-2">
-                        <span className={`text-[9px] font-bold ${isSelected ? 'text-white/50' : 'text-ink-sub/40'}`}>
-                          {label.week}
+                      <button
+                        onClick={() => setSelectedDate(d)}
+                        className={`flex-shrink-0 flex flex-col items-center justify-center w-20 h-24 rounded-[28px] border transition-all active:scale-95 ${isSelected
+                          ? 'bg-primary border-primary shadow-xl shadow-primary/20 scale-105 z-10'
+                          : 'bg-white border-surface-gray-mid/50 text-ink-light'
+                          }`}
+                      >
+                        <span className={`text-[9px] font-black uppercase tracking-tighter mb-1.5 ${isSelected ? 'text-white/70' : 'text-ink-sub'}`}>
+                          {label.day}
                         </span>
-                      </div>
-                    </button>
+
+                        <span className={`text-2xl font-black leading-none ${isSelected ? 'text-white' : 'text-ink'}`}>
+                          {label.date}
+                        </span>
+
+                        <div className="flex items-center gap-1 mt-2">
+                          <span className={`text-[9px] font-bold ${isSelected ? 'text-white/50' : 'text-ink-sub/40'}`}>
+                            {label.week}
+                          </span>
+                        </div>
+                      </button>
+                    </div>
                   );
                 })}
               </div>

@@ -457,14 +457,10 @@ const App: React.FC = () => {
       const exists = prev.find(i => i.id === item.id);
       return exists ? prev.map(i => i.id === item.id ? item : i) : [...prev, item];
     });
-    // await syncItineraryToSheet(item); // Handled by Firebase
   };
 
   const handleDeleteItinerary = async (id: string) => {
-    deletedIdsRef.current.add(id); // For Google Sheet sync
     updateItinerary(prev => prev.filter(i => i.id !== id));
-    setTimeout(() => { if (deletedIdsRef.current.has(id)) deletedIdsRef.current.delete(id); }, 60000);
-    // await deleteItemFromSheet(`ITINERARY_${ id } `); // For Google Sheet sync
   };
 
   // --- Handlers for Tickets ---
@@ -476,9 +472,7 @@ const App: React.FC = () => {
   };
 
   const handleDeleteTicket = async (id: string) => {
-    deletedIdsRef.current.add(id); // For Google Sheet sync
     updateTickets(prev => prev.filter(t => t.id !== id));
-    setTimeout(() => { if (deletedIdsRef.current.has(id)) deletedIdsRef.current.delete(id); }, 60000);
   };
 
   // --- Handlers for Profiles ---
