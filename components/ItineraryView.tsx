@@ -19,14 +19,16 @@ const ITEM_TYPES: { value: ItineraryItem['type']; label: string; icon: string }[
   { value: 'other', label: 'その他', icon: '✨' },
 ];
 
+// カテゴリ別サンプル画像（AI生成、ローカル配置）
+// OGP取得失敗時のフォールバックとして使用
 const TYPE_IMAGES: Record<string, string> = {
-  activity: 'https://images.unsplash.com/photo-1540206276207-39257e7aade0?q=80&w=800&auto=format&fit=crop',
-  sightseeing: 'https://images.unsplash.com/photo-1542931287-023b922fa89b?q=80&w=800&auto=format&fit=crop',
-  meal: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=800&auto=format&fit=crop',
-  shopping: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=800&auto=format&fit=crop',
-  move: 'https://images.unsplash.com/photo-1436491865332-7a61a109c0f3?q=80&w=800&auto=format&fit=crop',
-  stay: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=800&auto=format&fit=crop',
-  other: 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?q=80&w=800&auto=format&fit=crop',
+  activity: '/images/categories/activity.png',
+  sightseeing: '/images/categories/sightseeing.png',
+  meal: '/images/categories/meal.png',
+  shopping: '/images/categories/shopping.png',
+  move: '/images/categories/move.png',
+  stay: '/images/categories/stay.png',
+  other: '/images/categories/other.png',
 };
 
 const getTypeInfo = (type: string) => {

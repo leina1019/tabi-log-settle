@@ -18,7 +18,8 @@ export const fetchOgpData = async (url: string): Promise<OgpData> => {
     try {
         // allorigins.winを使ってCORSを回避（タイムアウト5秒）
         const controller = new AbortController();
-        const timer = setTimeout(() => controller.abort(), 5000);
+        // OGP取得はボーナス扱い：3秒で取れなければカテゴリ画像にフォールバック
+        const timer = setTimeout(() => controller.abort(), 3000);
 
         const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
         const response = await fetch(proxyUrl, { signal: controller.signal });
