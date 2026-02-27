@@ -2,6 +2,7 @@
 import { UserProfile } from '../types';
 import { AppIcon } from './AppIcon';
 import { MEMBER_COLORS } from '../constants';
+import { AppLogo } from './AppLogo';
 
 interface OnboardingData {
     name: string;
@@ -122,18 +123,8 @@ const WelcomeView: React.FC<Props> = ({ onStart, onDemoStart }) => {
                 {/* Step: Welcome */}
                 {step === 'welcome' && (
                     <div className="flex-1 flex flex-col items-center justify-center text-center animate-in fade-in zoom-in duration-500">
-                        <div className="mb-8 animate-bounce">
-                            <img
-                                src="/logo.png"
-                                alt="たびログ Logo"
-                                className="w-48 h-auto drop-shadow-2xl"
-                                onError={(e) => {
-                                    e.currentTarget.style.display = 'none';
-                                    const sibling = e.currentTarget.nextSibling as HTMLElement | null;
-                                    if (sibling) sibling.style.display = 'flex';
-                                }}
-                            />
-                            <div className="hidden w-24 h-24 bg-primary-light rounded-[32px] items-center justify-center text-5xl shadow-inner">✈️</div>
+                        <div className="mb-4 animate-in zoom-in duration-700">
+                            <AppLogo className="w-40 h-40" />
                         </div>
                         <h2 className="text-4xl font-sans font-black text-ink mb-4 leading-tight tracking-tighter">たびログへ<br />ようこそ！</h2>
                         <p className="text-ink-sub text-sm mb-12 leading-relaxed px-4">

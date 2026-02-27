@@ -16,6 +16,7 @@ import { fetchAllData, syncAllDataToSheet, exportToMasterSheet, getMasterSheetUr
 import { SAMPLE_PROFILES, SAMPLE_ITINERARY, SAMPLE_EXPENSES, SAMPLE_TICKETS, SAMPLE_PACKING } from './utils/sampleData';
 import { GET_ULTIMATE_TRIP } from './utils/ultimateDemoData';
 import WelcomeView from './components/WelcomeView';
+import { AppLogo } from './components/AppLogo';
 
 type ViewState = 'onboarding' | 'home' | 'schedule' | 'tickets' | 'packing' | 'history' | 'add_expense' | 'settle' | 'settings';
 
@@ -691,15 +692,9 @@ const App: React.FC = () => {
 
         {/* Header - ANAブルー帯 */}
         <header className="bg-ocean-dark px-5 pt-2 pb-2 flex justify-between items-center z-20 safe-pt shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl overflow-hidden shadow-inner bg-white/20 p-1 flex items-center justify-center">
-              <img src="/logo_light.png" alt="Logo" className="w-full h-full object-contain" onError={(e) => { e.currentTarget.style.display = 'none'; if (e.currentTarget.nextSibling) (e.currentTarget.nextSibling as HTMLElement).classList.remove('hidden'); }} />
-              <div className="hidden text-xl">✈️</div>
-            </div>
-            <div className="flex items-center gap-2">
-              <img src="/logo.png" alt="たびログ Logo" className="w-8 h-8 object-contain" />
-              <h1 className="text-xl font-sans font-black tracking-tighter text-white">たびログ</h1>
-            </div>
+          <div className="flex items-center gap-2">
+            <AppLogo className="w-8 h-8" />
+            <h1 className="text-xl font-sans font-black tracking-tighter text-white">たびログ</h1>
           </div>
           <div className="flex items-center gap-2">
             {syncStatus === 'syncing' && <span className="text-[10px] text-accent animate-pulse">SYNCING...</span>}

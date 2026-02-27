@@ -148,7 +148,11 @@ const TicketView: React.FC<Props> = ({ tickets, userProfiles, onSave, onDelete, 
   const filteredTickets = tickets.filter(t => {
     const isDateMatch = !selectedDate || t.date === selectedDate;
     if (!isDateMatch) return false;
-    if (viewMode === 'personal') return t.participantId === selectedMemberId;
+    if (viewMode === 'personal') {
+      // 本人が参加者リストに含まれているか、個別の担当者として設定されているか
+      const pIds = (t as any).passengerIds || (t.participantId ? [t.participantId] : []);
+      return pIds.includes(selectedMemberId);
+    }
     return true; // overall: 全員表示
   });
 
@@ -310,189 +314,108 @@ const TicketView: React.FC<Props> = ({ tickets, userProfiles, onSave, onDelete, 
           const isDeleting = deletingId === ticket.id;
 
           return (
-            <div key={ticket.id} className="relative group perspective">
-              <div className="bg-white rounded-[40px] overflow-hidden shadow-2xl shadow-ink/5 border border-surface-gray-mid/30 hover:shadow-primary/10 transition-all duration-500 relative">
+            <div key={ticket.id} className="relative group">
+              <div className="bg-white rounded-[24px] overflow-hidden shadow-xl shadow-ink/5 border border-surface-gray-mid/30 hover:shadow-primary/10 transition-all duration-500 relative flex flex-col sm:flex-row h-auto sm:h-32">
 
-                {/* プレミアム・ボーディングパス装飾 */}
-                <div className="absolute top-0 left-0 w-full h-3 bg-gradient-to-r from-ocean-dark via-primary to-accent/60 opacity-90" />
+                {/* プレミアム・左端カラフルライン（Apple Wallet風） */}
+                <div className="w-full sm:w-2 h-2 sm:h-full bg-gradient-to-b from-ocean-dark via-primary to-accent/60 opacity-90" />
 
-                {/* メンバーバッジ（複数対応スタック表示） */}
-                {(() => {
-                  const pIds = (ticket as any).passengerIds || (ticket.participantId ? [ticket.participantId] : []);
-                  if (pIds.length === 0) {
-                    return (
-                      <div className="absolute top-6 right-8 z-20 flex items-center gap-2 px-4 py-2 rounded-full bg-surface-gray/90 backdrop-blur-md border border-white/50 shadow-sm">
-                        <span className="text-[11px] font-black text-emerald-600 uppercase tracking-widest">🌎 全員</span>
-                      </div>
-                    );
-                  }
-
-                  const profiles = userProfiles.filter(p => pIds.includes(p.id));
-                  return (
-                    <div className="absolute top-6 right-8 z-20 flex -space-x-3 items-center">
-                      {profiles.map((p, i) => (
-                        <div
-                          key={p.id}
-                          className="w-9 h-9 rounded-full border-2 border-white overflow-hidden shadow-lg transform hover:-translate-y-1 transition-transform cursor-help"
-                          style={{ zIndex: 10 - i }}
-                          title={p.displayName}
-                        >
-                          {p.avatarUrl ? (
-                            <img src={p.avatarUrl} className="w-full h-full object-cover" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-[10px] text-white font-bold" style={{ backgroundColor: p.color }}>
-                              {p.displayName[0]}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                      {profiles.length > 0 && (
-                        <div className="ml-2 bg-surface-gray/80 backdrop-blur-sm px-2 py-1 rounded-md border border-white/50 shadow-sm">
-                          <span className="text-[9px] font-black text-ink-sub uppercase tracking-tighter">
-                            {profiles.length === 1 ? profiles[0].displayName : `${profiles.length}名`}
-                          </span>
-                        </div>
-                      )}
+                <div className="flex-1 p-5 sm:p-4 flex flex-col sm:flex-row items-center sm:items-stretch gap-4">
+                  {/* アイコン & タイトル */}
+                  <div className="flex-1 flex items-center gap-4 min-w-0">
+                    <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-surface-gray flex items-center justify-center text-3xl shadow-inner border border-white flex-shrink-0 group-hover:scale-105 transition-transform">
+                      {getTypeIcon(ticket.type)}
                     </div>
-                  );
-                })()}
-
-                {/* チケットパンチ（左右の切り込み） */}
-                <div className="absolute top-[65%] -left-5 w-10 h-10 bg-surface-gray rounded-full border border-surface-gray-mid/50 z-10 shadow-[inset_-4px_0_8px_rgba(0,0,0,0.05)]"></div>
-                <div className="absolute top-[65%] -right-5 w-10 h-10 bg-surface-gray rounded-full border border-surface-gray-mid/50 z-10 shadow-[inset_4px_0_8px_rgba(0,0,0,0.05)]"></div>
-
-                <div className="p-10 pb-6 relative">
-                  {/* ヘッダーセクション */}
-                  <div className="flex justify-between items-start mb-10">
-                    <div className="flex items-center gap-6">
-                      <div className="w-20 h-20 rounded-[28px] bg-surface-gray flex items-center justify-center text-4xl shadow-inner border border-white relative group-hover:scale-105 transition-transform duration-500">
-                        {getTypeIcon(ticket.type)}
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5 mb-0.5">
+                        <span className="text-[9px] font-black text-primary uppercase tracking-widest">{TYPE_LABELS[ticket.type] || ticket.type}</span>
+                        <span className="text-[9px] font-bold text-ink-sub/60 truncate opacity-60">• {ticket.provider}</span>
                       </div>
-                      <div>
-                        <div className="flex items-center gap-2 mb-2">
-                          {/* U4: typeを日本語表示 */}
-                          <span className="text-[11px] font-black text-primary uppercase tracking-[0.25em]">{TYPE_LABELS[ticket.type] || ticket.type}</span>
-                          <span className="w-2 h-2 rounded-full bg-accent animate-pulse"></span>
-                          <span className="text-[11px] font-black text-ink-sub/60 tracking-widest uppercase truncate max-w-[140px]">{ticket.provider}</span>
-                        </div>
-                        <h3 className="font-black text-ink text-3xl leading-none tracking-tighter">{ticket.title}</h3>
-                      </div>
+                      <h3 className="font-black text-ink text-lg sm:text-xl leading-tight tracking-tight truncate">{ticket.title}</h3>
+                      {ticket.notes && <p className="text-[10px] text-ink-sub font-bold truncate opacity-70 mt-0.5">📝 {ticket.notes}</p>}
                     </div>
                   </div>
 
-                  {/* メイン情報セクション */}
-                  <div className="grid grid-cols-2 gap-10 mb-8 px-2">
-                    <div className="space-y-6">
-                      <div>
-                        {/* U1: 英語ラベルを日本語化 */}
-                        <p className="text-[10px] font-black text-ink-light uppercase tracking-[0.25em] mb-2">日付・時刻</p>
-                        <div className="flex items-baseline gap-2.5">
-                          <p className="text-2xl font-black text-ink">{ticket.date.split('-').slice(1).join('/')}</p>
-                          {ticket.time && <p className="text-lg font-black text-primary/80">{ticket.time}</p>}
-                        </div>
-                      </div>
+                  {/* 垂直セパレーター (デスクトップのみ) */}
+                  <div className="hidden sm:block w-px bg-surface-gray-mid/30 my-1" />
 
-                      <div
-                        className={`group/ref rounded-[24px] p-5 transition-all cursor-pointer relative overflow-hidden border-2 ${copyFeedback === ticket.referenceNumber ? 'bg-emerald-50 border-emerald-200' : 'bg-surface-gray/40 border-transparent hover:border-primary/20'}`}
-                        onClick={() => ticket.referenceNumber && handleCopy(ticket.referenceNumber)}
-                      >
-                        <p className="text-[10px] font-black text-ink-sub uppercase tracking-widest mb-2 flex justify-between items-center opacity-60">
-                          予約番号・席番
-                          <AppIcon name="save" className="w-3.5 h-3.5 group-hover/ref:scale-110 transition-transform" />
-                        </p>
-                        <p className="text-base font-mono font-black text-ink tracking-[0.1em] truncate">{ticket.referenceNumber || '---'}</p>
-                        {copyFeedback === ticket.referenceNumber && (
-                          <div className="absolute inset-0 bg-emerald-500/10 flex items-center justify-center backdrop-blur-[2px] animate-in fade-in zoom-in duration-200">
-                            <span className="text-[11px] font-black text-emerald-600 uppercase tracking-widest">コピー済み ✓</span>
-                          </div>
-                        )}
+                  {/* 日付・予約番号 */}
+                  <div className="flex sm:flex-col justify-center gap-8 sm:gap-1 px-2 text-center sm:text-left">
+                    <div>
+                      <p className="text-[8px] font-black text-ink-light uppercase tracking-widest mb-0.5 opacity-60">DATE/TIME</p>
+                      <div className="flex items-baseline justify-center sm:justify-start gap-1">
+                        <p className="text-sm font-black text-ink">{ticket.date.split('-').slice(1).join('/')}</p>
+                        {ticket.time && <p className="text-[11px] font-bold text-primary/80">{ticket.time}</p>}
                       </div>
                     </div>
-
-                    <div className="flex flex-col justify-between py-1">
-                      <div className="bg-gradient-to-br from-ink/3 to-ink/7 rounded-3xl p-6 border border-white/50 shadow-sm flex flex-col items-center justify-center text-center">
-                        <p className="text-[10px] font-black text-ink-light uppercase tracking-widest mb-2.5">ステータス</p>
-                        <div className="text-[11px] font-black text-ink tracking-[0.2em] border-2 border-ink px-4 py-1.5 bg-white/40 rotate-[-1deg] shadow-sm transform hover:rotate-0 transition-transform">有効チケット</div>
-                      </div>
-
-                      <button
-                        type="button"
-                        onClick={() => handleOpenEdit(ticket)}
-                        className="w-full py-4 bg-white hover:bg-surface-gray rounded-2xl border border-surface-gray-mid/40 text-[11px] font-black uppercase tracking-[0.2em] transition-all active:scale-95 shadow-sm"
-                      >
-                        ✏️ 編集する
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* 備考・メモセクション */}
-                  {ticket.notes && (
-                    <div className="mb-10 bg-accent/5 p-5 rounded-[28px] border border-accent/10 relative overflow-hidden group/note">
-                      <div className="absolute -right-6 -bottom-6 w-16 h-16 bg-accent/10 rounded-full blur-2xl group-hover/note:scale-150 transition-transform duration-700"></div>
-                      <p className="text-[10px] font-black text-accent-dark uppercase tracking-widest mb-2 flex items-center gap-2">
-                        <span className="text-sm">📝</span> メモ
+                    <div
+                      className={`cursor-pointer group/ref px-2 py-0.5 rounded-lg transition-all ${copyFeedback === ticket.referenceNumber ? 'bg-emerald-50' : 'hover:bg-surface-gray'}`}
+                      onClick={() => ticket.referenceNumber && handleCopy(ticket.referenceNumber)}
+                    >
+                      <p className="text-[8px] font-black text-ink-sub uppercase tracking-widest mb-0.5 opacity-60">REF NO.</p>
+                      <p className="text-xs font-mono font-black text-ink tracking-tight truncate max-w-[80px]">
+                        {ticket.referenceNumber || '---'}
+                        {copyFeedback === ticket.referenceNumber && <span className="ml-1 text-emerald-500">✓</span>}
                       </p>
-                      <p className="text-[12px] font-bold text-ink-sub leading-relaxed relative z-10">{ticket.notes}</p>
                     </div>
-                  )}
-
-                  {/* 切り取り線（点線） */}
-                  <div className="relative h-10 flex items-center justify-center pointer-events-none -mx-10 overflow-hidden">
-                    <div className="w-full border-t-[3px] border-dashed border-surface-gray-mid/30"></div>
                   </div>
 
-                  {/* アクションセクション */}
-                  <div className="flex gap-4 mt-2">
+                  {/* アクションボタン */}
+                  <div className="flex items-center gap-2">
                     {ticket.link ? (
                       <a
                         href={ticket.link}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex-1 flex items-center justify-center gap-3 py-5 bg-ink text-white rounded-[24px] text-xs font-black uppercase tracking-[0.3em] hover:bg-primary transition-all shadow-2xl shadow-ink/20 active:scale-[0.98] overflow-hidden relative group/btn"
+                        className="h-12 sm:h-full px-6 bg-ink text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] hover:bg-primary transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2"
                         onClick={(e) => e.stopPropagation()}
                       >
-                        <div className="absolute inset-0 bg-white/10 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-1000"></div>
-                        <span className="text-xl">🎟️</span>
-                        チケットを開く
+                        <span className="text-base">🎟️</span>
+                        OPEN
                       </a>
                     ) : (
-                      <div className="flex-1 py-5 bg-surface-gray/50 rounded-[24px] text-xs font-black uppercase tracking-[0.3em] text-ink-sub/40 flex items-center justify-center gap-3 border border-surface-gray-mid/20">
-                        <span className="text-xl opacity-30">🎟️</span>
-                        リンクなし
+                      <div className="h-12 sm:h-full px-6 bg-surface-gray rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] text-ink-sub/30 flex items-center justify-center gap-2 border border-surface-gray-mid/20">
+                        EMPTY
                       </div>
                     )}
 
-                    {/* F2: インライン削除確認 */}
-                    {isDeleting ? (
-                      <div className="flex gap-2 items-center animate-in fade-in duration-200">
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteConfirm(ticket.id)}
-                          className="h-16 px-4 flex items-center justify-center bg-rose-500 hover:bg-rose-600 text-white rounded-[24px] text-[10px] font-black tracking-widest transition-all active:scale-90 shadow-lg shadow-rose-500/20"
-                        >
-                          削除
-                        </button>
-                        <button
-                          type="button"
-                          onClick={handleDeleteCancel}
-                          className="h-16 px-4 flex items-center justify-center bg-surface-gray hover:bg-surface-gray-mid rounded-[24px] text-[10px] font-black tracking-widest transition-all active:scale-90"
-                        >
-                          戻る
-                        </button>
-                      </div>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={(e) => { e.stopPropagation(); handleDeleteClick(ticket.id); }}
-                        className="w-16 h-16 items-center justify-center bg-rose-50/50 hover:bg-rose-100 border border-rose-100 rounded-[24px] text-rose-300 hover:text-rose-600 transition-all active:scale-90 flex shadow-sm group/del"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 group-hover/del:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
-                    )}
+                    <button
+                      onClick={() => handleOpenEdit(ticket)}
+                      className="w-12 h-12 sm:h-full flex items-center justify-center bg-white border border-surface-gray-mid/50 rounded-2xl text-lg hover:bg-surface-gray transition-all active:scale-90"
+                    >
+                      ✏️
+                    </button>
+
+                    <button
+                      onClick={() => isDeleting ? handleDeleteConfirm(ticket.id) : handleDeleteClick(ticket.id)}
+                      onMouseLeave={() => setDeletingId(null)}
+                      className={`w-12 h-12 sm:h-full flex items-center justify-center rounded-2xl transition-all active:scale-90 ${isDeleting ? 'bg-rose-500 text-white' : 'bg-rose-50/50 text-rose-300 hover:text-rose-600 border border-rose-100'}`}
+                    >
+                      {isDeleting ? <span className="text-[10px] font-black">DEL</span> : <AppIcon name="delete" className="w-5 h-5" />}
+                    </button>
                   </div>
                 </div>
+
+                {/* メンバースタック（Wallet風・右端に控えめに配置） */}
+                {(() => {
+                  const pIds = (ticket as any).passengerIds || (ticket.participantId ? [ticket.participantId] : []);
+                  const profiles = userProfiles.filter(p => pIds.includes(p.id));
+                  if (profiles.length === 0) return null;
+
+                  return (
+                    <div className="absolute top-2 right-4 flex -space-x-2">
+                      {profiles.slice(0, 3).map((p) => (
+                        <div key={p.id} className="w-5 h-5 rounded-full border border-white shadow-sm overflow-hidden" title={p.displayName}>
+                          {p.avatarUrl ? <img src={p.avatarUrl} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-[6px] text-white font-bold" style={{ backgroundColor: p.color }}>{p.displayName[0]}</div>}
+                        </div>
+                      ))}
+                      {profiles.length > 3 && <div className="w-5 h-5 rounded-full bg-white/80 border border-white shadow-sm flex items-center justify-center text-[6px] font-bold text-ink">+{profiles.length - 3}</div>}
+                    </div>
+                  );
+                })()}
+
+                {/* チケットパンチ（Wallet風・境界線部分） */}
+                <div className="hidden sm:block absolute left-2 top-1/2 -translate-y-1/2 -ml-3 w-6 h-6 bg-surface-gray rounded-full border border-surface-gray-mid/30 z-10 shadow-inner" />
               </div>
             </div>
           );
