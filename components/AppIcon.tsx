@@ -4,7 +4,7 @@ export type IconName =
     | 'activity' | 'sightseeing' | 'meal' | 'shopping' | 'move' | 'stay' | 'other'
     | 'itinerary' | 'expense' | 'packing' | 'settle'
     | 'copy' | 'share' | 'settings' | 'back' | 'save' | 'import' | 'export' | 'folder'
-    | 'user' | 'ticket' | 'map' | 'memo' | 'link' | 'time' | 'check' | 'celebrate'
+    | 'user' | 'ticket' | 'map' | 'memo' | 'link' | 'time' | 'history' | 'check' | 'celebrate'
     | 'device-phone' | 'device-tablet' | 'device-laptop' | 'add' | 'close' | 'home'
     | 'globe' | 'plus' | 'camera';
 
@@ -240,6 +240,14 @@ export const AppIcon: React.FC<AppIconProps> = ({ name, className = "w-5 h-5", c
             <svg className={className} viewBox="0 0 24 24" fill={fill} stroke={stroke} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
                 <line x1="18" y1="6" x2="6" y2="18" />
                 <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+        ),
+        // historyアイコン（時計・履歴）
+        history: (
+            <svg className={className} viewBox="0 0 24 24" fill={fill} stroke={stroke} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <polyline points="12 6 12 12 16 14" />
+                <path d="M12 2a10 10 0 0 1 10 10" opacity="0.3" />
             </svg>
         ),
         // saveアイコン（フロッピータイプ）
