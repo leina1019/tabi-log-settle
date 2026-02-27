@@ -14,6 +14,7 @@ import PackingView from './components/PackingView';
 import { createNewTrip, subscribeToTrip, updateTripData } from './services/firebaseService';
 import { fetchAllData, syncAllDataToSheet, exportToMasterSheet, getMasterSheetUrl } from './services/googleSheetService';
 import { SAMPLE_PROFILES, SAMPLE_ITINERARY, SAMPLE_EXPENSES, SAMPLE_TICKETS, SAMPLE_PACKING } from './utils/sampleData';
+import { GET_ULTIMATE_TRIP } from './utils/ultimateDemoData';
 import WelcomeView from './components/WelcomeView';
 
 type ViewState = 'onboarding' | 'home' | 'schedule' | 'tickets' | 'packing' | 'history' | 'add_expense' | 'settle' | 'settings';
@@ -342,6 +343,49 @@ const App: React.FC = () => {
     }
 
     alert('TabiLogのサンプルデータを読み込みました！設定画面から元のデータに戻すことも可能です。');
+    setView('home');
+  };
+
+  const handleLoadUltimateDemoData = async () => {
+    if (!window.confirm('「パリ・ロンドン海外旅行版」の究極デモデータを読み込みますか？現在のデータは一時的にバックアップされます。')) return;
+
+    // バックアップ
+    const backupKey = `tabilog-backup-${new Date().getTime()}`;
+    const currentData = { expenses, itinerary, tickets, packingList, userProfiles, budget, tripName, tripStartDate, tripEndDate, tripCoverImage };
+    localStorage.setItem(backupKey, JSON.stringify(currentData));
+    localStorage.setItem('tabilog-last-backup-key', backupKey);
+
+    const demo = GET_ULTIMATE_TRIP();
+
+    // セット
+    setExpenses(demo.expenses || []);
+    setItinerary(demo.itinerary || []);
+    setTickets(demo.tickets || []);
+    setPackingList(demo.packingList || []);
+    setUserProfiles(demo.userProfiles || []);
+    setTripName(demo.name || '');
+    setTripStartDate(demo.startDate || '');
+    setTripEndDate(demo.endDate || '');
+    setTripCoverImage(demo.coverImage || '');
+    setBudget(demo.budget || 0);
+
+    // Firebaseへ同期
+    if (tripId) {
+      pushUpdate({
+        expenses: demo.expenses,
+        itinerary: demo.itinerary,
+        tickets: demo.tickets,
+        packingList: demo.packingList,
+        userProfiles: demo.userProfiles,
+        name: demo.name,
+        startDate: demo.startDate,
+        endDate: demo.endDate,
+        coverImage: demo.coverImage,
+        budget: demo.budget
+      });
+    }
+
+    alert('パリ・ロンドン旅行の究極デモデータを読み込みました！');
     setView('home');
   };
 
@@ -868,6 +912,7 @@ const App: React.FC = () => {
               onAddMember={handleAddMember}
               onRemoveMember={handleRemoveMember}
               onLoadSampleData={handleLoadSampleData}
+              onLoadUltimateDemoData={handleLoadUltimateDemoData}
               onRestoreData={handleRestoreData}
               onBack={() => setView('home')}
               viewModeSize={viewModeSize}

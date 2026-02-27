@@ -19,6 +19,7 @@ interface Props {
   onAddMember: (name: string, color: string) => void;     // 新規メンバー追加
   onRemoveMember: (id: string) => void;                   // メンバー削除
   onLoadSampleData: () => void;
+  onLoadUltimateDemoData: () => void;
   onRestoreData: () => void;
   onBack: () => void;
   viewModeSize: ViewModeSize;
@@ -31,7 +32,7 @@ interface Props {
 
 const SettingsView: React.FC<Props> = ({
   userProfiles, expenses, itinerary, tickets, packingList = [], budget, tripName, tripStartDate, tripEndDate, coverImage, masterSheetUrl,
-  onUpdateProfile, onAddMember, onRemoveMember, onLoadSampleData, onRestoreData, onBack, viewModeSize, onUpdateViewModeSize,
+  onUpdateProfile, onAddMember, onRemoveMember, onLoadSampleData, onLoadUltimateDemoData, onRestoreData, onBack, viewModeSize, onUpdateViewModeSize,
   onImportFullData, onSyncToSheet, onFetchFromSheet, isSyncing
 }) => {
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
@@ -450,8 +451,22 @@ const SettingsView: React.FC<Props> = ({
               ✈️
             </div>
             <div className="text-center relative z-10">
-              <p className="text-sm font-black text-primary tracking-tight">サンプル旅行データを読み込む</p>
-              <p className="text-[10px] text-ink-light font-bold mt-1 opacity-60">アプリの機能を体験するためのデモデータを読み込みます。</p>
+              <p className="text-sm font-black text-primary tracking-tight">通常サンプルデータを読み込む</p>
+              <p className="text-[10px] text-ink-light font-bold mt-1 opacity-60">シドニー旅行の標準的なデモデータを読み込みます。</p>
+            </div>
+          </button>
+
+          <button
+            onClick={onLoadUltimateDemoData}
+            className="w-full relative overflow-hidden bg-gradient-to-br from-primary to-ocean-dark p-6 rounded-[32px] flex flex-col items-center gap-3 hover:shadow-xl hover:scale-[1.02] transition-all active:scale-95 group"
+          >
+            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-3xl group-hover:scale-150 transition-transform"></div>
+            <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center text-3xl shadow-lg ring-4 ring-white/10 group-hover:rotate-12 transition-transform">
+              🌍
+            </div>
+            <div className="text-center relative z-10">
+              <p className="text-sm font-black text-white tracking-tight">究極のデモデータを読み込む (MECE)</p>
+              <p className="text-[10px] text-white/80 font-bold mt-1">パリ・ロンドン海外旅行版。機能活用率100%の決定番データ！</p>
             </div>
           </button>
 
