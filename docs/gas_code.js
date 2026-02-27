@@ -33,7 +33,6 @@ var MASTER_HEADERS = ['tripId', 'spreadsheetId', 'createdAt'];
 
 /**
  * マスタースプレッドシートの "MASTER" シートを取得または作成する
- * スタンドアロンGASなのでopenById()で指定のシートを開く
  */
 function getMasterSheet() {
     var ss = SpreadsheetApp.openById(MASTER_SPREADSHEET_ID);
@@ -151,6 +150,7 @@ function doGet(e) {
  */
 function doPost(e) {
     try {
+        // e.postData.contents が json 形式の文字列であることを想定
         var payload = JSON.parse(e.postData.contents);
         var tripId = payload.tripId;
 
@@ -174,7 +174,7 @@ function doPost(e) {
                 .setMimeType(ContentService.MimeType.JSON);
 
         } else if (action === 'BULK_SAVE') {
-            // 一括保存：既存データをクリアしてから全件追加
+            // 一括保存：一度クリアしてから全件追加
             var lastRow2 = sheet.getLastRow();
             if (lastRow2 > 1) {
                 sheet.deleteRows(2, lastRow2 - 1);
@@ -185,7 +185,8 @@ function doPost(e) {
                 var rows = items.map(function (item) {
                     return HEADERS.map(function (h) {
                         var val = item[h];
-                        return val !== undefined && val !== null ? val : '';
+                        // nullやundefined、空文字列を適切に処理
+                        return (val !== undefined && val !== null) ? val : "";
                     });
                 });
                 sheet.getRange(2, 1, rows.length, HEADERS.length).setValues(rows);
@@ -199,18 +200,20 @@ function doPost(e) {
             // 特定IDの行を削除
             var targetId = payload.id;
             var allData = sheet.getDataRange().getValues();
+            var found = false;
             for (var i = allData.length - 1; i >= 1; i--) {
                 if (String(allData[i][0]) === String(targetId)) {
                     sheet.deleteRow(i + 1);
-                    break;
+                    found = true;
+                    // 同じIDの行が複数ある可能性を考慮し、ここでは break せず全体をスキャン（通常は1件想定）
                 }
             }
             return ContentService
-                .createTextOutput(JSON.stringify({ status: 'ok', message: 'Deleted: ' + targetId }))
+                .createTextOutput(JSON.stringify({ status: 'ok', message: 'Deleted: ' + targetId, found: found }))
                 .setMimeType(ContentService.MimeType.JSON);
 
         } else {
-            // 単一アイテムのUPSERT
+            // 単一アイテムのUPSERT (actionなし、またはその他の場合)
             var item = payload;
             var existingData = sheet.getDataRange().getValues();
             var existingRowIndex = -1;
@@ -224,7 +227,7 @@ function doPost(e) {
 
             var rowData = HEADERS.map(function (h) {
                 var val = item[h];
-                return val !== undefined && val !== null ? val : '';
+                return (val !== undefined && val !== null) ? val : "";
             });
 
             if (existingRowIndex > 0) {

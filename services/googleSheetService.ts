@@ -4,7 +4,7 @@ import { convertToJPY } from '../utils/currency';
 import { MEMBER_COLORS } from '../constants';
 
 // GAS WebApp の URL（1本のURLで全tripIdを管理）
-const GAS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbxMLrlCb3WphIRPzcnnoqKA615GJT0bylB-rMuUMZtEf85GK9yybzdlxhauUhypFAr1XQ/exec';
+const GAS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbyvB_2VRNzgoqRdfTM_bpoUv6K-ak8oRQcs5ZTWyGNkqNu8G4ZLMYW8gUiMVPVg0TtL/exec';
 
 // マスタースプレッドシートID（ここに設定することでURLを生成できる）
 export const MASTER_SPREADSHEET_ID = '1nLjmh3UX9PmoX88B5oU5qNRvpgT5p6g01rqQs7yEPaE'; // TODO: 実際のSpreadsheet IDを入れる
@@ -139,9 +139,9 @@ async function syncGenericItem(tripId: string, payload: any): Promise<boolean> {
   try {
     await fetch(GAS_WEBAPP_URL, {
       method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'application/json' },
       // payloadにtripIdを付加してGASに送信
+      // headersを指定しない（かつtext/plain相当）ことで、
+      // プリフライト(OPTIONS)を回避し、GASのdoPostへ確実にデータを届けます
       body: JSON.stringify({ ...payload, tripId }),
     });
     return true;
@@ -351,8 +351,6 @@ export async function syncAllDataToSheet(data: CloudData, tripId: string): Promi
     // GASへPOST送信
     await fetch(GAS_WEBAPP_URL, {
       method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     });
 
@@ -509,8 +507,6 @@ export async function exportToMasterSheet(params: {
 
     await fetch(GAS_WEBAPP_URL, {
       method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'BULK_SAVE', tripId, data: rows })
     });
 

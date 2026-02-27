@@ -859,6 +859,7 @@ const App: React.FC = () => {
               tripStartDate={tripStartDate}
               tripEndDate={tripEndDate}
               isTablet={viewModeSize.startsWith('tablet')}
+              autoOpenAdd={autoOpenAdd.tickets}
             />
           )}
 
@@ -868,6 +869,7 @@ const App: React.FC = () => {
               userProfiles={userProfiles}
               onUpdate={updatePackingList}
               isTablet={viewModeSize.startsWith('tablet')}
+              autoOpenAdd={autoOpenAdd.packing}
             />
           )}
           {view === 'add_expense' && (
@@ -971,27 +973,27 @@ const App: React.FC = () => {
             </div>
 
             <nav className="fixed bottom-4 left-1/2 -translate-x-1/2 w-[92%] max-w-[400px] h-16 bg-white rounded-full flex justify-between items-center px-4 sm:px-6 shadow-lg border border-surface-gray-mid z-[40] safe-pb">
-              <button onClick={() => { setView('home'); setIsAddMenuOpen(false); }} className={`flex flex-col items-center gap-1 transition-all flex-1 ${view === 'home' ? 'text-primary -translate-y-1' : 'text-ink-light hover:text-ink-sub'}`}>
+              <button onClick={() => { setView('home'); setIsAddMenuOpen(false); setAutoOpenAdd({}); }} className={`flex flex-col items-center gap-1 transition-all flex-1 ${view === 'home' ? 'text-primary -translate-y-1' : 'text-ink-light hover:text-ink-sub'}`}>
                 <AppIcon name="home" className="w-5 h-5 sm:w-6 sm:h-6" />
                 <span className="text-[8px] sm:text-[9px] font-bold tracking-[0.1em] uppercase">HOME</span>
               </button>
 
-              <button onClick={() => { setView('history'); setIsAddMenuOpen(false); }} className={`flex flex-col items-center gap-1 transition-all flex-1 ${view === 'history' || view === 'add_expense' ? 'text-primary -translate-y-1' : 'text-ink-light hover:text-ink-sub'}`}>
+              <button onClick={() => { setView('history'); setIsAddMenuOpen(false); setAutoOpenAdd({}); }} className={`flex flex-col items-center gap-1 transition-all flex-1 ${view === 'history' ? 'text-primary -translate-y-1' : 'text-ink-light hover:text-ink-sub'}`}>
                 <AppIcon name="expense" className="w-5 h-5 sm:w-6 sm:h-6" />
                 <span className="text-[8px] sm:text-[9px] font-bold tracking-[0.1em] uppercase">SPEND</span>
               </button>
 
-              <button onClick={() => { setView('schedule'); setIsAddMenuOpen(false); }} className={`flex flex-col items-center gap-1 transition-all flex-1 ${view === 'schedule' ? 'text-primary -translate-y-1' : 'text-ink-light hover:text-ink-sub'}`}>
+              <button onClick={() => { setView('schedule'); setIsAddMenuOpen(false); setAutoOpenAdd({}); }} className={`flex flex-col items-center gap-1 transition-all flex-1 ${view === 'schedule' ? 'text-primary -translate-y-1' : 'text-ink-light hover:text-ink-sub'}`}>
                 <AppIcon name="itinerary" className="w-5 h-5 sm:w-6 sm:h-6" />
                 <span className="text-[8px] sm:text-[9px] font-bold tracking-[0.1em] uppercase">PLAN</span>
               </button>
 
-              <button onClick={() => { setView('tickets'); setIsAddMenuOpen(false); }} className={`flex flex-col items-center gap-1 transition-all flex-1 ${view === 'tickets' ? 'text-primary -translate-y-1' : 'text-ink-light hover:text-ink-sub'}`}>
+              <button onClick={() => { setView('tickets'); setIsAddMenuOpen(false); setAutoOpenAdd({}); }} className={`flex flex-col items-center gap-1 transition-all flex-1 ${view === 'tickets' ? 'text-primary -translate-y-1' : 'text-ink-light hover:text-ink-sub'}`}>
                 <AppIcon name="ticket" className="w-5 h-5 sm:w-6 sm:h-6" />
                 <span className="text-[8px] sm:text-[9px] font-bold tracking-[0.1em] uppercase">TICKETS</span>
               </button>
 
-              <button onClick={() => { setView('packing'); setIsAddMenuOpen(false); }} className={`flex flex-col items-center gap-1 transition-all flex-1 ${view === 'packing' ? 'text-primary -translate-y-1' : 'text-ink-light hover:text-ink-sub'}`}>
+              <button onClick={() => { setView('packing'); setIsAddMenuOpen(false); setAutoOpenAdd({}); }} className={`flex flex-col items-center gap-1 transition-all flex-1 ${view === 'packing' ? 'text-primary -translate-y-1' : 'text-ink-light hover:text-ink-sub'}`}>
                 <AppIcon name="packing" className="w-5 h-5 sm:w-6 sm:h-6" />
                 <span className="text-[8px] sm:text-[9px] font-bold tracking-[0.1em] uppercase">PACKING</span>
               </button>

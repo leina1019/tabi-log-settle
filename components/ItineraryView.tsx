@@ -96,7 +96,8 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
         type: 'activity',
         date: selectedDate || (dateRange[0] || new Date().toISOString().split('T')[0]),
         time: defaultTime,
-        links: []
+        links: [],
+        participantIds: [] // デフォルトは全員(空)
       });
       setIsModalOpen(true);
     }
@@ -126,13 +127,15 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
     // 1. 日付で絞り込み
     let list = items.filter(i => i.date === selectedDate);
 
-    // 2. 「全体（participantIdなし）」と「個別のメンバー」の表示設定で絞り込み
+    // 2. 「全体」と「個人のスケジュール」表示設定で絞り込み
     list = list.filter(i => {
-      if (!i.participantId) {
-        return showOverall; // 「全体」スケジュールの表示/非表示フラグ
-      } else {
-        return visibleMemberIds.includes(i.participantId); // 個人スケジュールの表示/非表示フラグ
-      }
+      if (showOverall) return true; // 全員表示モードなら全て出す
+
+      // 個人表示モード（showOverall=false）の場合
+      const pIds = i.participantIds || (i.participantId ? [i.participantId] : []);
+      // 選択されているメンバーのいずれかが含まれているか、または予定が「全員向け(pIdsが空)」の場合は表示
+      if (pIds.length === 0) return true;
+      return pIds.some(id => visibleMemberIds.includes(id));
     });
 
     return list.sort((a, b) => a.time.localeCompare(b.time));
@@ -427,18 +430,18 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
               <button
                 key={d}
                 onClick={() => setSelectedDate(d)}
-                className={`flex-shrink-0 flex flex-col items-center justify-center w-20 h-24 rounded-[28px] border transition-all active:scale-95 relative overflow-hidden ${isSelected
+                className={`flex-shrink-0 flex flex-col items-center justify-center w-20 h-24 rounded-[28px] border transition-all active:scale-95 relative ${isSelected
                   ? 'bg-primary border-primary shadow-xl shadow-primary/20 scale-105 z-10'
                   : 'bg-white border-surface-gray-mid/50 text-ink-light'
                   }`}
               >
                 {isToday && (
-                  <div className="absolute top-0 inset-x-0 h-4 bg-emerald-500 flex items-center justify-center">
-                    <span className="text-[8px] font-black text-white tracking-widest">TODAY</span>
+                  <div className="absolute -top-2 left-1/2 -translate-x-1/2 z-20 bg-white px-2 py-0.5 rounded-full shadow-md border border-primary/10">
+                    <span className="text-[7px] font-black text-primary tracking-widest whitespace-nowrap">TODAY</span>
                   </div>
                 )}
 
-                <span className={`text-[9px] font-black uppercase tracking-tighter mb-1.5 ${isSelected ? 'text-white/70' : 'text-ink-sub'} ${isToday ? 'mt-3' : ''}`}>
+                <span className={`text-[9px] font-black uppercase tracking-tighter mb-1.5 ${isSelected ? 'text-white/70' : 'text-ink-sub'}`}>
                   {label.day}
                 </span>
 
@@ -542,14 +545,37 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
                         onClick={() => handleOpenEdit(item)}
                         className="bg-white rounded-xl border border-surface-gray-mid hover:border-primary/30 hover:shadow-sm transition-all relative cursor-pointer active:scale-[0.98] overflow-hidden"
                       >
-                        {/* 既存の予定カードの内容 (中略) */}
-                        {/* 個人カラーインジケーター */}
-                        {item.participantId && (
-                          <div
-                            className="absolute left-0 top-0 bottom-0 w-1 z-30"
-                            style={{ backgroundColor: userProfiles.find(u => u.id === item.participantId)?.color }}
-                          />
-                        )}
+                        {/* A5: 複数アバター表示 */}
+                        <div className="absolute top-3 left-3 z-30 flex -space-x-2">
+                          {(() => {
+                            const pIds = item.participantIds || (item.participantId ? [item.participantId] : []);
+                            const profiles = userProfiles.filter(p => pIds.includes(p.id));
+
+                            if (profiles.length === 0) {
+                              // 全員向け予定
+                              return (
+                                <div className="w-8 h-8 rounded-full border-2 border-white shadow-sm bg-primary/10 flex items-center justify-center text-[10px]" title="全員">
+                                  🌎
+                                </div>
+                              );
+                            }
+
+                            return (
+                              <>
+                                {profiles.slice(0, 3).map(p => (
+                                  <div key={p.id} className="w-8 h-8 rounded-full border-2 border-white shadow-sm overflow-hidden" title={p.displayName} style={{ backgroundColor: p.color }}>
+                                    {p.avatarUrl ? <img src={p.avatarUrl} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-[10px] text-white font-black">{p.displayName[0]}</div>}
+                                  </div>
+                                ))}
+                                {profiles.length > 3 && (
+                                  <div className="w-8 h-8 rounded-full bg-white border-2 border-white shadow-sm flex items-center justify-center text-[10px] font-black text-ink">
+                                    +{profiles.length - 3}
+                                  </div>
+                                )}
+                              </>
+                            );
+                          })()}
+                        </div>
 
                         {/* OGP/タイプ別テンプレート画像 */}
                         {(item.imageUrl || TYPE_IMAGES[item.type]) && (
@@ -720,50 +746,50 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
                   )}
                 </div>
 
-                {/* 誰の予定か */}
-                <div>
-                  <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">担当メンバー</label>
-                  <div className="flex flex-wrap gap-2 mt-1">
-                    <button
-                      type="button"
-                      onClick={() => setFormData({ ...formData, participantId: undefined })}
-                      className={`px-3 py-1.5 rounded-full text-[10px] font-bold transition-all border ${!formData.participantId ? 'bg-ink text-white border-ink' : 'bg-surface-gray text-ink-light border-surface-gray-mid'}`}
-                    >
-                      <AppIcon name="globe" className="w-3 h-3 inline-block mr-1" /> 全員
-                    </button>
-                    {userProfiles.map(p => (
-                      <button
-                        key={p.id}
-                        type="button"
-                        onClick={() => setFormData({ ...formData, participantId: p.id })}
-                        className={`px-3 py-1.5 rounded-full text-[10px] font-bold transition-all border ${formData.participantId === p.id ? 'text-white border-transparent' : 'bg-surface-gray text-ink-light border-surface-gray-mid'}`}
-                        style={formData.participantId === p.id ? { backgroundColor: p.color } : {}}
-                      >
-                        {p.displayName}
-                      </button>
-                    ))}
+                {/* A5: 複数メンバー選択（チップ形式） */}
+                <div className="mb-6">
+                  <label className="block text-[11px] font-black text-ink-sub mb-3 uppercase tracking-[0.25em] px-1">この予定のメンバー</label>
+                  <div className="flex flex-wrap gap-2.5">
+                    {userProfiles.map(p => {
+                      const pIds = formData.participantIds || (formData.participantId ? [formData.participantId] : []);
+                      const selected = pIds.includes(p.id);
+                      return (
+                        <button
+                          key={p.id}
+                          type="button"
+                          onClick={() => {
+                            const curr = formData.participantIds || (formData.participantId ? [formData.participantId] : []);
+                            const next = curr.includes(p.id) ? curr.filter(id => id !== p.id) : [...curr, p.id];
+                            setFormData({ ...formData, participantIds: next, participantId: undefined });
+                          }}
+                          className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-[11px] font-black border-2 transition-all active:scale-95 ${selected ? 'text-white border-transparent shadow-lg' : 'bg-surface-gray text-ink-sub border-transparent hover:border-surface-gray-mid'}`}
+                          style={selected ? { backgroundColor: p.color, boxShadow: `0 8px 20px ${p.color}44` } : {}}
+                        >
+                          <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${selected ? 'bg-white/30 border-white/50' : 'bg-white border-surface-gray-mid'}`}>
+                            {selected && <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3.5} d="M5 13l4 4L19 7" /></svg>}
+                          </div>
+                          {p.displayName}
+                        </button>
+                      );
+                    })}
                   </div>
+                  {(formData.participantIds || []).length === 0 && !formData.participantId && (
+                    <p className="mt-2 text-[10px] font-bold text-emerald-600 px-1 flex items-center gap-1">
+                      <span>🌎</span>
+                      全員共通の予定
+                    </p>
+                  )}
                 </div>
 
                 {/* 日付 + 時間 */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="col-span-2">
-                    <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">日付</label>
-                    <input
-                      type="date"
-                      className="w-full bg-surface-gray border border-surface-gray-mid rounded-xl p-2.5 text-sm text-ink outline-none"
-                      value={formData.date || ''}
-                      onChange={e => setFormData({ ...formData, date: e.target.value })}
-                    />
+                <div className="grid grid-cols-2 gap-5 mb-6">
+                  <div>
+                    <label className="block text-[11px] font-black text-ink-sub mb-2 uppercase tracking-[0.25em]">日付</label>
+                    <input type="date" value={formData.date || ''} onChange={e => setFormData({ ...formData, date: e.target.value })} className="w-full bg-surface-gray rounded-2xl px-5 py-4 text-xs font-bold outline-none border-2 border-transparent focus:border-primary/20 focus:bg-white transition-all shadow-inner" />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">開始時間</label>
-                    <input
-                      type="time"
-                      className="w-full bg-surface-gray border border-surface-gray-mid rounded-xl p-2.5 text-sm text-ink outline-none"
-                      value={formData.time || ''}
-                      onChange={e => setFormData({ ...formData, time: e.target.value })}
-                    />
+                    <label className="block text-[11px] font-black text-ink-sub mb-2 uppercase tracking-[0.25em]">開始時刻</label>
+                    <input type="time" value={formData.time || ''} onChange={e => setFormData({ ...formData, time: e.target.value })} className="w-full bg-surface-gray rounded-2xl px-5 py-4 text-xs font-bold outline-none border-2 border-transparent focus:border-primary/20 focus:bg-white transition-all shadow-inner" />
                   </div>
                   <div>
                     <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">終了時間</label>

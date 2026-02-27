@@ -48,7 +48,8 @@ export interface ItineraryItem {
   link?: string; // 互換性維持のための既存リンク
   mapUrl?: string; // 📍 Google Maps専用リンク
   links?: ItineraryLink[]; // 複数リンク対応
-  participantId?: string; // 特定メンバーの予定。undefinedの場合は「全体」
+  participantId?: string; // 後方互換: 特定メンバーの予定。undefinedの場合は「全体」
+  participantIds?: string[]; // 複数メンバーの予定。未設定の場合は「全体」
   imageUrl?: string; // アップロード画像 or OGP取得画像
   type: 'move' | 'activity' | 'meal' | 'stay' | 'shopping' | 'sightseeing' | 'other';
   updatedAt?: string; // For sync

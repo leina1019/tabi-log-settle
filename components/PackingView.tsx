@@ -143,20 +143,56 @@ const PackingView: React.FC<Props> = ({ items, userProfiles, onUpdate, isTablet 
     };
 
     return (
-        <div className="space-y-6 pt-2 pb-10">
-            <div className="flex justify-between items-center mb-4 px-1">
-                <h2 className="text-xl font-sans font-bold text-ink flex items-center gap-2">
+        <div className="flex flex-col h-full bg-surface-gray relative pb-20 pt-1">
+            {/* 画面上部：全員/個人トグル */}
+            <div className="sticky top-0 z-40 bg-surface-gray/95 backdrop-blur-xl border-b border-surface-gray-mid/50 pt-4 pb-2 px-4 shadow-sm">
+                <div className="flex bg-white/80 p-1 rounded-full mb-4 mx-auto w-full max-w-[320px] shadow-sm border border-surface-gray-mid/50">
+                    <button
+                        onClick={() => setFilterMemberId('ALL')}
+                        className={`flex-1 py-3 text-[11px] font-black uppercase tracking-widest rounded-full transition-all duration-500 flex items-center justify-center gap-2.5 ${filterMemberId === 'ALL' ? 'bg-ink text-white shadow-xl shadow-ink/20 scale-[1.02]' : 'bg-transparent text-ink-sub hover:text-ink'}`}
+                    >
+                        <span className="text-sm">🌎</span>
+                        全員
+                    </button>
+                    <button
+                        onClick={() => {
+                            if (filterMemberId === 'ALL') setFilterMemberId(userProfiles[0]?.id || 'ALL');
+                        }}
+                        className={`flex-1 py-3 text-[11px] font-black uppercase tracking-widest rounded-full transition-all duration-500 flex items-center justify-center gap-2.5 ${filterMemberId !== 'ALL' ? 'bg-ink text-white shadow-xl shadow-ink/20 scale-[1.02]' : 'bg-transparent text-ink-sub hover:text-ink'}`}
+                    >
+                        <span className="text-sm">👤</span>
+                        個人
+                    </button>
+                </div>
+
+                {/* メンバー選択（個別モードのみ） */}
+                {filterMemberId !== 'ALL' && (
+                    <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-4 mb-1 animate-in fade-in slide-in-from-top-2 duration-500 justify-start sm:justify-center">
+                        {userProfiles.map(p => (
+                            <button
+                                key={p.id}
+                                onClick={() => setFilterMemberId(p.id)}
+                                className={`flex items-center gap-2 px-4 py-2 rounded-full whitespace-nowrap transition-all border-2 shadow-sm ${filterMemberId === p.id ? 'bg-white border-primary/30 text-ink scale-105' : 'bg-white/40 border-transparent text-ink-light opacity-60 hover:opacity-100'}`}
+                            >
+                                <div className="w-5 h-5 rounded-full overflow-hidden border border-white" style={{ backgroundColor: p.color }}>
+                                    {p.avatarUrl ? <img src={p.avatarUrl} className="w-full h-full object-cover" alt="" /> : null}
+                                </div>
+                                <span className="text-[10px] font-black">{p.displayName}</span>
+                            </button>
+                        ))}
+                    </div>
+                )}
+            </div>
+
+            <div className="flex justify-between items-center mb-4 px-4 mt-4">
+                <h2 className="text-xl font-sans font-black text-ink flex items-center gap-2 tracking-tight">
                     <span className="text-2xl">🎒</span> 持ち物リスト
                 </h2>
                 <button
                     onClick={() => setShowAddForm(!showAddForm)}
-                    className={`h-11 px-5 rounded-full flex items-center justify-center text-white transition-all shadow-lg font-bold text-sm gap-2 ${showAddForm ? 'bg-rose-500' : 'bg-primary hover:bg-ocean-dark'}`}
+                    className={`h-10 px-5 rounded-full flex items-center justify-center text-white transition-all shadow-lg font-black text-[10px] uppercase tracking-widest gap-2 ${showAddForm ? 'bg-rose-500' : 'bg-primary hover:bg-ocean-dark'}`}
                 >
-                    {showAddForm ? (
-                        <>閉じる</>
-                    ) : (
-                        <><span className="text-lg">+</span> 持ち物を追加</>
-                    )}
+                    {showAddForm ? '閉じる' : '+ 追加'}
                 </button>
             </div>
 
@@ -203,30 +239,7 @@ const PackingView: React.FC<Props> = ({ items, userProfiles, onUpdate, isTablet 
                 </div>
             </div>
 
-            {/* フィルター・タブ */}
-            <div className="px-1 overflow-x-auto scrollbar-hide">
-                <div className="flex gap-2 min-w-max pb-2">
-                    <button
-                        onClick={() => setFilterMemberId('ALL')}
-                        className={`px-4 py-2.5 rounded-2xl text-[10px] font-bold uppercase tracking-widest transition-all border ${filterMemberId === 'ALL' ? 'bg-ink text-white border-ink shadow-md' : 'bg-white text-ink-sub border-surface-gray-mid hover:bg-surface-gray'}`}
-                    >
-                        全員
-                    </button>
-                    {userProfiles.map(p => (
-                        <button
-                            key={p.id}
-                            onClick={() => setFilterMemberId(p.id)}
-                            className={`px-4 py-2.5 rounded-2xl text-[10px] font-bold uppercase tracking-widest transition-all border flex items-center gap-2 ${filterMemberId === p.id ? 'text-white border-transparent shadow-md' : 'bg-white text-ink-sub border-surface-gray-mid hover:bg-surface-gray'}`}
-                            style={filterMemberId === p.id ? { backgroundColor: p.color } : {}}
-                        >
-                            <div className="w-4 h-4 rounded-full overflow-hidden border border-white/20">
-                                {p.avatarUrl ? <img src={p.avatarUrl} className="w-full h-full object-cover" /> : <span>👤</span>}
-                            </div>
-                            {p.displayName}
-                        </button>
-                    ))}
-                </div>
-            </div>
+
 
             {/* 追加フォーム */}
             {showAddForm && (

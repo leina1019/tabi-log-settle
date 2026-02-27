@@ -52,7 +52,18 @@ const ExpenseList: React.FC<Props> = ({ expenses, onDelete, onEdit, onResetAll, 
     } else if (dateRange.length === 0 && !selectedDate) {
       setSelectedDate(new Date().toISOString().split('T')[0]);
     }
-  }, [dateRange, selectedDate]);
+  }, [dateRange]);
+
+  // 日付タブのラベル生成
+  const getDayLabel = (dateStr: string, index: number) => {
+    const d = new Date(dateStr);
+    const weekDays = ['日', '月', '火', '水', '木', '金', '土'];
+    return {
+      day: `${index + 1}日目`,
+      date: `${d.getDate()}`,
+      week: weekDays[d.getDay()],
+    };
+  };
 
   useEffect(() => {
     if (resetStage === 'confirm') {
@@ -121,7 +132,7 @@ const ExpenseList: React.FC<Props> = ({ expenses, onDelete, onEdit, onResetAll, 
   }
 
   return (
-    <div className="flex flex-col h-full bg-surface-gray relative pb-28 pt-2">
+    <div className="flex flex-col h-full bg-surface-gray relative pb-20 pt-1">
       {/* 画面上部：日付ピッカー＆フィルタ トグル */}
       <div className="sticky top-0 z-40 bg-surface-gray pb-2 sm:pt-4">
         <div className="absolute inset-0 bg-surface-gray/95 backdrop-blur-xl border-b border-surface-gray-mid"></div>
@@ -137,24 +148,26 @@ const ExpenseList: React.FC<Props> = ({ expenses, onDelete, onEdit, onResetAll, 
 
           <div className="px-4">
             {/* 全体 / 個別 トグル */}
-            <div className="flex bg-white shadow-sm p-1 rounded-full mb-3 max-w-[280px] border border-surface-gray-mid/50">
+            <div className="flex bg-white shadow-sm p-1 rounded-full mb-3 mx-auto w-full max-w-[280px] border border-surface-gray-mid/50">
               <button
                 onClick={() => setShowOverall(true)}
-                className={`flex-1 py-1.5 text-[10px] uppercase tracking-widest font-bold rounded-full transition-all duration-300 ${showOverall ? 'bg-primary text-white shadow-sm' : 'text-ink-sub hover:text-ink'}`}
+                className={`flex-1 py-1.5 text-[10px] uppercase tracking-widest font-bold rounded-full transition-all duration-300 flex items-center justify-center gap-2 ${showOverall ? 'bg-primary text-white shadow-sm' : 'text-ink-sub hover:text-ink'}`}
               >
+                <span>🌎</span>
                 全員の支出
               </button>
               <button
                 onClick={() => setShowOverall(false)}
-                className={`flex-1 py-1.5 text-[10px] uppercase tracking-widest font-bold rounded-full transition-all duration-300 ${!showOverall ? 'bg-primary text-white shadow-sm' : 'text-ink-sub hover:text-ink'}`}
+                className={`flex-1 py-1.5 text-[10px] uppercase tracking-widest font-bold rounded-full transition-all duration-300 flex items-center justify-center gap-2 ${!showOverall ? 'bg-primary text-white shadow-sm' : 'text-ink-sub hover:text-ink'}`}
               >
+                <span>👤</span>
                 個人の記録
               </button>
             </div>
 
             {/* メンバー選択（個別モードのみ） */}
             {!showOverall && (
-              <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-3 mb-1 animate-in fade-in slide-in-from-top-2 duration-300">
+              <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-3 mb-1 animate-in fade-in slide-in-from-top-2 duration-300 justify-start sm:justify-center">
                 {userProfiles.map(p => (
                   <button
                     key={p.id}
@@ -202,38 +215,45 @@ const ExpenseList: React.FC<Props> = ({ expenses, onDelete, onEdit, onResetAll, 
 
           {/* 日付横スクロールバー */}
           {dateRange.length > 0 && (
-            <div className="flex gap-3 overflow-x-auto scrollbar-hide snap-x pt-1 pb-4 px-4 bg-gradient-to-r from-surface-gray via-transparent to-surface-gray mask-edges">
-              {dateRange.map((dateStr, index) => {
-                const isSelected = dateStr === selectedDate;
-                const isToday = isTodayDate(dateStr);
-                const day = dateStr.split('-')[2];
+            <div className="overflow-x-auto scrollbar-hide mb-2 px-4 pt-4">
+              <div className="flex gap-3 pb-2 min-w-min">
+                {dateRange.map((d, i) => {
+                  const label = getDayLabel(d, i);
+                  const isSelected = selectedDate === d;
+                  const isToday = isTodayDate(d);
 
-                return (
-                  <button
-                    key={dateStr}
-                    onClick={() => setSelectedDate(dateStr)}
-                    className={`relative flex-shrink-0 flex flex-col items-center justify-center w-14 h-16 rounded-[20px] transition-all snap-start ${isSelected
-                      ? 'bg-primary text-white shadow-lg shadow-primary/30 -translate-y-1'
-                      : 'bg-white/80 text-ink-sub hover:bg-white hover:-translate-y-0.5 shadow-sm border border-surface-gray-mid'
-                      }`}
-                  >
-                    <span className={`text-[9px] font-black uppercase tracking-widest ${isSelected ? 'text-white/80' : 'text-ink-light'}`}>
-                      Day {index + 1}
-                    </span>
-                    <span className={`text-lg font-sans font-black mt-0.5 ${isSelected ? 'text-white' : 'text-ink'}`}>
-                      {day}
-                    </span>
+                  return (
+                    <button
+                      key={d}
+                      onClick={() => setSelectedDate(d)}
+                      className={`flex-shrink-0 flex flex-col items-center justify-center w-20 h-24 rounded-[28px] border transition-all active:scale-95 relative ${isSelected
+                        ? 'bg-primary border-primary shadow-xl shadow-primary/20 scale-105 z-10'
+                        : 'bg-white border-surface-gray-mid/50 text-ink-light'
+                        }`}
+                    >
+                      {isToday && (
+                        <div className="absolute -top-2 left-1/2 -translate-x-1/2 z-20 bg-white px-2 py-0.5 rounded-full shadow-md border border-primary/10">
+                          <span className="text-[7px] font-black text-primary tracking-widest whitespace-nowrap">TODAY</span>
+                        </div>
+                      )}
 
-                    {/* TODAYバッジ */}
-                    {isToday && (
-                      <div className={`absolute -top-1.5 -right-1.5 px-1.5 py-0.5 rounded-full text-[8px] font-black tracking-wider shadow-sm transform rotate-6 border ${isSelected ? 'bg-white text-primary border-transparent' : 'bg-accent text-white border-white'
-                        }`}>
-                        TODAY
+                      <span className={`text-[9px] font-black uppercase tracking-tighter mb-1.5 ${isSelected ? 'text-white/70' : 'text-ink-sub'}`}>
+                        {label.day}
+                      </span>
+
+                      <span className={`text-2xl font-black leading-none ${isSelected ? 'text-white' : 'text-ink'}`}>
+                        {label.date}
+                      </span>
+
+                      <div className="flex items-center gap-1 mt-2">
+                        <span className={`text-[9px] font-bold ${isSelected ? 'text-white/50' : 'text-ink-sub/40'}`}>
+                          {label.week}
+                        </span>
                       </div>
-                    )}
-                  </button>
-                );
-              })}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           )}
         </div>
