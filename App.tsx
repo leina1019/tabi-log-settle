@@ -913,21 +913,23 @@ const App: React.FC = () => {
               />
             )}
 
-            <nav className="fixed bottom-4 left-1/2 -translate-x-1/2 w-[92%] max-w-[400px] h-16 bg-white rounded-full flex justify-between items-center px-6 shadow-lg border border-surface-gray-mid z-[40] safe-pb">
-              <button onClick={() => { setView('home'); setIsAddMenuOpen(false); }} className={`flex flex-col items-center gap-1 transition-all ${view === 'home' ? 'text-primary -translate-y-1' : 'text-ink-light'}`}>
+            <nav className="fixed bottom-4 left-1/2 -translate-x-1/2 w-[92%] max-w-[400px] h-16 bg-white rounded-full flex justify-between items-center px-4 shadow-lg border border-surface-gray-mid z-[40] safe-pb">
+              <button onClick={() => { setView('home'); setIsAddMenuOpen(false); }} className={`flex flex-col items-center gap-1 transition-all flex-1 ${view === 'home' ? 'text-primary -translate-y-1' : 'text-ink-light'}`}>
                 <AppIcon name="home" className="w-6 h-6" />
                 <span className="text-[9px] font-bold tracking-widest uppercase">HOME</span>
               </button>
 
-              <button onClick={() => { setView('schedule'); setIsAddMenuOpen(false); }} className={`flex flex-col items-center gap-1 transition-all ${view === 'schedule' ? 'text-primary -translate-y-1' : 'text-ink-light'}`}>
-                <AppIcon name="itinerary" className="w-6 h-6" />
-                <span className="text-[9px] font-bold tracking-widest uppercase">PLAN</span>
-              </button>
-
-              <div className="relative">
+              <div className="relative flex-1 flex justify-center">
                 {/* スピードダイヤルメニュー */}
                 {isAddMenuOpen && (
-                  <div className="absolute bottom-20 left-1/2 -translate-x-1/2 flex flex-col gap-3 items-center animate-in slide-in-from-bottom-4 fade-in duration-300">
+                  <div className="absolute bottom-16 left-1/2 -translate-x-1/2 flex flex-col gap-3 items-center animate-in slide-in-from-bottom-4 fade-in duration-300">
+                    <button
+                      onClick={() => { setEditingExpense(null); setView('add_expense'); setIsAddMenuOpen(false); }}
+                      className="flex items-center gap-3 bg-white px-5 py-3 rounded-2xl shadow-xl border border-surface-gray-mid whitespace-nowrap active:scale-95 transition-transform"
+                    >
+                      <AppIcon name="expense" className="w-6 h-6 text-lg" />
+                      <span className="text-xs font-bold text-ink">支出の追加</span>
+                    </button>
                     <button
                       onClick={() => { setView('schedule'); setIsAddMenuOpen(false); }}
                       className="flex items-center gap-3 bg-white px-5 py-3 rounded-2xl shadow-xl border border-surface-gray-mid whitespace-nowrap active:scale-95 transition-transform"
@@ -936,11 +938,11 @@ const App: React.FC = () => {
                       <span className="text-xs font-bold text-ink">予定の追加</span>
                     </button>
                     <button
-                      onClick={() => { setEditingExpense(null); setView('add_expense'); setIsAddMenuOpen(false); }}
+                      onClick={() => { setView('tickets'); setIsAddMenuOpen(false); }}
                       className="flex items-center gap-3 bg-white px-5 py-3 rounded-2xl shadow-xl border border-surface-gray-mid whitespace-nowrap active:scale-95 transition-transform"
                     >
-                      <AppIcon name="expense" className="w-6 h-6 text-lg" />
-                      <span className="text-xs font-bold text-ink">支出の登録</span>
+                      <AppIcon name="ticket" className="w-6 h-6 text-lg" />
+                      <span className="text-xs font-bold text-ink">チケットの追加</span>
                     </button>
                     <button
                       onClick={() => { setView('packing'); setIsAddMenuOpen(false); }}
@@ -954,18 +956,23 @@ const App: React.FC = () => {
 
                 <button
                   onClick={() => setIsAddMenuOpen(!isAddMenuOpen)}
-                  className={`w-14 h-14 bg-primary rounded-full flex items-center justify-center text-white shadow-lg -translate-y-6 transition-all z-50 ${isAddMenuOpen ? 'rotate-45 scale-90 bg-ocean-dark' : 'active:scale-95'}`}
+                  className={`w-12 h-12 bg-primary rounded-full flex items-center justify-center text-white shadow-lg -translate-y-4 transition-all z-50 ${isAddMenuOpen ? 'rotate-45 scale-90 bg-ocean-dark' : 'active:scale-95'} border-4 border-white shadow-primary/30`}
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" /></svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" /></svg>
                 </button>
               </div>
 
-              <button onClick={() => { setView('tickets'); setIsAddMenuOpen(false); }} className={`flex flex-col items-center gap-1 transition-all ${view === 'tickets' ? 'text-primary -translate-y-1' : 'text-ink-light'}`}>
+              <button onClick={() => { setView('schedule'); setIsAddMenuOpen(false); }} className={`flex flex-col items-center gap-1 transition-all flex-1 ${view === 'schedule' ? 'text-primary -translate-y-1' : 'text-ink-light'}`}>
+                <AppIcon name="itinerary" className="w-6 h-6" />
+                <span className="text-[9px] font-bold tracking-widest uppercase">PLAN</span>
+              </button>
+
+              <button onClick={() => { setView('tickets'); setIsAddMenuOpen(false); }} className={`flex flex-col items-center gap-1 transition-all flex-1 ${view === 'tickets' ? 'text-primary -translate-y-1' : 'text-ink-light'}`}>
                 <AppIcon name="ticket" className="w-6 h-6" />
                 <span className="text-[9px] font-bold tracking-widest uppercase">TICKETS</span>
               </button>
 
-              <button onClick={() => { setView('packing'); setIsAddMenuOpen(false); }} className={`flex flex-col items-center gap-1 transition-all ${view === 'packing' ? 'text-primary -translate-y-1' : 'text-ink-light'}`}>
+              <button onClick={() => { setView('packing'); setIsAddMenuOpen(false); }} className={`flex flex-col items-center gap-1 transition-all flex-1 ${view === 'packing' ? 'text-primary -translate-y-1' : 'text-ink-light'}`}>
                 <AppIcon name="packing" className="w-6 h-6" />
                 <span className="text-[9px] font-bold tracking-widest uppercase">PACKING</span>
               </button>

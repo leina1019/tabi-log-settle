@@ -7,10 +7,10 @@ import { MEMBER_COLORS } from '../constants';
 const GAS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbxMLrlCb3WphIRPzcnnoqKA615GJT0bylB-rMuUMZtEf85GK9yybzdlxhauUhypFAr1XQ/exec';
 
 // マスタースプレッドシートID（ここに設定することでURLを生成できる）
-export const MASTER_SPREADSHEET_ID = ''; // TODO: 実際のSpreadsheet IDを入れる
+export const MASTER_SPREADSHEET_ID = '1nLjmh3UX9PmoX88B5oU5qNRvpgT5p6g01rqQs7yEPaE'; // TODO: 実際のSpreadsheet IDを入れる
 export const getMasterSheetUrl = () =>
   MASTER_SPREADSHEET_ID
-    ? `https://docs.google.com/spreadsheets/d/${MASTER_SPREADSHEET_ID}/view`
+    ? `https://docs.google.com/spreadsheets/d/${MASTER_SPREADSHEET_ID}/edit`
     : null;
 
 // シート内でデータ種別を区別するための特殊カテゴリ定数
