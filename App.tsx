@@ -652,7 +652,10 @@ const App: React.FC = () => {
               <img src="/logo_light.png" alt="Logo" className="w-full h-full object-contain" onError={(e) => { e.currentTarget.style.display = 'none'; if (e.currentTarget.nextSibling) (e.currentTarget.nextSibling as HTMLElement).classList.remove('hidden'); }} />
               <div className="hidden text-xl">✈️</div>
             </div>
-            <h1 className="text-xl font-sans font-black tracking-tighter text-white">TabiLog</h1>
+            <div className="flex items-center gap-2">
+              <img src="/logo.png" alt="たびログ Logo" className="w-8 h-8 object-contain" />
+              <h1 className="text-xl font-sans font-black tracking-tighter text-white">たびログ</h1>
+            </div>
           </div>
           <div className="flex items-center gap-2">
             {syncStatus === 'syncing' && <span className="text-[10px] text-accent animate-pulse">SYNCING...</span>}
