@@ -314,7 +314,7 @@ const TicketView: React.FC<Props> = ({ tickets, userProfiles, onSave, onDelete, 
           const isDeleting = deletingId === ticket.id;
 
           return (
-            <div key={ticket.id} className="relative group">
+            <div key={ticket.id} className="relative group cursor-pointer" onClick={() => handleOpenEdit(ticket)}>
               <div className="bg-white rounded-[24px] overflow-hidden shadow-xl shadow-ink/5 border border-surface-gray-mid/30 hover:shadow-primary/10 transition-all duration-500 relative flex flex-col sm:flex-row h-auto sm:h-32">
 
                 {/* プレミアム・左端カラフルライン（Apple Wallet風） */}
@@ -350,7 +350,7 @@ const TicketView: React.FC<Props> = ({ tickets, userProfiles, onSave, onDelete, 
                     </div>
                     <div
                       className={`cursor-pointer group/ref px-2 py-0.5 rounded-lg transition-all ${copyFeedback === ticket.referenceNumber ? 'bg-emerald-50' : 'hover:bg-surface-gray'}`}
-                      onClick={() => ticket.referenceNumber && handleCopy(ticket.referenceNumber)}
+                      onClick={(e) => { e.stopPropagation(); ticket.referenceNumber && handleCopy(ticket.referenceNumber); }}
                     >
                       <p className="text-[8px] font-black text-ink-sub uppercase tracking-widest mb-0.5 opacity-60">REF NO.</p>
                       <p className="text-xs font-mono font-black text-ink tracking-tight truncate max-w-[80px]">
@@ -380,14 +380,14 @@ const TicketView: React.FC<Props> = ({ tickets, userProfiles, onSave, onDelete, 
                     )}
 
                     <button
-                      onClick={() => handleOpenEdit(ticket)}
+                      onClick={(e) => { e.stopPropagation(); handleOpenEdit(ticket); }}
                       className="w-12 h-12 sm:h-full flex items-center justify-center bg-white border border-surface-gray-mid/50 rounded-2xl text-lg hover:bg-surface-gray transition-all active:scale-90"
                     >
                       ✏️
                     </button>
 
                     <button
-                      onClick={() => isDeleting ? handleDeleteConfirm(ticket.id) : handleDeleteClick(ticket.id)}
+                      onClick={(e) => { e.stopPropagation(); isDeleting ? handleDeleteConfirm(ticket.id) : handleDeleteClick(ticket.id); }}
                       onMouseLeave={() => setDeletingId(null)}
                       className={`w-12 h-12 sm:h-full flex items-center justify-center rounded-2xl transition-all active:scale-90 ${isDeleting ? 'bg-rose-500 text-white' : 'bg-rose-50/50 text-rose-300 hover:text-rose-600 border border-rose-100'}`}
                     >
