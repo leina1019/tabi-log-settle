@@ -655,7 +655,7 @@ const App: React.FC = () => {
   return (
     <div className={`min-h-[100dvh] bg-ocean-light flex flex-col items-center antialiased font-sans select-none`}>
       {/* Main Container - h-screenを削除し、親の100dvhを継承 */}
-      <div className={`${DEVICE_CONFIG[viewModeSize]?.width || 'max-w-md'} w-full mx-auto h-full bg-surface-gray flex flex-col text-ink relative overflow-hidden sm:border-x sm:border-surface-gray-mid transition-all duration-300 shadow-2xl shadow-ocean-dark/20`}>
+      <div className={`${DEVICE_CONFIG[viewModeSize]?.width || 'max-w-md'} w-full mx-auto min-h-full bg-surface-gray flex flex-col text-ink relative sm:border-x sm:border-surface-gray-mid transition-all duration-300 shadow-2xl shadow-ocean-dark/20`}>
 
         {/* Header - ANAブルー帯 & 固定表示 */}
         <header className="sticky top-0 bg-ocean-dark px-5 pt-2 pb-2 flex justify-between items-center z-[60] safe-pt shadow-md">
@@ -786,8 +786,8 @@ const App: React.FC = () => {
         )}
 
 
-        {/* Main Content Area - スクロール可能な領域 */}
-        <main className="flex-1 overflow-y-auto px-4 pb-32 pt-2 scrollbar-hide">
+        {/* Main Content Area - 自然なスクロールへ戻し、十分な底部の余白を確保 */}
+        <main className="flex-1 px-4 pb-40 pt-2">
           {view === 'history' && (
             <ExpenseList
               expenses={expenses}
