@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
+import { getLocalDateString } from '../utils/dateUtils';
 
 export const useTripDates = (tripStartDate: string, tripEndDate: string) => {
     const [selectedDate, setSelectedDate] = useState<string>('');
@@ -11,7 +12,8 @@ export const useTripDates = (tripStartDate: string, tripEndDate: string) => {
         let current = new Date(start);
         let count = 0;
         while (current <= end && count < 31) {
-            dates.push(current.toISOString().split('T')[0]);
+            const dateStr = getLocalDateString(current);
+            dates.push(dateStr);
             current.setDate(current.getDate() + 1);
             count++;
         }
@@ -20,9 +22,15 @@ export const useTripDates = (tripStartDate: string, tripEndDate: string) => {
 
     useEffect(() => {
         if (dateRange.length > 0 && !selectedDate) {
-            setSelectedDate(dateRange[0]);
+            const today = getLocalDateString();
+            // 旅行期間中に今日が含まれていれば、今日をデフォルト選択にする
+            if (dateRange.includes(today)) {
+                setSelectedDate(today);
+            } else {
+                setSelectedDate(dateRange[0]);
+            }
         } else if (dateRange.length === 0 && !selectedDate) {
-            setSelectedDate(new Date().toISOString().split('T')[0]);
+            setSelectedDate(getLocalDateString());
         }
     }, [dateRange, selectedDate]);
 
@@ -38,8 +46,7 @@ export const useTripDates = (tripStartDate: string, tripEndDate: string) => {
 
     const isTodayDate = (dateStr: string) => {
         if (!dateStr) return false;
-        const today = new Date().toISOString().split('T')[0];
-        return dateStr === today;
+        return dateStr === getLocalDateString();
     };
 
     return {

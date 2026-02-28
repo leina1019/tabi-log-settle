@@ -8,6 +8,7 @@ import { AppIcon } from './AppIcon';
 import { useTripDates } from '../hooks/useTripDates';
 import { useMemberFilter } from '../hooks/useMemberFilter';
 import { resizeImage } from '../utils/imageUtils';
+import { getLocalDateString, getCurrentTimeStr } from '../utils/dateUtils';
 
 // 予定種類の定義（ラベル + アイコン）
 const ITEM_TYPES: { value: ItineraryItem['type']; label: string; icon: string }[] = [
@@ -64,12 +65,10 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
   // 直接追加フォームを開く処理
   useEffect(() => {
     if (autoOpenAdd) {
-      const now = new Date();
-      const defaultTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
       setFormData({
         type: 'activity',
-        date: selectedDate || (dateRange[0] || new Date().toISOString().split('T')[0]),
-        time: defaultTime,
+        date: selectedDate || (dateRange[0] || getLocalDateString()),
+        time: getCurrentTimeStr(),
         links: [],
         participantIds: [] // デフォルトは全員(空)
       });
@@ -137,10 +136,7 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
   }, [filteredItems]);
 
   const handleOpenAdd = () => {
-    // 現在時刻をデフォルト（HH:MM形式）
-    const now = new Date();
-    const defaultTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-    setFormData({ type: 'activity', date: selectedDate, time: defaultTime });
+    setFormData({ type: 'activity', date: selectedDate, time: getCurrentTimeStr() });
     setValidationError('');
     setIsModalOpen(true);
   };
@@ -162,22 +158,16 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
     }
 
     try {
-      // time が空なら現在時刻をセット
-      const time = formData.time || (() => {
-        const now = new Date();
-        return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-      })();
-
-      const now = new Date().toISOString();
+      const nowStr = new Date().toISOString();
       const itemToSave: ItineraryItem = {
         ...formData,
         id: formData.id || crypto.randomUUID(),
         title: (formData.title || '').trim(),
         date: formData.date || selectedDate,
-        time,
+        time: formData.time || getCurrentTimeStr(),
         type: formData.type || 'activity',
         links: formData.links || [],
-        updatedAt: now,
+        updatedAt: nowStr,
       } as ItineraryItem;
 
       onSave(itemToSave);
@@ -417,7 +407,7 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
                   <WeatherIcon code={dayWeather.weatherCode} className="w-8 h-8" />
                   <div>
                     <p className="text-[8px] font-bold text-ink-sub uppercase tracking-widest">天気予報</p>
-                    <p className="text-[10px] font-bold text-ink">{selectedDate === new Date().toISOString().split('T')[0] ? '今日の予報' : 'この日の予報'}</p>
+                    <p className="text-[10px] font-bold text-ink">{selectedDate === getLocalDateString() ? '今日の予報' : 'この日の予報'}</p>
                   </div>
                 </div>
                 <div className="text-right">
@@ -454,9 +444,8 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
 
             {filteredItems.map((item, idx) => {
               const typeInfo = getTypeInfo(item.type);
-              const now = new Date();
-              const currentTimeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-              const isToday = selectedDate === now.toISOString().split('T')[0];
+              const currentTimeStr = getCurrentTimeStr();
+              const isToday = selectedDate === getLocalDateString();
 
               // 次の予定判定: 今日かつ、まだ始まっていない最初の予定
               const isNext = isToday && item.time > currentTimeStr && (idx === 0 || filteredItems[idx - 1].time <= currentTimeStr);
