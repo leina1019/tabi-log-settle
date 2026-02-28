@@ -361,11 +361,11 @@ export async function syncAllDataToSheet(data: CloudData, tripId: string): Promi
   }
 }
 
+import { calculateBalances, calculateSettlements } from '../utils/settlementUtils';
+
 /**
- * 一括エクスポート (白紙化 → 全データ書き込み)
- * - 毎回マスターシートを白紙にしてから全データを書き込む
- * - 他のグループへの情報漏洩を防ぐ
- * - packingListもエクスポート対象に含む
+ * 一括エクスポート (マルチタブ形式)
+ * - 清算用・振り返り用の人間が読みやすい形式で出力
  */
 export async function exportToMasterSheet(params: {
   tripId: string;
@@ -384,127 +384,137 @@ export async function exportToMasterSheet(params: {
 }): Promise<string | null> {
   const { tripId, profiles, expenses, itinerary, tickets, packingList, tripSettings } = params;
 
-  if (!tripId) {
-    console.error('[GSheet] tripIdが未設定');
-    return false;
-  }
+  if (!tripId) return null;
 
   try {
-    // Step2: 全データをBULK_SAVEで送信 (BULK_SAVEはGAS側で既にRESETを含むため、ここでの個別リセットは不要)
-    const rows: any[] = [
-      // 旅行設定
-      {
-        id: 'TRIP_SETTINGS',
-        date: '2024-01-01',
-        title: tripSettings.tripName || '無題',
-        category: CAT_TRIP_SETTINGS,
-        paidBy: 'SYSTEM',
-        amount: 0,
-        currency: 'JPY',
-        exchangeRate: 1,
-        amountJPY: 0,
-        splitWith: '',
-        sourceUrl: JSON.stringify(tripSettings),
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      },
-      // メンバー
-      ...profiles.map(p => ({
-        id: `PROFILE_${p.id}`,
-        date: '2024-01-01',
-        title: p.displayName,
-        category: CAT_PROFILE,
-        paidBy: p.id,
-        amount: 0,
-        currency: 'JPY',
-        exchangeRate: 1,
-        amountJPY: 0,
-        splitWith: '',
-        sourceUrl: p.avatarUrl || '',
-        createdAt: new Date().toISOString(),
-        updatedAt: p.updatedAt || new Date().toISOString()
-      })),
-      // 支出
-      ...expenses.map(e => ({
-        id: e.id,
-        date: e.date,
-        title: e.title,
-        category: e.category,
-        paidBy: e.paidBy,
-        amount: e.amount,
-        currency: e.currency,
-        exchangeRate: e.exchangeRate,
-        amountJPY: convertToJPY(e.amount, e.currency, e.exchangeRate),
-        splitWith: e.splitWith.join(', '),
-        sourceUrl: e.sourceUrl || '',
-        createdAt: e.createdAt,
-        updatedAt: e.updatedAt
-      })),
-      // スケジュール
-      ...itinerary.map(item => ({
-        id: `ITINERARY_${item.id}`,
-        date: item.date,
-        title: item.title,
-        category: CAT_ITINERARY,
-        paidBy: 'SYSTEM',
-        amount: 0,
-        currency: 'JPY',
-        exchangeRate: 1,
-        amountJPY: 0,
-        splitWith: '',
-        sourceUrl: JSON.stringify({
-          time: item.time, location: item.location,
-          memo: item.memo, link: item.link, type: item.type
-        }),
-        createdAt: new Date().toISOString(),
-        updatedAt: item.updatedAt || new Date().toISOString()
-      })),
-      // チケット
-      ...tickets.map(item => ({
-        id: `TICKET_${item.id}`,
-        date: item.date,
-        title: item.title,
-        category: CAT_TICKET,
-        paidBy: 'SYSTEM',
-        amount: 0,
-        currency: 'JPY',
-        exchangeRate: 1,
-        amountJPY: 0,
-        splitWith: '',
-        sourceUrl: JSON.stringify({
-          type: item.type, provider: item.provider, time: item.time,
-          referenceNumber: item.referenceNumber, notes: item.notes, link: item.link,
-          passengerIds: item.passengerIds
-        }),
-        createdAt: new Date().toISOString(),
-        updatedAt: item.updatedAt || new Date().toISOString()
-      })),
-      // 荷物リスト
-      ...packingList.map(item => ({
-        id: `PACKING_${item.id}`,
-        date: '2024-01-01',
-        title: item.title,
-        category: CAT_PACKING,
-        paidBy: 'SYSTEM',
-        amount: 0,
-        currency: 'JPY',
-        exchangeRate: 1,
-        amountJPY: 0,
-        splitWith: '',
-        sourceUrl: JSON.stringify({
-          category: item.category,
-          isPacked: item.isPacked,
-          assignees: item.assignees || [],
-          packedBy: item.packedBy || []
-        }),
-        createdAt: new Date().toISOString(),
-        updatedAt: item.updatedAt || new Date().toISOString()
-      }))
-    ];
+    // 1. 各種計算
+    const balances = calculateBalances(expenses, profiles);
+    const settlements = calculateSettlements(balances);
+    const totalJPY = expenses.reduce((sum, e) => sum + convertToJPY(e.amount, e.currency, e.exchangeRate), 0);
+    const getDisplayName = (id: string) => profiles.find(p => p.id === id)?.displayName || id;
 
+    // 2. シートデータの構築
+    const sheets: Record<string, { headers: string[], data: any[] }> = {
+      "概要": {
+        headers: ["項目", "値", "備考"],
+        data: [
+          { "項目": "旅行名", "値": tripSettings.tripName },
+          { "項目": "期間", "値": `${tripSettings.tripStartDate} 〜 ${tripSettings.tripEndDate}` },
+          { "項目": "予算", "値": `${tripSettings.budget.toLocaleString()}円` },
+          { "項目": "合計支出", "値": `${Math.round(totalJPY).toLocaleString()}円` },
+          { "項目": "-------------------", "値": "-------------------", "備考": "-------------------" },
+          { "項目": "【精算指示】", "値": "送金する人", "備考": "受け取る人" },
+          ...settlements.map(s => ({
+            "項目": `${Math.round(s.amount).toLocaleString()}円`,
+            "値": getDisplayName(s.from),
+            "備考": `→ ${getDisplayName(s.to)}`
+          })),
+          { "項目": "-------------------", "値": "-------------------", "備考": "-------------------" },
+          { "項目": "【個人別収支】", "値": "名前", "備考": "収支(＋が受取/－が支払)" },
+          ...profiles.map(p => ({
+            "項目": p.displayName,
+            "値": `${Math.round(balances[p.id] || 0).toLocaleString()}円`,
+            "備考": balances[p.id] >= 0 ? "受取待ち" : "支払いが必要"
+          }))
+        ]
+      },
+      "支出精算": {
+        headers: ["日付", "内容", "カテゴリ", "支払者", "金額", "通貨", "レート", "日本円相当", "精算対象", "ID"],
+        data: expenses.map(e => ({
+          "日付": e.date,
+          "内容": e.title,
+          "カテゴリ": e.category,
+          "支払者": getDisplayName(e.paidBy),
+          "金額": e.amount,
+          "通貨": e.currency,
+          "レート": e.exchangeRate,
+          "日本円相当": convertToJPY(e.amount, e.currency, e.exchangeRate),
+          "精算対象": e.splitWith.map(id => getDisplayName(id)).join(", "),
+          "ID": e.id
+        }))
+      },
+      "スケジュール": {
+        headers: ["日付", "時刻", "内容", "場所", "メモ", "リンク", "参加者"],
+        data: itinerary.map(item => ({
+          "日付": item.date,
+          "時刻": item.time,
+          "内容": item.title,
+          "場所": item.location || "",
+          "メモ": item.memo || "",
+          "リンク": item.link || "",
+          "参加者": item.participantIds ? item.participantIds.map(id => getDisplayName(id)).join(", ") : "全員"
+        }))
+      },
+      "チケット": {
+        headers: ["種類", "タイトル", "提供元/会社", "日付", "時刻", "予約番号", "メモ", "リンク", "利用者"],
+        data: tickets.map(item => ({
+          "種類": item.type,
+          "タイトル": item.title,
+          "提供元/会社": item.provider || "",
+          "日付": item.date,
+          "時刻": item.time || "",
+          "予約番号": item.referenceNumber || "",
+          "メモ": item.notes || "",
+          "リンク": item.link || "",
+          "利用者": item.passengerIds ? item.passengerIds.map(id => getDisplayName(id)).join(", ") : "全員"
+        }))
+      },
+      "持ち物": {
+        headers: ["カテゴリ", "アイテム", "準備完了", "担当", "完了者"],
+        data: packingList.map(item => ({
+          "カテゴリ": item.category,
+          "アイテム": item.title,
+          "準備完了": item.isPacked ? "○" : "×",
+          "担当": item.assignees ? item.assignees.map(id => getDisplayName(id)).join(", ") : "全員",
+          "完了者": item.packedBy ? item.packedBy.map(id => getDisplayName(id)).join(", ") : ""
+        }))
+      },
+      "[HIDDEN]data": {
+        headers: ["id", "date", "title", "category", "paidBy", "amount", "currency", "exchangeRate", "amountJPY", "splitWith", "sourceUrl", "createdAt", "updatedAt"],
+        data: [
+          ...expenses.map(e => ({
+            id: e.id, date: e.date, title: e.title, category: e.category, paidBy: e.paidBy,
+            amount: e.amount, currency: e.currency, exchangeRate: e.exchangeRate,
+            amountJPY: convertToJPY(e.amount, e.currency, e.exchangeRate),
+            splitWith: e.splitWith.join(", "), sourceUrl: e.sourceUrl || '',
+            createdAt: e.createdAt, updatedAt: e.updatedAt
+          })),
+          ...itinerary.map(item => ({
+            id: `ITINERARY_${item.id}`, date: item.date, title: item.title, category: '__ITINERARY__', paidBy: 'SYSTEM',
+            amount: 0, currency: 'JPY', exchangeRate: 1, amountJPY: 0, splitWith: '',
+            sourceUrl: JSON.stringify({ time: item.time, location: item.location, memo: item.memo, link: item.link, type: item.type }),
+            createdAt: new Date().toISOString(), updatedAt: item.updatedAt || new Date().toISOString()
+          })),
+          ...tickets.map(item => ({
+            id: `TICKET_${item.id}`, date: item.date, title: item.title, category: '__TICKET__', paidBy: 'SYSTEM',
+            amount: 0, currency: 'JPY', exchangeRate: 1, amountJPY: 0, splitWith: '',
+            sourceUrl: JSON.stringify({ type: item.type, provider: item.provider, time: item.time, referenceNumber: item.referenceNumber, notes: item.notes, link: item.link, passengerIds: item.passengerIds }),
+            createdAt: new Date().toISOString(), updatedAt: item.updatedAt || new Date().toISOString()
+          })),
+          ...packingList.map(item => ({
+            id: `PACKING_${item.id}`, date: '2024-01-01', title: item.title, category: '__PACKING__', paidBy: 'SYSTEM',
+            amount: 0, currency: 'JPY', exchangeRate: 1, amountJPY: 0, splitWith: '',
+            sourceUrl: JSON.stringify({ category: item.category, isPacked: item.isPacked, assignees: item.assignees || [], packedBy: item.packedBy || [] }),
+            createdAt: new Date().toISOString(), updatedAt: item.updatedAt || new Date().toISOString()
+          })),
+          ...profiles.map(p => ({
+            id: `PROFILE_${p.id}`, date: '2024-01-01', title: p.displayName, category: '__PROFILE__', paidBy: p.id,
+            amount: 0, currency: 'JPY', exchangeRate: 1, amountJPY: 0, splitWith: '', sourceUrl: p.avatarUrl || '',
+            createdAt: new Date().toISOString(), updatedAt: p.updatedAt || new Date().toISOString()
+          })),
+          {
+            id: 'TRIP_SETTINGS', date: '2024-01-01', title: tripSettings.tripName, category: '__TRIP_SETTINGS__', paidBy: 'SYSTEM',
+            amount: 0, currency: 'JPY', exchangeRate: 1, amountJPY: 0, splitWith: '', sourceUrl: JSON.stringify(tripSettings),
+            createdAt: new Date().toISOString(), updatedAt: new Date().toISOString()
+          }
+        ]
+      }
+    };
+
+    // 3. GASへ送信
     const response = await fetch(GAS_WEBAPP_URL, {
       method: 'POST',
-      body: JSON.stringify({ action: 'BULK_SAVE', tripId, data: rows })
+      body: JSON.stringify({ action: 'EXPORT_MULTITAB', tripId, sheets })
     });
 
     if (!response.ok) return null;

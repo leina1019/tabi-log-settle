@@ -3,7 +3,7 @@ import React, { useMemo, useState } from 'react';
 import { Settlement, Expense, Participant, UserProfile } from '../types';
 import { convertToJPY, formatCurrency } from '../utils/currency';
 import { AppIcon } from './AppIcon';
-// PARTICIPANTS is removed
+import { calculateBalances } from '../utils/settlementUtils';
 
 interface Props {
   settlements: Settlement[];
@@ -14,21 +14,9 @@ interface Props {
 
 const SettlementView: React.FC<Props> = ({ settlements, expenses, onBack, userProfiles }) => {
   const [selectedPId, setSelectedPId] = useState<string | null>(null);
-  // F1: 送金プランのコピーフィードバック用
   const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
 
-  const balances = useMemo(() => {
-    const b: Record<string, number> = {};
-    const memberIds = userProfiles.map(u => u.id);
-    memberIds.forEach(id => b[id] = 0);
-    expenses.forEach(exp => {
-      const amountJPY = convertToJPY(exp.amount, exp.currency, exp.exchangeRate);
-      const share = amountJPY / (exp.splitWith.length || 1);
-      b[exp.paidBy] += amountJPY;
-      exp.splitWith.forEach(p => { b[p] -= share; });
-    });
-    return b;
-  }, [expenses, userProfiles]);
+  const balances = useMemo(() => calculateBalances(expenses, userProfiles), [expenses, userProfiles]);
 
   const participantDetails = useMemo(() => {
     if (!selectedPId) return null;

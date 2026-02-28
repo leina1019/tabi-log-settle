@@ -146,11 +146,48 @@ function doGet(e) {
 }
 
 /**
- * POSTリクエスト処理 - データを保存・削除・リセット
+ * 指定名のシートを取得し、ヘッダーをセットして初期化する（既存データはクリア）
+ */
+function prepareSheet(ss, sheetName, headers) {
+    var isHidden = sheetName.indexOf("[HIDDEN]") === 0;
+    var actualName = isHidden ? sheetName.replace("[HIDDEN]", "") : sheetName;
+
+    var sheet = ss.getSheetByName(actualName);
+    if (!sheet) {
+        sheet = ss.insertSheet(actualName);
+    } else {
+        sheet.clear();
+        sheet.showSheet(); // 一旦表示
+    }
+
+    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+    sheet.getRange(1, 1, 1, headers.length).setFontWeight("bold").setBackground("#f3f3f3");
+    sheet.setFrozenRows(1);
+
+    if (isHidden) sheet.hideSheet();
+    return sheet;
+}
+
+/**
+ * 送信されたデータをシートに書き込む
+ */
+function writeToSheet(sheet, headers, data) {
+    if (!data || data.length === 0) return;
+    var rows = data.map(function (item) {
+        return headers.map(function (h) {
+            var val = item[h];
+            return (val !== undefined && val !== null) ? val : "";
+        });
+    });
+    sheet.getRange(2, 1, rows.length, headers.length).setValues(rows);
+    sheet.autoResizeColumns(1, headers.length);
+}
+
+/**
+ * POSTリクエスト処理 - データを保存・削除・一括エクスポート
  */
 function doPost(e) {
     try {
-        // e.postData.contents が json 形式の文字列であることを想定
         var payload = JSON.parse(e.postData.contents);
         var tripId = payload.tripId;
 
@@ -161,89 +198,95 @@ function doPost(e) {
         }
 
         var action = payload.action;
-        var sheet = getDataSheet(tripId);
-        var spreadsheetId = sheet.getParent().getId();
+        var spreadsheetId = findSpreadsheetId(tripId);
+        if (!spreadsheetId) {
+            spreadsheetId = createNewSpreadsheetForTrip(tripId);
+        }
+        var ss = SpreadsheetApp.openById(spreadsheetId);
 
-        if (action === 'RESET') {
-            // シート内のデータをクリア（ヘッダーは残す）
-            var lastRow = sheet.getLastRow();
-            if (lastRow > 1) {
-                sheet.deleteRows(2, lastRow - 1);
+        if (action === 'EXPORT_MULTITAB') {
+            // マルチタブ形式のエクスポート
+            var sheetsData = payload.sheets; // { "概要": { headers: [], data: [] }, ... }
+
+            // デフォルトの "シート1" や "data" があれば削除検討（必要なら）
+            var existingSheetNames = ss.getSheets().map(function (s) { return s.getName(); });
+
+            for (var name in sheetsData) {
+                var sInfo = sheetsData[name];
+                var sheet = prepareSheet(ss, name, sInfo.headers);
+                writeToSheet(sheet, sInfo.headers, sInfo.data);
             }
+
+            // 最初の "data" または "Sheet1" を削除して整理（データ保護のため慎重に）
+            var sheet1 = ss.getSheetByName("Sheet1");
+            if (sheet1 && ss.getSheets().length > 1) ss.deleteSheet(sheet1);
+            var oldDataSheet = ss.getSheetByName("data");
+            if (oldDataSheet && ss.getSheets().length > 1) ss.deleteSheet(oldDataSheet);
+
             return ContentService
-                .createTextOutput(JSON.stringify({ status: 'ok', message: 'Reset for tripId: ' + tripId, spreadsheetId: spreadsheetId }))
+                .createTextOutput(JSON.stringify({ status: 'ok', spreadsheetId: spreadsheetId }))
                 .setMimeType(ContentService.MimeType.JSON);
 
-        } else if (action === 'BULK_SAVE') {
-            // 一括保存：一度クリアしてから全件追加
-            var lastRow2 = sheet.getLastRow();
-            if (lastRow2 > 1) {
-                sheet.deleteRows(2, lastRow2 - 1);
+        } else if (action === 'RESET' || action === 'BULK_SAVE') {
+            // 互換性維持のための既存ロジック
+            var sheet = getDataSheet(tripId);
+            if (action === 'RESET' || action === 'BULK_SAVE') {
+                var lastRow = sheet.getLastRow();
+                if (lastRow > 1) sheet.deleteRows(2, lastRow - 1);
             }
-
-            var items = payload.data;
-            if (items && items.length > 0) {
-                var rows = items.map(function (item) {
-                    return HEADERS.map(function (h) {
-                        var val = item[h];
-                        // nullやundefined、空文字列を適切に処理
-                        return (val !== undefined && val !== null) ? val : "";
+            if (action === 'BULK_SAVE') {
+                var items = payload.data;
+                if (items && items.length > 0) {
+                    var rows = items.map(function (item) {
+                        return HEADERS.map(function (h) {
+                            var val = item[h];
+                            return (val !== undefined && val !== null) ? val : "";
+                        });
                     });
-                });
-                sheet.getRange(2, 1, rows.length, HEADERS.length).setValues(rows);
-            }
-
-            return ContentService
-                .createTextOutput(JSON.stringify({ status: 'ok', count: items ? items.length : 0, spreadsheetId: spreadsheetId }))
-                .setMimeType(ContentService.MimeType.JSON);
-
-        } else if (action === 'DELETE') {
-            // 特定IDの行を削除
-            var targetId = payload.id;
-            var allData = sheet.getDataRange().getValues();
-            var found = false;
-            for (var i = allData.length - 1; i >= 1; i--) {
-                if (String(allData[i][0]) === String(targetId)) {
-                    sheet.deleteRow(i + 1);
-                    found = true;
-                    // 同じIDの行が複数ある可能性を考慮し、ここでは break せず全体をスキャン（通常は1件想定）
+                    sheet.getRange(2, 1, rows.length, HEADERS.length).setValues(rows);
                 }
             }
             return ContentService
-                .createTextOutput(JSON.stringify({ status: 'ok', message: 'Deleted: ' + targetId, found: found, spreadsheetId: spreadsheetId }))
+                .createTextOutput(JSON.stringify({ status: 'ok', spreadsheetId: spreadsheetId }))
+                .setMimeType(ContentService.MimeType.JSON);
+
+        } else if (action === 'DELETE') {
+            var sheet = getDataSheet(tripId);
+            var targetId = payload.id;
+            var allData = sheet.getDataRange().getValues();
+            for (var i = allData.length - 1; i >= 1; i--) {
+                if (String(allData[i][0]) === String(targetId)) sheet.deleteRow(i + 1);
+            }
+            return ContentService
+                .createTextOutput(JSON.stringify({ status: 'ok', spreadsheetId: spreadsheetId }))
                 .setMimeType(ContentService.MimeType.JSON);
 
         } else {
-            // 単一アイテムのUPSERT (actionなし、またはその他の場合)
+            // 単独UPSERT
+            var sheet = getDataSheet(tripId);
             var item = payload;
             var existingData = sheet.getDataRange().getValues();
             var existingRowIndex = -1;
-
             for (var j = 1; j < existingData.length; j++) {
                 if (String(existingData[j][0]) === String(item.id)) {
                     existingRowIndex = j + 1;
                     break;
                 }
             }
-
             var rowData = HEADERS.map(function (h) {
                 var val = item[h];
                 return (val !== undefined && val !== null) ? val : "";
             });
-
             if (existingRowIndex > 0) {
                 sheet.getRange(existingRowIndex, 1, 1, HEADERS.length).setValues([rowData]);
             } else {
                 sheet.appendRow(rowData);
             }
-
             return ContentService
                 .createTextOutput(JSON.stringify({ status: 'ok', spreadsheetId: spreadsheetId }))
                 .setMimeType(ContentService.MimeType.JSON);
         }
-
     } catch (err) {
-        Logger.log('doPost error: ' + err.toString());
         return ContentService
             .createTextOutput(JSON.stringify({ status: 'error', message: err.toString() }))
             .setMimeType(ContentService.MimeType.JSON);
