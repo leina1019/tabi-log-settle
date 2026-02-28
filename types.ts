@@ -66,6 +66,8 @@ export interface Ticket {
   notes?: string;
   link?: string; // Drive link or e-ticket URL
   mapUrl?: string; // 📍 関連マップリンク
+  imageUrl?: string; // アップロードされた画像 or PDFの1ページ目 (Base64)
+  fileType?: 'image' | 'pdf'; // ファイル形式
   participantId?: string; // 後方互換: 単数指定（非推奨）
   passengerIds?: string[]; // 乗車・利用メンバー（複数選択可、未設定=全員）
   updatedAt?: string; // For sync
