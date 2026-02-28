@@ -401,88 +401,89 @@ const TicketView: React.FC<Props> = ({ tickets, userProfiles, onSave, onDelete, 
 
                   {/* アクションボタン */}
                   <div className="flex items-center gap-2 flex-1 sm:flex-none">
-                    <div className="flex items-center gap-2 flex-1 sm:flex-none">
-                      {ticket.imageUrl ? (
-                        <button
-                          onClick={(e) => { e.stopPropagation(); setLightboxImage(ticket.imageUrl!); }}
-                          className="flex-1 sm:flex-none h-11 px-5 bg-primary text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-ink transition-all shadow-xl shadow-primary/20 active:scale-95 flex items-center justify-center gap-2"
-                        >
-                          <span className="text-sm">🔍</span>
-                          表示する
-                        </button>
-                      ) : ticket.link ? (
-                        <a
-                          href={ticket.link}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex-1 sm:flex-none h-10 px-4 bg-ink text-white rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-primary transition-all shadow-lg active:scale-95 flex items-center justify-center gap-1.5"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <span className="text-sm">🎟️</span>
-                          OPEN
-                        </a>
-                      ) : (
-                        <div className="flex-1 sm:flex-none h-10 px-4 bg-surface-gray rounded-xl text-[9px] font-black uppercase tracking-widest text-ink-sub/30 flex items-center justify-center gap-1.5 border border-surface-gray-mid/20">
-                          EMPTY
-                        </div>
+                    {ticket.imageUrl && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setLightboxImage(ticket.imageUrl!); }}
+                        className="flex-1 sm:flex-none h-11 px-5 bg-primary text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-ink transition-all shadow-xl shadow-primary/20 active:scale-95 flex items-center justify-center gap-2"
+                      >
+                        <span className="text-sm">🔍</span>
+                        表示する
+                      </button>
+                    )}
+
+                    {ticket.link && (
+                      <a
+                        href={ticket.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`flex-1 sm:flex-none h-11 px-4 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all shadow-lg active:scale-95 flex items-center justify-center gap-1.5 ${ticket.imageUrl
+                          ? 'bg-ink/5 text-ink-sub border border-surface-gray-mid/50 hover:bg-surface-gray'
+                          : 'bg-ink text-white hover:bg-primary shadow-primary/10'
+                          }`}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <span className="text-sm">{ticket.imageUrl ? '🔗' : '🎟️'}</span>
+                        {ticket.imageUrl ? 'WEB' : 'OPEN'}
+                      </a>
+                    )}
+
+                    {!ticket.imageUrl && !ticket.link && (
+                      <div className="flex-1 sm:flex-none h-10 px-4 bg-surface-gray rounded-xl text-[9px] font-black uppercase tracking-widest text-ink-sub/30 flex items-center justify-center gap-1.5 border border-surface-gray-mid/20">
+                        EMPTY
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleOpenEdit(ticket); }}
+                      className="w-10 h-10 flex items-center justify-center bg-white border border-surface-gray-mid/50 rounded-xl text-base hover:bg-surface-gray transition-all active:scale-90 shadow-sm"
+                    >
+                      ✏️
+                    </button>
+
+                    <button
+                      onClick={(e) => { e.stopPropagation(); isDeleting ? handleDeleteConfirm(ticket.id) : handleDeleteClick(ticket.id); }}
+                      onMouseLeave={() => setDeletingId(null)}
+                      className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all active:scale-90 shadow-sm ${isDeleting ? 'bg-rose-500 text-white shadow-lg' : 'bg-rose-50 text-rose-400 hover:text-rose-600 border border-rose-100'}`}
+                    >
+                      {isDeleting ? <span className="text-[8px] font-black tracking-widest">OK?</span> : (
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                       )}
-                    </div>
-
-                    <div className="flex items-center gap-1.5">
-                      <button
-                        onClick={(e) => { e.stopPropagation(); handleOpenEdit(ticket); }}
-                        className="w-10 h-10 flex items-center justify-center bg-white border border-surface-gray-mid/50 rounded-xl text-base hover:bg-surface-gray transition-all active:scale-90 shadow-sm"
-                      >
-                        ✏️
-                      </button>
-
-                      <button
-                        onClick={(e) => { e.stopPropagation(); isDeleting ? handleDeleteConfirm(ticket.id) : handleDeleteClick(ticket.id); }}
-                        onMouseLeave={() => setDeletingId(null)}
-                        className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all active:scale-90 shadow-sm ${isDeleting ? 'bg-rose-500 text-white shadow-lg' : 'bg-rose-50 text-rose-400 hover:text-rose-600 border border-rose-100'}`}
-                      >
-                        {isDeleting ? <span className="text-[8px] font-black tracking-widest">OK?</span> : (
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                        )}
-                      </button>
-                    </div>
+                    </button>
                   </div>
                 </div>
+              </div>
 
-                {/* メンバスイッチ (Itineraryスタイルに統合) */}
-                <div className="absolute top-3 left-3 z-30 flex -space-x-2">
-                  {(() => {
-                    const pIds = ticket.passengerIds || (ticket.participantId ? [ticket.participantId] : []);
-                    const profiles = userProfiles.filter(p => pIds.includes(p.id));
+              {/* メンバスイッチ (Itineraryスタイルに統合) */}
+              <div className="absolute top-3 left-3 z-30 flex -space-x-2">
+                {(() => {
+                  const pIds = ticket.passengerIds || (ticket.participantId ? [ticket.participantId] : []);
+                  const profiles = userProfiles.filter(p => pIds.includes(p.id));
 
-                    if (profiles.length === 0) {
-                      return (
-                        <div className="w-8 h-8 rounded-full border-2 border-white shadow-sm bg-primary/10 flex items-center justify-center text-[10px]" title="全員">
-                          🌎
-                        </div>
-                      );
-                    }
-
+                  if (profiles.length === 0) {
                     return (
-                      <>
-                        {profiles.slice(0, 3).map(p => (
-                          <div key={p.id} className="w-8 h-8 rounded-full border-2 border-white shadow-sm overflow-hidden" title={p.displayName} style={{ backgroundColor: p.color }}>
-                            {p.avatarUrl ? <img src={p.avatarUrl} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-[10px] text-white font-black">{p.displayName[0]}</div>}
-                          </div>
-                        ))}
-                        {profiles.length > 3 && (
-                          <div className="w-8 h-8 rounded-full bg-white border-2 border-white shadow-sm flex items-center justify-center text-[10px] font-black text-ink">
-                            +{profiles.length - 3}
-                          </div>
-                        )}
-                      </>
+                      <div className="w-8 h-8 rounded-full border-2 border-white shadow-sm bg-primary/10 flex items-center justify-center text-[10px]" title="全員">
+                        🌎
+                      </div>
                     );
-                  })()}
-                </div>
+                  }
 
-                {/* チケットパンチ（切り欠き） */}
-                <div className="hidden sm:block absolute left-1 sm:left-2 top-1/2 -translate-y-1/2 -ml-3 sm:-ml-4 w-6 h-6 bg-surface-gray rounded-full border border-surface-gray-mid/30 z-10 shadow-inner" />
-                <div className="hidden sm:block absolute right-0 top-1/2 -translate-y-1/2 -mr-3 w-6 h-6 bg-surface-gray rounded-full border border-surface-gray-mid/30 z-10 shadow-inner" />
+                  return (
+                    <>
+                      {profiles.slice(0, 3).map(p => (
+                        <div key={p.id} className="w-8 h-8 rounded-full border-2 border-white shadow-sm overflow-hidden" title={p.displayName} style={{ backgroundColor: p.color }}>
+                          {p.avatarUrl ? <img src={p.avatarUrl} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-[10px] text-white font-black">{p.displayName[0]}</div>}
+                        </div>
+                      ))}
+                      {profiles.length > 3 && (
+                        <div className="w-8 h-8 rounded-full bg-white border-2 border-white shadow-sm flex items-center justify-center text-[10px] font-black text-ink">
+                          +{profiles.length - 3}
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
               </div>
             </div>
           );
@@ -691,38 +692,41 @@ const TicketView: React.FC<Props> = ({ tickets, userProfiles, onSave, onDelete, 
             </div>
           </div>
         </div>
-      )}
+      )
+      }
 
       {/* ライトボックス（拡大表示） */}
-      {lightboxImage && (
-        <div
-          className="fixed inset-0 z-[200] bg-black/95 backdrop-blur-xl flex flex-col items-center justify-center p-4 animate-in fade-in duration-300"
-          onClick={() => setLightboxImage(null)}
-        >
-          <div className="absolute top-6 right-6 flex gap-4">
-            <button
-              onClick={() => setLightboxImage(null)}
-              className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center text-3xl font-light transition-all active:scale-90 backdrop-blur-md border border-white/20"
-            >
-              ×
-            </button>
-          </div>
+      {
+        lightboxImage && (
+          <div
+            className="fixed inset-0 z-[200] bg-black/95 backdrop-blur-xl flex flex-col items-center justify-center p-4 animate-in fade-in duration-300"
+            onClick={() => setLightboxImage(null)}
+          >
+            <div className="absolute top-6 right-6 flex gap-4">
+              <button
+                onClick={() => setLightboxImage(null)}
+                className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center text-3xl font-light transition-all active:scale-90 backdrop-blur-md border border-white/20"
+              >
+                ×
+              </button>
+            </div>
 
-          <div className="w-full h-full flex items-center justify-center p-2 sm:p-10 select-none">
-            <img
-              src={lightboxImage}
-              className="max-w-full max-h-full object-contain rounded-lg shadow-2xl animate-in zoom-in-95 duration-500"
-              alt="Full Ticket"
-              onClick={(e) => e.stopPropagation()}
-            />
-          </div>
+            <div className="w-full h-full flex items-center justify-center p-2 sm:p-10 select-none">
+              <img
+                src={lightboxImage}
+                className="max-w-full max-h-full object-contain rounded-lg shadow-2xl animate-in zoom-in-95 duration-500"
+                alt="Full Ticket"
+                onClick={(e) => e.stopPropagation()}
+              />
+            </div>
 
-          <p className="absolute bottom-8 text-white/40 text-[10px] uppercase font-black tracking-[0.3em]">
-            Tap background to close
-          </p>
-        </div>
-      )}
-    </div>
+            <p className="absolute bottom-8 text-white/40 text-[10px] uppercase font-black tracking-[0.3em]">
+              Tap background to close
+            </p>
+          </div>
+        )
+      }
+    </div >
   );
 };
 
