@@ -381,7 +381,7 @@ export async function exportToMasterSheet(params: {
     coverImage: string;
     budget: number;
   };
-}): Promise<boolean> {
+}): Promise<string | null> {
   const { tripId, profiles, expenses, itinerary, tickets, packingList, tripSettings } = params;
 
   if (!tripId) {
@@ -390,10 +390,7 @@ export async function exportToMasterSheet(params: {
   }
 
   try {
-    // Step1: マスターシートを白紙化
-    await resetSheetData(tripId);
-
-    // Step2: 全データをBULK_SAVEで送信
+    // Step2: 全データをBULK_SAVEで送信 (BULK_SAVEはGAS側で既にRESETを含むため、ここでの個別リセットは不要)
     const rows: any[] = [
       // 旅行設定
       {
@@ -505,14 +502,16 @@ export async function exportToMasterSheet(params: {
       }))
     ];
 
-    await fetch(GAS_WEBAPP_URL, {
+    const response = await fetch(GAS_WEBAPP_URL, {
       method: 'POST',
       body: JSON.stringify({ action: 'BULK_SAVE', tripId, data: rows })
     });
 
-    return true;
+    if (!response.ok) return null;
+    const result = await response.json();
+    return result.spreadsheetId || MASTER_SPREADSHEET_ID;
   } catch (error) {
     console.error('[GSheet] exportToMasterSheet failed:', error);
-    return false;
+    return null;
   }
 }

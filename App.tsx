@@ -526,7 +526,7 @@ const App: React.FC = () => {
         return;
       }
 
-      const success = await exportToMasterSheet({
+      const sheetId = await exportToMasterSheet({
         tripId,
         profiles: userProfiles,
         expenses,
@@ -542,28 +542,16 @@ const App: React.FC = () => {
         }
       });
 
-      if (success) {
-        const sheetUrl = getMasterSheetUrl();
-        if (sheetUrl) {
-          window.open(sheetUrl, '_blank');
-          alert([
-            'Googleスプレッドシートへのエクスポートが完了しました！',
-            '🔗 マスターシートを別タブで開きました。',
-            '',
-            '✔ 内容：支出・荷物・チケット・スケジュール・メンバー',
-            '⚠️ マスターシートは読み取り専用です',
-            '   編集する場合はコピーをダウンロードしてください'
-          ].join('\n'));
-        } else {
-          alert([
-            'Googleスプレッドシートへのエクスポートが完了しました！',
-            '',
-            '※ スプレッドシートのURLを自動で開くには、',
-            'googleSheetService.ts内の MASTER_SPREADSHEET_ID を設定してください。',
-            '',
-            '✔ 内容：支出・荷物・チケット・スケジュール・メンバー'
-          ].join('\n'));
-        }
+      if (sheetId) {
+        const finalUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/edit`;
+        window.open(finalUrl, '_blank');
+        alert([
+          'スプレッドシートへのエクスポートが完了しました！',
+          '🔗 個別データシートを別タブで開きました。',
+          '',
+          '✔ 内容：支出・荷物・チケット・スケジュール・メンバー',
+          '⚠️ マスターシート(目次)ではなく、今回の旅行専用のシートに書き込んでいます。'
+        ].join('\n'));
       } else {
         alert('エクスポートに失敗しました。再度お試しください。');
       }

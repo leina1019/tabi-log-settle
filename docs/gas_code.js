@@ -162,6 +162,7 @@ function doPost(e) {
 
         var action = payload.action;
         var sheet = getDataSheet(tripId);
+        var spreadsheetId = sheet.getParent().getId();
 
         if (action === 'RESET') {
             // シート内のデータをクリア（ヘッダーは残す）
@@ -170,7 +171,7 @@ function doPost(e) {
                 sheet.deleteRows(2, lastRow - 1);
             }
             return ContentService
-                .createTextOutput(JSON.stringify({ status: 'ok', message: 'Reset for tripId: ' + tripId }))
+                .createTextOutput(JSON.stringify({ status: 'ok', message: 'Reset for tripId: ' + tripId, spreadsheetId: spreadsheetId }))
                 .setMimeType(ContentService.MimeType.JSON);
 
         } else if (action === 'BULK_SAVE') {
@@ -193,7 +194,7 @@ function doPost(e) {
             }
 
             return ContentService
-                .createTextOutput(JSON.stringify({ status: 'ok', count: items ? items.length : 0 }))
+                .createTextOutput(JSON.stringify({ status: 'ok', count: items ? items.length : 0, spreadsheetId: spreadsheetId }))
                 .setMimeType(ContentService.MimeType.JSON);
 
         } else if (action === 'DELETE') {
@@ -209,7 +210,7 @@ function doPost(e) {
                 }
             }
             return ContentService
-                .createTextOutput(JSON.stringify({ status: 'ok', message: 'Deleted: ' + targetId, found: found }))
+                .createTextOutput(JSON.stringify({ status: 'ok', message: 'Deleted: ' + targetId, found: found, spreadsheetId: spreadsheetId }))
                 .setMimeType(ContentService.MimeType.JSON);
 
         } else {
@@ -237,7 +238,7 @@ function doPost(e) {
             }
 
             return ContentService
-                .createTextOutput(JSON.stringify({ status: 'ok' }))
+                .createTextOutput(JSON.stringify({ status: 'ok', spreadsheetId: spreadsheetId }))
                 .setMimeType(ContentService.MimeType.JSON);
         }
 
