@@ -422,8 +422,8 @@ const TicketView: React.FC<Props> = ({ tickets, userProfiles, onSave, onDelete, 
                           }`}
                         onClick={(e) => e.stopPropagation()}
                       >
-                        <span className="text-sm">{ticket.imageUrl ? '🔗' : '🎟️'}</span>
-                        {ticket.imageUrl ? 'WEB' : 'OPEN'}
+                        <span className="text-sm">{ticket.imageUrl ? '' : '🎟️'}</span>
+                        {ticket.imageUrl ? '🎫リンクOPEN' : 'OPEN'}
                       </a>
                     )}
 
