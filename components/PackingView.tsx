@@ -144,7 +144,7 @@ const PackingView: React.FC<Props> = ({ items, userProfiles, onUpdate, isTablet 
 
     return (
         <div className="flex flex-col h-full bg-surface-gray relative pb-20 pt-1">
-            {/* 画面上部：全員/個人トグル */}
+            {/* 画面上部：全員/個人トグル - チケットセクション統一デザイン */}
             <div className="sticky top-0 z-40 bg-surface-gray/95 backdrop-blur-xl border-b border-surface-gray-mid/50 pt-4 pb-2 px-4 shadow-sm">
                 <div className="flex bg-white/80 p-1 rounded-full mb-4 mx-auto w-full max-w-[320px] shadow-sm border border-surface-gray-mid/50">
                     <button
@@ -426,7 +426,7 @@ const PackingView: React.FC<Props> = ({ items, userProfiles, onUpdate, isTablet 
                 <div className="fixed inset-0 z-[100] bg-ocean-dark/80 backdrop-blur-md flex items-end sm:items-center justify-center p-4 overflow-y-auto" onClick={() => setEditingItem(null)}>
                     <form
                         onSubmit={handleUpdateItem}
-                        className="bg-white w-full max-w-sm rounded-[40px] p-8 shadow-2xl border border-surface-gray-mid animate-in slide-in-from-bottom-4 duration-300 max-h-[90vh] overflow-y-auto"
+                        className="bg-white w-full max-w-sm rounded-[40px] p-8 shadow-2xl border border-surface-gray-mid animate-in slide-in-from-bottom-4 duration-300 max-h-[90dvh] overflow-y-auto"
                         onClick={e => e.stopPropagation()}
                     >
                         <div className="flex justify-between items-center mb-8">

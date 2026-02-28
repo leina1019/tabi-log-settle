@@ -653,12 +653,12 @@ const App: React.FC = () => {
   }, [expenses, userProfiles]);
 
   return (
-    <div className={`min-h-screen bg-ocean-light flex flex-col items-center antialiased font-sans select-none`}>
-      {/* Main Container */}
-      <div className={`${DEVICE_CONFIG[viewModeSize]?.width || 'max-w-md'} w-full mx-auto min-h-screen h-screen bg-surface-gray flex flex-col text-ink relative overflow-hidden sm:border-x sm:border-surface-gray-mid transition-all duration-300 shadow-2xl shadow-ocean-dark/20`}>
+    <div className={`min-h-[100dvh] bg-ocean-light flex flex-col items-center antialiased font-sans select-none`}>
+      {/* Main Container - h-screenを削除し、親の100dvhを継承 */}
+      <div className={`${DEVICE_CONFIG[viewModeSize]?.width || 'max-w-md'} w-full mx-auto h-full bg-surface-gray flex flex-col text-ink relative overflow-hidden sm:border-x sm:border-surface-gray-mid transition-all duration-300 shadow-2xl shadow-ocean-dark/20`}>
 
-        {/* Header - ANAブルー帯 */}
-        <header className="bg-ocean-dark px-5 pt-2 pb-2 flex justify-between items-center z-20 safe-pt shadow-sm">
+        {/* Header - ANAブルー帯 & 固定表示 */}
+        <header className="sticky top-0 bg-ocean-dark px-5 pt-2 pb-2 flex justify-between items-center z-[60] safe-pt shadow-md">
           <div className="flex items-center gap-2">
             <AppLogo className="w-8 h-8" />
             <h1 className="text-xl font-sans font-black tracking-tighter text-white">たびログ</h1>
@@ -786,8 +786,8 @@ const App: React.FC = () => {
         )}
 
 
-        {/* Main Content Area */}
-        <main className="flex-1 overflow-y-auto px-4 pb-28 scrollbar-hide">
+        {/* Main Content Area - スクロール可能な領域 */}
+        <main className="flex-1 overflow-y-auto px-4 pb-32 pt-2 scrollbar-hide">
           {view === 'history' && (
             <ExpenseList
               expenses={expenses}

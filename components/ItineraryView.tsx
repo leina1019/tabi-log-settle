@@ -263,17 +263,18 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
       setIsFetchingOgp(true);
       try {
         const ogp = await fetchOgpData(url);
-        if (ogp.image) {
+        if (ogp && ogp.image) {
           setFormData(prev => ({ ...prev, imageUrl: ogp.image }));
         }
+      } catch (err) {
+        console.error('OGP fetching failed:', err);
       } finally {
         setIsFetchingOgp(false);
       }
     }, 800);
 
     return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formData.mapUrl, formData.link, formData.links]);
+  }, [formData.mapUrl, formData.link, JSON.stringify(formData.links)]); // JSON.stringify for deep comparison
 
 
   if (!tripStartDate) {
@@ -310,49 +311,46 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
         </div>
       </div>
 
-      {/* フィルターチップ（階層を廃止し、フラットなトグルに） */}
-      <div className="px-4 mb-4 overflow-x-auto scrollbar-hide">
-        <div className="flex gap-2 min-w-min">
-          {/* 「全体」スケジュールのトグル */}
+      {/* 画面上部：メンバートグル - チケットセクション統一デザイン */}
+      <div className="bg-surface-gray border-b border-surface-gray-mid/50 pt-4 pb-2 px-4 shadow-sm">
+        <div className="flex bg-white/80 p-1 rounded-full mb-4 mx-auto w-full max-w-[320px] shadow-sm border border-surface-gray-mid/50">
           <button
-            onClick={() => setShowOverall(prev => !prev)}
-            className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-bold transition-all border flex items-center gap-1.5 ${showOverall ? 'text-white border-transparent' : 'bg-white text-ink-light border-surface-gray-mid/50 hover:border-surface-gray-mid'}`}
-            style={showOverall ? { backgroundColor: '#111827' /* ink color */ } : {}}
+            onClick={() => setShowOverall(true)}
+            className={`flex-1 py-3 text-[11px] font-black uppercase tracking-widest rounded-full transition-all duration-500 flex items-center justify-center gap-2.5 ${showOverall ? 'bg-ink text-white shadow-xl shadow-ink/20 scale-[1.02]' : 'bg-transparent text-ink-sub hover:text-ink'}`}
           >
-            <div className="w-4 h-4 rounded-full overflow-hidden bg-white/20 flex items-center justify-center">
-              <span>🌎</span>
-            </div>
-            全体
-            <div className={`ml-1 w-3 h-3 rounded-sm border flex items-center justify-center ${showOverall ? 'bg-white/20 border-white/30' : 'bg-transparent border-surface-gray-mid'}`}>
-              {showOverall && <div className="w-1.5 h-1.5 bg-white rounded-full"></div>}
-            </div>
+            <span className="text-sm">🌎</span>
+            全員
           </button>
+          <button
+            onClick={() => setShowOverall(false)}
+            className={`flex-1 py-3 text-[11px] font-black uppercase tracking-widest rounded-full transition-all duration-500 flex items-center justify-center gap-2.5 ${!showOverall ? 'bg-ink text-white shadow-xl shadow-ink/20 scale-[1.02]' : 'bg-transparent text-ink-sub hover:text-ink'}`}
+          >
+            <span className="text-sm">👤</span>
+            個人
+          </button>
+        </div>
 
-          {/* 各メンバーごとのトグル */}
-          {userProfiles.map(profile => {
-            const isVisible = visibleMemberIds.includes(profile.id);
-            return (
+        {/* メンバー選択 */}
+        {!showOverall && (
+          <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-4 mb-1 animate-in fade-in slide-in-from-top-2 duration-500 justify-start sm:justify-center">
+            {userProfiles.map(p => (
               <button
-                key={profile.id}
+                key={p.id}
                 onClick={() => {
                   setVisibleMemberIds(prev =>
-                    prev.includes(profile.id) ? prev.filter(id => id !== profile.id) : [...prev, profile.id]
+                    prev.includes(p.id) ? prev.filter(id => id !== p.id) : [...prev, p.id]
                   );
                 }}
-                className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-bold transition-all border flex items-center gap-1.5 ${isVisible ? 'text-white border-transparent' : 'bg-white text-ink-light border-surface-gray-mid/50 hover:border-surface-gray-mid'}`}
-                style={isVisible ? { backgroundColor: profile.color } : {}}
+                className={`flex items-center gap-2 px-4 py-2 rounded-full whitespace-nowrap transition-all border-2 shadow-sm ${visibleMemberIds.includes(p.id) ? 'bg-white border-primary/30 text-ink scale-105' : 'bg-white/40 border-transparent text-ink-light opacity-60 hover:opacity-100'}`}
               >
-                <div className="w-4 h-4 rounded-full overflow-hidden bg-white/20 flex items-center justify-center">
-                  {profile.avatarUrl ? <img src={profile.avatarUrl} className="w-full h-full object-cover" /> : <span className="text-[10px]">{profile.displayName[0]}</span>}
+                <div className="w-5 h-5 rounded-full overflow-hidden border border-white" style={{ backgroundColor: p.color }}>
+                  {p.avatarUrl ? <img src={p.avatarUrl} className="w-full h-full object-cover" alt="" /> : null}
                 </div>
-                {profile.displayName}
-                <div className={`ml-1 w-3 h-3 rounded-sm border flex items-center justify-center ${isVisible ? 'bg-white/20 border-white/30' : 'bg-transparent border-surface-gray-mid'}`}>
-                  {isVisible && <div className="w-1.5 h-1.5 bg-white rounded-full"></div>}
-                </div>
+                <span className="text-[10px] font-black">{p.displayName}</span>
               </button>
-            );
-          })}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* 日付タブ */}
@@ -860,9 +858,59 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
                   </div>
                 </div>
 
-                {/* カバー画像: リンクから自動取得（チェックボックス廃止・常時自動） */}
-                <div className="pt-1 px-1">
-                  <p className="text-[8px] text-ink-light">📷 リンクまたはマップURLからカバー画像を自動取得します（画像がない場合のみ）</p>
+                {/* カバー画像設定: 手動取得 & アップロード */}
+                <div className="space-y-3">
+                  <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">カバー画像</label>
+
+                  {formData.imageUrl && (
+                    <div className="relative aspect-[21/9] rounded-xl overflow-hidden group mb-2 border border-surface-gray-mid">
+                      <img src={formData.imageUrl} className="w-full h-full object-cover" alt="" />
+                      <button
+                        type="button"
+                        onClick={() => setFormData(prev => ({ ...prev, imageUrl: undefined }))}
+                        className="absolute top-2 right-2 w-7 h-7 bg-black/50 text-white rounded-full flex items-center justify-center backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  )}
+
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        const url = (formData.links && formData.links.length > 0 ? formData.links[0].url : '') || formData.link || formData.mapUrl;
+                        if (!url || !url.startsWith('http')) {
+                          alert('画像を取得できる有効なリンクがありません');
+                          return;
+                        }
+                        setIsFetchingOgp(true);
+                        try {
+                          const ogp = await fetchOgpData(url);
+                          if (ogp && ogp.image) {
+                            setFormData(prev => ({ ...prev, imageUrl: ogp.image }));
+                          } else {
+                            alert('画像を取得できませんでした');
+                          }
+                        } finally {
+                          setIsFetchingOgp(false);
+                        }
+                      }}
+                      className={`flex-1 flex items-center justify-center gap-1.5 py-3 rounded-xl text-[10px] font-bold tracking-wider transition-all border ${isFetchingOgp ? 'bg-surface-gray text-ink-sub' : 'bg-ocean-light/10 border-ocean-light/30 text-ocean-dark hover:bg-ocean-light/20'}`}
+                      disabled={isFetchingOgp}
+                    >
+                      {isFetchingOgp ? <span className="animate-pulse">取得中...</span> : <><span>🌍</span> リンクから画像取得</>}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => imageInputRef.current?.click()}
+                      className="flex-1 flex items-center justify-center gap-1.5 py-3 rounded-xl text-[10px] font-bold tracking-wider bg-surface-gray border border-surface-gray-mid text-ink-sub hover:bg-white hover:border-primary/40 transition-all"
+                    >
+                      <span>📷</span> 写真を選択
+                    </button>
+                    <input type="file" ref={imageInputRef} className="hidden" accept="image/*" onChange={handleImageChange} />
+                  </div>
                 </div>
 
                 {/* メモ */}

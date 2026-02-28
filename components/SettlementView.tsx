@@ -199,7 +199,7 @@ const SettlementView: React.FC<Props> = ({ settlements, expenses, onBack, userPr
               <h3 className="text-xl font-bold">{getDisplayName(selectedPId)} の精算根拠</h3>
             </div>
 
-            <div className="p-6 overflow-y-auto max-h-[60vh] space-y-6">
+            <div className="p-6 overflow-y-auto max-h-[60dvh] space-y-6">
               {/* 支払い済みリスト */}
               <section>
                 <div className="flex justify-between items-end mb-3">

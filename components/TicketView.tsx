@@ -318,7 +318,7 @@ const TicketView: React.FC<Props> = ({ tickets, userProfiles, onSave, onDelete, 
         )}
       </div>
 
-      <div className={`space-y-6 px-1 ${isTablet ? 'grid grid-cols-2 gap-6 space-y-0' : ''}`}>
+      <div className={`space-y-4 px-2 sm:px-1 ${isTablet ? 'grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 space-y-0' : 'flex flex-col gap-4'}`}>
         {/* U2: 空状態を日本語化してCTAボタン追加 */}
         {filteredTickets.length === 0 && (
           <div className="bg-white/50 p-16 rounded-[40px] text-center border-2 border-dashed border-surface-gray-mid/50 shadow-inner">
@@ -342,12 +342,12 @@ const TicketView: React.FC<Props> = ({ tickets, userProfiles, onSave, onDelete, 
           return (
             <div key={ticket.id} className="relative group overflow-visible">
               {/* カード本体 */}
-              <div className="bg-white rounded-[24px] overflow-hidden shadow-xl shadow-ink/5 border border-surface-gray-mid/30 hover:shadow-primary/10 transition-all duration-500 relative flex flex-col h-auto min-h-[110px] sm:flex-row sm:h-28">
+              <div className="bg-white rounded-[24px] overflow-hidden shadow-xl shadow-ink/5 border border-surface-gray-mid/30 hover:shadow-primary/10 transition-all duration-500 relative flex flex-col sm:flex-row min-h-[140px] sm:min-h-0 sm:h-28">
 
-                {/* プレミアム・左端カラフルライン（Apple Wallet風） */}
-                <div className="w-full h-1 sm:w-2 sm:h-full bg-gradient-to-b from-ocean-dark via-primary to-accent/60 opacity-90" />
+                {/* プレミアム・アクセントライン */}
+                <div className="w-full h-1 sm:w-2 sm:h-auto bg-gradient-to-r sm:bg-gradient-to-b from-ocean-dark via-primary to-accent/60 opacity-90" />
 
-                <div className="flex-1 p-4 flex flex-col sm:flex-row items-center sm:items-stretch gap-4">
+                <div className="flex-1 p-3 sm:p-4 flex flex-col sm:flex-row items-stretch gap-3 sm:gap-4">
                   {/* アイコン & タイトル */}
                   <div className="flex-1 flex items-center gap-4 min-w-0 w-full sm:w-auto">
                     <div className="w-12 h-12 rounded-2xl bg-surface-gray flex items-center justify-center text-2xl shadow-inner border border-white flex-shrink-0 group-hover:rotate-6 transition-transform">
@@ -364,9 +364,8 @@ const TicketView: React.FC<Props> = ({ tickets, userProfiles, onSave, onDelete, 
                     </div>
                   </div>
 
-                  {/* 点線セパレーター (デスクトップ: 垂直, モバイル: 水平) */}
+                  {/* 点線セパレーター (モバイルでは省略してマージンで調整) */}
                   <div className="hidden sm:block w-px border-l-2 border-dashed border-surface-gray-mid/30 my-2" />
-                  <div className="block sm:hidden w-full h-px border-t-2 border-dashed border-surface-gray-mid/30" />
 
                   {/* 日付・予約番号 */}
                   <div className="flex sm:flex-col justify-around sm:justify-center items-center sm:items-start gap-4 sm:gap-1 w-full sm:w-auto px-2">
@@ -393,60 +392,77 @@ const TicketView: React.FC<Props> = ({ tickets, userProfiles, onSave, onDelete, 
                   <div className="hidden sm:block w-px border-l-2 border-dashed border-surface-gray-mid/30 my-2" />
 
                   {/* アクションボタン */}
-                  <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
-                    {ticket.link ? (
-                      <a
-                        href={ticket.link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex-1 sm:flex-none h-10 px-4 bg-ink text-white rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-primary transition-all shadow-lg active:scale-95 flex items-center justify-center gap-1.5"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <span className="text-sm">🎟️</span>
-                        OPEN
-                      </a>
-                    ) : (
-                      <div className="flex-1 sm:flex-none h-10 px-4 bg-surface-gray rounded-xl text-[9px] font-black uppercase tracking-widest text-ink-sub/30 flex items-center justify-center gap-1.5 border border-surface-gray-mid/20">
-                        EMPTY
-                      </div>
-                    )}
-
-                    <button
-                      onClick={(e) => { e.stopPropagation(); handleOpenEdit(ticket); }}
-                      className="w-10 h-10 flex items-center justify-center bg-white border border-surface-gray-mid/50 rounded-xl text-base hover:bg-surface-gray transition-all active:scale-90 shadow-sm"
-                    >
-                      ✏️
-                    </button>
-
-                    <button
-                      onClick={(e) => { e.stopPropagation(); isDeleting ? handleDeleteConfirm(ticket.id) : handleDeleteClick(ticket.id); }}
-                      onMouseLeave={() => setDeletingId(null)}
-                      className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all active:scale-90 shadow-sm ${isDeleting ? 'bg-rose-500 text-white shadow-lg' : 'bg-rose-50 text-rose-400 hover:text-rose-600 border border-rose-100'}`}
-                    >
-                      {isDeleting ? <span className="text-[8px] font-black tracking-widest">OK?</span> : (
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                  <div className="flex items-center gap-2 mt-auto sm:mt-0 justify-between sm:justify-end">
+                    <div className="flex items-center gap-2 flex-1 sm:flex-none">
+                      {ticket.link ? (
+                        <a
+                          href={ticket.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex-1 sm:flex-none h-10 px-4 bg-ink text-white rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-primary transition-all shadow-lg active:scale-95 flex items-center justify-center gap-1.5"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <span className="text-sm">🎟️</span>
+                          OPEN
+                        </a>
+                      ) : (
+                        <div className="flex-1 sm:flex-none h-10 px-4 bg-surface-gray rounded-xl text-[9px] font-black uppercase tracking-widest text-ink-sub/30 flex items-center justify-center gap-1.5 border border-surface-gray-mid/20">
+                          EMPTY
+                        </div>
                       )}
-                    </button>
+                    </div>
+
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleOpenEdit(ticket); }}
+                        className="w-10 h-10 flex items-center justify-center bg-white border border-surface-gray-mid/50 rounded-xl text-base hover:bg-surface-gray transition-all active:scale-90 shadow-sm"
+                      >
+                        ✏️
+                      </button>
+
+                      <button
+                        onClick={(e) => { e.stopPropagation(); isDeleting ? handleDeleteConfirm(ticket.id) : handleDeleteClick(ticket.id); }}
+                        onMouseLeave={() => setDeletingId(null)}
+                        className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all active:scale-90 shadow-sm ${isDeleting ? 'bg-rose-500 text-white shadow-lg' : 'bg-rose-50 text-rose-400 hover:text-rose-600 border border-rose-100'}`}
+                      >
+                        {isDeleting ? <span className="text-[8px] font-black tracking-widest">OK?</span> : (
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                        )}
+                      </button>
+                    </div>
                   </div>
                 </div>
 
-                {/* メンバースタック */}
-                {(() => {
-                  const pIds = ticket.passengerIds || (ticket.participantId ? [ticket.participantId] : []);
-                  const profiles = userProfiles.filter(p => pIds.includes(p.id));
-                  if (profiles.length === 0) return null;
+                {/* メンバスイッチ (Itineraryスタイルに統合) */}
+                <div className="absolute top-3 left-3 z-30 flex -space-x-2">
+                  {(() => {
+                    const pIds = ticket.passengerIds || (ticket.participantId ? [ticket.participantId] : []);
+                    const profiles = userProfiles.filter(p => pIds.includes(p.id));
 
-                  return (
-                    <div className="absolute top-1 right-2 flex -space-x-1.5">
-                      {profiles.slice(0, 3).map((p) => (
-                        <div key={p.id} className="w-4 h-4 rounded-full border border-white shadow-sm overflow-hidden" title={p.displayName} style={{ backgroundColor: p.color }}>
-                          {p.avatarUrl ? <img src={p.avatarUrl} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-[5px] text-white font-black">{p.displayName[0]}</div>}
+                    if (profiles.length === 0) {
+                      return (
+                        <div className="w-8 h-8 rounded-full border-2 border-white shadow-sm bg-primary/10 flex items-center justify-center text-[10px]" title="全員">
+                          🌎
                         </div>
-                      ))}
-                      {profiles.length > 3 && <div className="w-4 h-4 rounded-full bg-white/90 border border-white shadow-sm flex items-center justify-center text-[5px] font-black text-ink">+{profiles.length - 3}</div>}
-                    </div>
-                  );
-                })()}
+                      );
+                    }
+
+                    return (
+                      <>
+                        {profiles.slice(0, 3).map(p => (
+                          <div key={p.id} className="w-8 h-8 rounded-full border-2 border-white shadow-sm overflow-hidden" title={p.displayName} style={{ backgroundColor: p.color }}>
+                            {p.avatarUrl ? <img src={p.avatarUrl} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-[10px] text-white font-black">{p.displayName[0]}</div>}
+                          </div>
+                        ))}
+                        {profiles.length > 3 && (
+                          <div className="w-8 h-8 rounded-full bg-white border-2 border-white shadow-sm flex items-center justify-center text-[10px] font-black text-ink">
+                            +{profiles.length - 3}
+                          </div>
+                        )}
+                      </>
+                    );
+                  })()}
+                </div>
 
                 {/* チケットパンチ（切り欠き） */}
                 <div className="hidden sm:block absolute left-1 sm:left-2 top-1/2 -translate-y-1/2 -ml-3 sm:-ml-4 w-6 h-6 bg-surface-gray rounded-full border border-surface-gray-mid/30 z-10 shadow-inner" />

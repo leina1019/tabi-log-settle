@@ -101,37 +101,37 @@ const ExpenseList: React.FC<Props> = ({ expenses, onDelete, onEdit, onResetAll, 
           </div>
 
           <div className="px-4">
-            {/* 全体 / 個別 トグル */}
-            <div className="flex bg-white shadow-sm p-1 rounded-full mb-3 mx-auto w-full max-w-[280px] border border-surface-gray-mid/50">
+            {/* 全体 / 個別 トグル - チケットセクション統一デザイン */}
+            <div className="flex bg-white/80 p-1 rounded-full mb-4 mx-auto w-full max-w-[320px] shadow-sm border border-surface-gray-mid/50">
               <button
                 onClick={() => setShowOverall(true)}
-                className={`flex-1 py-1.5 text-[10px] uppercase tracking-widest font-bold rounded-full transition-all duration-300 flex items-center justify-center gap-2 ${showOverall ? 'bg-primary text-white shadow-sm' : 'text-ink-sub hover:text-ink'}`}
+                className={`flex-1 py-3 text-[11px] font-black uppercase tracking-widest rounded-full transition-all duration-500 flex items-center justify-center gap-2.5 ${showOverall ? 'bg-ink text-white shadow-xl shadow-ink/20 scale-[1.02]' : 'bg-transparent text-ink-sub hover:text-ink'}`}
               >
-                <span>🌎</span>
-                全員の支出
+                <span className="text-sm">🌎</span>
+                全員
               </button>
               <button
                 onClick={() => setShowOverall(false)}
-                className={`flex-1 py-1.5 text-[10px] uppercase tracking-widest font-bold rounded-full transition-all duration-300 flex items-center justify-center gap-2 ${!showOverall ? 'bg-primary text-white shadow-sm' : 'text-ink-sub hover:text-ink'}`}
+                className={`flex-1 py-3 text-[11px] font-black uppercase tracking-widest rounded-full transition-all duration-500 flex items-center justify-center gap-2.5 ${!showOverall ? 'bg-ink text-white shadow-xl shadow-ink/20 scale-[1.02]' : 'bg-transparent text-ink-sub hover:text-ink'}`}
               >
-                <span>👤</span>
-                個人の記録
+                <span className="text-sm">👤</span>
+                個人
               </button>
             </div>
 
             {/* メンバー選択（個別モードのみ） */}
             {!showOverall && (
-              <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-3 mb-1 animate-in fade-in slide-in-from-top-2 duration-300 justify-start sm:justify-center">
+              <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-4 mb-1 animate-in fade-in slide-in-from-top-2 duration-500 justify-start sm:justify-center">
                 {userProfiles.map(p => (
                   <button
                     key={p.id}
                     onClick={() => toggleMember(p.id)}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full whitespace-nowrap transition-all border shadow-sm ${visibleMemberIds.includes(p.id) ? 'bg-white border-primary/20 text-ink' : 'bg-surface-gray border-transparent text-ink-light grayscale opacity-50 hover:opacity-80'}`}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-full whitespace-nowrap transition-all border-2 shadow-sm ${visibleMemberIds.includes(p.id) ? 'bg-white border-primary/30 text-ink scale-105' : 'bg-white/40 border-transparent text-ink-light opacity-60 hover:opacity-100'}`}
                   >
-                    <div className="w-4 h-4 rounded-full overflow-hidden" style={{ backgroundColor: p.color }}>
+                    <div className="w-5 h-5 rounded-full overflow-hidden border border-white" style={{ backgroundColor: p.color }}>
                       {p.avatarUrl ? <img src={p.avatarUrl} className="w-full h-full object-cover" alt="" /> : null}
                     </div>
-                    <span className="text-[10px] font-bold">{p.displayName}</span>
+                    <span className="text-[10px] font-black">{p.displayName}</span>
                   </button>
                 ))}
               </div>

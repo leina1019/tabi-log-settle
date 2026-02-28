@@ -497,7 +497,7 @@ const Dashboard: React.FC<Props> = ({
       {/* Modal - Trip Settings Edit (Restore) */}
       {isEditingTrip && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-ocean-dark/40 backdrop-blur-md" onClick={() => { setIsEditingTrip(false); setError(null); }}>
-          <div className="bg-white w-full max-w-sm rounded-[32px] p-6 shadow-2xl border border-surface-gray-mid overflow-y-auto max-h-[90vh]" onClick={e => e.stopPropagation()}>
+          <div className="bg-white w-full max-w-sm rounded-[32px] p-6 shadow-2xl border border-surface-gray-mid overflow-y-auto max-h-[90dvh]" onClick={e => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-xl font-sans font-bold text-ink">旅行の設定</h3>
               <button onClick={() => { setIsEditingTrip(false); setError(null); }} className="p-2 text-ink-light hover:text-ink hover:bg-surface-gray rounded-full">
@@ -562,7 +562,7 @@ const Dashboard: React.FC<Props> = ({
       {/* Modal - Member Detail */}
       {selectedMemberId && detailData && (
         <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-primary/40 backdrop-blur-md overflow-hidden" onClick={() => setSelectedMemberId(null)}>
-          <div className="bg-white w-full max-w-md h-[92vh] sm:h-auto sm:max-h-[85vh] sm:rounded-[40px] rounded-t-[40px] shadow-2xl overflow-y-auto border-t border-surface-gray-mid flex flex-col relative" onClick={e => e.stopPropagation()}>
+          <div className="bg-white w-full max-w-md h-[92dvh] sm:h-auto sm:max-h-[85dvh] sm:rounded-[40px] rounded-t-[40px] shadow-2xl overflow-y-auto border-t border-surface-gray-mid flex flex-col relative" onClick={e => e.stopPropagation()}>
             <div className="sticky top-0 z-20 bg-white/80 backdrop-blur-md px-6 py-5 border-b border-surface-gray-mid flex justify-between items-start">
               <div className="flex items-center gap-4">
                 {selectedMemberId !== 'ALL' && (
