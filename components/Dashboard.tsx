@@ -294,7 +294,7 @@ const Dashboard: React.FC<Props> = ({
       <div className="space-y-4">
         <div className="flex justify-between items-end px-2">
           <h3 className="text-[10px] font-bold text-ink-sub uppercase tracking-[0.2em]">メンバー</h3>
-          <button onClick={onOpenSettle} className="text-[10px] font-bold text-primary uppercase tracking-widest hover:text-primary-dark transition-colors">合計と清算を確認 &gt;</button>
+          <button onClick={onOpenSettle} className="text-[10px] font-bold text-primary uppercase tracking-widest hover:text-primary-dark transition-colors">合計と精算を確認 &gt;</button>
         </div>
         <div className="grid grid-cols-1 gap-3">
           {memberStats.map(m => {

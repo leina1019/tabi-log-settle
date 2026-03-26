@@ -76,7 +76,7 @@ const SettlementView: React.FC<Props> = ({ settlements, expenses, onBack, userPr
             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
           </button>
         )}
-        <h2 className="text-xl font-sans font-bold text-ink">清算</h2>
+        <h2 className="text-xl font-sans font-bold text-ink">精算</h2>
       </div>
 
       {/* 送金プラン */}
@@ -89,7 +89,7 @@ const SettlementView: React.FC<Props> = ({ settlements, expenses, onBack, userPr
             <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-4">
               <span className="text-4xl">🎉</span>
             </div>
-            <p className="text-base font-bold text-emerald-600 mb-1">清算完了！</p>
+            <p className="text-base font-bold text-emerald-600 mb-1">精算完了！</p>
             <p className="text-xs text-ink-light">全員の収支が均等です。お疲れさまでした🌿</p>
           </div>
         ) : (

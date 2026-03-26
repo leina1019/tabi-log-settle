@@ -12,7 +12,6 @@ import TicketView from './components/TicketView';
 import SettingsView from './components/SettingsView';
 import PackingView from './components/PackingView';
 import { createNewTrip, subscribeToTrip, updateTripData } from './services/firebaseService';
-import { fetchAllData, syncAllDataToSheet, exportToMasterSheet, getMasterSheetUrl } from './services/googleSheetService';
 import { SAMPLE_PROFILES, SAMPLE_ITINERARY, SAMPLE_EXPENSES, SAMPLE_TICKETS, SAMPLE_PACKING } from './utils/sampleData';
 import { GET_ULTIMATE_TRIP } from './utils/ultimateDemoData';
 import WelcomeView from './components/WelcomeView';
@@ -185,34 +184,7 @@ const App: React.FC = () => {
     localStorage.setItem('tabilog-view-mode-size', viewModeSize);
   }, [tripId, budget, userProfiles, tripStartDate, tripEndDate, tripName, tripCoverImage, expenses, itinerary, tickets, packingList, viewModeSize]);
 
-  // --- Automatic Google Sheet Sync (Debounced 1.5s) ---
-  useEffect(() => {
-    if (!tripId) return;
-
-    // 自動同期：tripId必須
-    const timer = setTimeout(() => {
-      if (!tripId) return;
-      syncAllDataToSheet({
-        profiles: userProfiles,
-        expenses,
-        itinerary,
-        tickets,
-        tripSettings: {
-          tripName,
-          tripStartDate,
-          tripEndDate,
-          coverImage: tripCoverImage,
-          budget
-        }
-      }, tripId).then(success => {
-        if (success) console.log('[GSheet] Debounced sync successful for tripId:', tripId);
-      }).catch(err => console.error('[GSheet] Debounced sync error', err));
-    }, 1500);
-
-    return () => clearTimeout(timer);
-  }, [tripId, budget, userProfiles, tripStartDate, tripEndDate, tripName, tripCoverImage, expenses, itinerary, tickets]);
-
-  // NOTE: syncWithCloud (Google Sheets) は Firebase 移行後は不要のため削除。
+  // --- Firebase handles all background syncing ---  // NOTE: syncWithCloud (Google Sheets) は Firebase 移行後は不要のため削除。
   // Firebase の onSnapshot リスナーがリアルタイム同期を担当する。
 
   // NOTE: syncWithCloud (Google Sheets) は Firebase 移行後は不要。
@@ -433,22 +405,13 @@ const App: React.FC = () => {
     }
     setView('history');
     setEditingExpense(null);
-    // Google Sheet sync is now handled by Firebase subscription
-    // const success = await syncExpenseToSheet(newExpense);
-    // if (success) await syncWithCloud(false);
   };
 
   const handleDeleteExpense = async (id: string) => {
     if (!window.confirm('この経費を削除してもよろしいですか？')) return;
 
-    // 削除フラグを立てる代わりに、単純にリストから削除して同期する
-    // deletedIdsRef.current.add(id); // これはGoogle Sheet用なのでFirebaseでは不要かもだが一旦維持
-
     const newExpenses = expenses.filter(e => e.id !== id);
     updateExpenses(newExpenses);
-
-    // Google Sheetsからも削除する場合
-    // deleteItemFromSheet(id, 'expense').catch(console.error);
   };
 
   // --- Handlers for Itinerary ---
@@ -517,80 +480,7 @@ const App: React.FC = () => {
     }
   };
 
-  // スプレッドシートの一括エクスポート（白紙化 → 全データ書き込み）
-  const handleSyncToSheet = async () => {
-    setIsSyncing(true);
-    try {
-      if (!tripId) {
-        alert('旅行IDが設定されていません。URLから旅行リンクを開いてください。');
-        return;
-      }
-
-      const sheetId = await exportToMasterSheet({
-        tripId,
-        profiles: userProfiles,
-        expenses,
-        itinerary,
-        tickets,
-        packingList,
-        tripSettings: {
-          tripName,
-          tripStartDate,
-          tripEndDate,
-          coverImage: tripCoverImage,
-          budget
-        }
-      });
-
-      if (sheetId) {
-        const finalUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/edit`;
-        window.open(finalUrl, '_blank');
-        alert([
-          'スプレッドシートへのエクスポートが完了しました！',
-          '🔗 清算・振り返り用のマルチタブシートを別タブで開きました。',
-          '',
-          '✔ 内容：【概要(精算指示)】・支出・荷物・チケット・予定',
-          '⚠️ 同期用のデータは非表示シートとして維持されています。'
-        ].join('\n'));
-      } else {
-        alert('エクスポートに失敗しました。再度お試しください。');
-      }
-    } catch (e) {
-      console.error(e);
-      alert('エラーが発生しました。');
-    } finally {
-      setIsSyncing(false);
-    }
-  };
-
-  const handleFetchFromSheet = async (isLongPress = false) => {
-    if (isLongPress && !window.confirm('スプレッドシートから全データを強制的に再取得し、現在の内容を上書きします。よろしいですか？')) return;
-
-    setIsSyncing(true);
-    try {
-      // tripIdが未設定の場合はフェッチ不可
-      if (!tripId) {
-        alert('旅行IDが未設定です。');
-        return;
-      }
-      const cloudData = await fetchAllData(tripId);
-      if (cloudData) {
-        handleImportFullData({
-          tripDetails: cloudData.tripSettings,
-          userProfiles: cloudData.profiles,
-          expenses: cloudData.expenses,
-          itinerary: cloudData.itinerary,
-          tickets: cloudData.tickets
-        });
-        alert(isLongPress ? '全データを強制再取得しました。' : '最新データを取得しました。');
-      }
-    } catch (e) {
-      console.error(e);
-      alert('データ取得に失敗しました。');
-    } finally {
-      setIsSyncing(false);
-    }
-  };
+  // Removed GAS sync functions (handleSyncToSheet, handleFetchFromSheet)
 
   const handleResetAll = async () => {
     if (!window.confirm('全てのデータを削除しますか？この操作は取り消せません。')) return;
@@ -882,11 +772,7 @@ const App: React.FC = () => {
               tripStartDate={tripStartDate}
               tripEndDate={tripEndDate}
               coverImage={tripCoverImage}
-              masterSheetUrl={getMasterSheetUrl() || undefined}
               onImportFullData={handleImportFullData}
-              onSyncToSheet={handleSyncToSheet}
-              onFetchFromSheet={handleFetchFromSheet}
-              isSyncing={isSyncing}
             />
           )}
         </main>

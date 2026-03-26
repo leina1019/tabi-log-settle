@@ -14,7 +14,6 @@ interface Props {
   tripStartDate: string;
   tripEndDate: string;
   coverImage: string;
-  masterSheetUrl?: string; // マスターシートへのリンク
   onUpdateProfile: (id: Participant, updates: Partial<UserProfile>) => void;
   onAddMember: (name: string, color: string) => void;     // 新規メンバー追加
   onRemoveMember: (id: string) => void;                   // メンバー削除
@@ -24,16 +23,16 @@ interface Props {
   viewModeSize: ViewModeSize;
   onUpdateViewModeSize: (size: ViewModeSize) => void;
   onImportFullData: (data: any) => void;
-  onSyncToSheet: () => void;
-  onFetchFromSheet: (isLongPress?: boolean) => void;
-  isSyncing: boolean;
 }
 
+import { exportToExcel } from '../utils/exportExcel';
+
 const SettingsView: React.FC<Props> = ({
-  userProfiles, expenses, itinerary, tickets, packingList = [], budget, tripName, tripStartDate, tripEndDate, coverImage, masterSheetUrl,
+  userProfiles, expenses, itinerary, tickets, packingList = [], budget, tripName, tripStartDate, tripEndDate, coverImage,
   onUpdateProfile, onAddMember, onRemoveMember, onLoadSample, onRestoreData, onBack, viewModeSize, onUpdateViewModeSize,
-  onImportFullData, onSyncToSheet, onFetchFromSheet, isSyncing
+  onImportFullData
 }) => {
+  const [isExporting, setIsExporting] = React.useState(false);
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const jsonImportRef = useRef<HTMLInputElement>(null);
   // window.confirm/alert 廃止用
@@ -44,19 +43,25 @@ const SettingsView: React.FC<Props> = ({
   const [newMemberColor, setNewMemberColor] = React.useState(MEMBER_COLORS[0]);
   // メンバー削除確認
   const [removingMemberId, setRemovingMemberId] = React.useState<string | null>(null);
-  // スプシ同期完了フラグ
-  const [showSheetLink, setShowSheetLink] = React.useState(false);
-
-  const prevIsSyncing = React.useRef(isSyncing);
-  React.useEffect(() => {
-    if (prevIsSyncing.current && !isSyncing) {
-      // 同期が完了した瞬間（true -> false）
-      setShowSheetLink(true);
-      // 10秒後に通常の表示に戻す（任意）
-      setTimeout(() => setShowSheetLink(false), 10000);
+  const handleExportExcel = async () => {
+    setIsExporting(true);
+    try {
+      await exportToExcel({
+        tripId: 'local',
+        profiles: userProfiles,
+        expenses,
+        itinerary,
+        tickets,
+        packingList,
+        tripSettings: { tripName, tripStartDate, tripEndDate, coverImage, budget }
+      });
+    } catch (error) {
+      console.error('Export failed', error);
+      alert('Excelファイルの生成に失敗しました。');
+    } finally {
+      setIsExporting(false);
     }
-    prevIsSyncing.current = isSyncing;
-  }, [isSyncing]);
+  };
 
   const handleAddMemberSubmit = () => {
     if (!newMemberName.trim()) return;
@@ -325,25 +330,25 @@ const SettingsView: React.FC<Props> = ({
         </div>
       </section>
 
-      {/* 3. Googleスプレッドシートエクスポート */}
+      {/* 3. Excelデータの書き出し */}
       <section className="space-y-4">
         <div className="flex items-center gap-2 px-2">
           <span className="text-xl">📊</span>
-          <h3 className="text-xs font-black text-ink uppercase tracking-[0.2em]">Googleスプレッドシートエクスポート</h3>
+          <h3 className="text-xs font-black text-ink uppercase tracking-[0.2em]">Excelデータ ダウンロード</h3>
         </div>
 
-        <div className="bg-gradient-to-br from-emerald-600 to-teal-500 p-7 rounded-[32px] text-white shadow-xl shadow-emerald-600/20 relative overflow-hidden">
+        <div className="bg-gradient-to-br from-[#1D6F42] to-[#124B2C] p-7 rounded-[32px] text-white shadow-xl shadow-[#1D6F42]/20 relative overflow-hidden">
           <div className="absolute -right-8 -top-8 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
           <div className="relative z-10 space-y-5">
             {/* ヘッダー */}
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-7 h-7" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" /><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" /><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" /><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" /><path fill="none" d="M0 0h48v48H0z" /></svg>
+                <span className="text-3xl">🗂️</span>
               </div>
               <div>
-                <h4 className="text-sm font-black uppercase tracking-widest mb-1">一括エクスポート</h4>
+                <h4 className="text-sm font-black uppercase tracking-widest mb-1">Excel書き出し</h4>
                 <p className="text-[10px] opacity-80 font-bold leading-relaxed">
-                  マスターシートを白紙にしてから<br />全データを一気に書き込みます
+                  すべてのデータをマルチタブ形式の<br />Excelファイルとして保存します
                 </p>
               </div>
             </div>
@@ -365,43 +370,24 @@ const SettingsView: React.FC<Props> = ({
 
             {/* エクスポートボタン */}
             <button
-              onClick={onSyncToSheet}
-              disabled={isSyncing}
-              className="w-full group flex items-center justify-center gap-3 py-4 bg-white text-emerald-700 font-black text-sm rounded-2xl shadow-xl active:scale-95 transition-all disabled:opacity-50"
+              onClick={handleExportExcel}
+              disabled={isExporting}
+              className="w-full group flex items-center justify-center gap-3 py-4 bg-white text-[#1D6F42] font-black text-sm rounded-2xl shadow-xl active:scale-95 transition-all disabled:opacity-50"
             >
-              {isSyncing ? (
-                <><div className="w-5 h-5 border-2 border-emerald-200 border-t-emerald-600 rounded-full animate-spin" />エクスポート中...</>
+              {isExporting ? (
+                <><div className="w-5 h-5 border-2 border-[#1D6F42]/30 border-t-[#1D6F42] rounded-full animate-spin" />作成中...</>
               ) : (
-                <><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>マスターシートへエクスポート</>
+                <><span className="text-xl">📥</span>Excelデータをダウンロード</>
               )}
             </button>
 
-            {/* マスターシートを開くリンク */}
-            {masterSheetUrl ? (
-              <a
-                href={masterSheetUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`flex items-center justify-center gap-2 py-4 rounded-2xl text-[11px] font-black tracking-widest transition-all active:scale-95 ${showSheetLink ? 'bg-white text-emerald-700 shadow-xl scale-105 animate-bounce ring-4 ring-white/20' : 'bg-white/10 hover:bg-white/20 border border-white/20 text-white'}`}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
-                {showSheetLink ? '✨ 今すぐマスターシートを確認！' : 'マスターシートを開く'}
-              </a>
-            ) : (
-              <div className="flex flex-col items-center justify-center gap-1.5 py-4 rounded-2xl bg-white/5 border border-white/10 text-white/60 text-center">
-                <p className="text-[10px] font-bold tracking-widest">🔗 スプレッドシートID未設定</p>
-                <p className="text-[8px] opacity-70">ソースコードでIDを設定するとここにリンクが表示されます</p>
-              </div>
-            )}
-
             {/* 注意書き */}
-            <div className="bg-black/10 border border-white/10 rounded-xl p-3 space-y-1.5">
-              <p className="text-[9px] font-bold opacity-80">📋 エクスポートの仕組み</p>
-              <ul className="text-[9px] font-bold opacity-60 space-y-1 list-disc list-inside">
-                <li>毎回マスターシートを白紙にしてから書き込みます</li>
-                <li>他のグループのデータには影響しません</li>
-                <li>マスターシートは読み取り専用です</li>
-                <li>編集したい場合はダウンロードしてください</li>
+            <div className="bg-black/20 border border-white/10 rounded-xl p-3 space-y-1.5">
+              <p className="text-[9px] font-bold opacity-80">📋 エクスポートについて</p>
+              <ul className="text-[9px] font-bold opacity-70 space-y-1 list-disc list-inside">
+                <li>概要・精算・スケジュール等を分けて出力します</li>
+                <li>ダウンロードしたデータは端末内で共有可能です</li>
+                <li>オフラインの状態でも出力できます</li>
               </ul>
             </div>
           </div>
