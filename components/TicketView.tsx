@@ -637,7 +637,7 @@ const TicketView: React.FC<Props> = ({ tickets, userProfiles, onSave, onDelete, 
               <div className="grid grid-cols-2 gap-5">
                 <div>
                   <label className="block text-[11px] font-black text-ink-sub mb-2.5 uppercase tracking-[0.25em] px-1">日付 *</label>
-                  <input type="date" className="w-full bg-surface-gray border-2 border-transparent focus:border-primary/20 focus:bg-white rounded-2xl px-6 py-4 text-sm font-bold text-ink outline-none transition-all shadow-inner" value={formData.date || ''} onChange={e => setFormData({ ...formData, date: e.target.value })} />
+                  <input type="date" min={tripStartDate} max={tripEndDate} className="w-full bg-surface-gray border-2 border-transparent focus:border-primary/20 focus:bg-white rounded-2xl px-6 py-4 text-sm font-bold text-ink outline-none transition-all shadow-inner" value={formData.date || ''} onChange={e => setFormData({ ...formData, date: e.target.value })} />
                 </div>
                 <div>
                   <label className="block text-[11px] font-black text-ink-sub mb-2.5 uppercase tracking-[0.25em] px-1">時刻</label>

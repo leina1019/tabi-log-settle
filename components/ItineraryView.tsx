@@ -710,7 +710,7 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
                 <div className="grid grid-cols-2 gap-5 mb-6">
                   <div>
                     <label className="block text-[11px] font-black text-ink-sub mb-2 uppercase tracking-[0.25em]">日付</label>
-                    <input type="date" value={formData.date || ''} onChange={e => setFormData({ ...formData, date: e.target.value })} className="w-full bg-surface-gray rounded-2xl px-5 py-4 text-xs font-bold outline-none border-2 border-transparent focus:border-primary/20 focus:bg-white transition-all shadow-inner" />
+                    <input type="date" min={tripStartDate} max={tripEndDate} value={formData.date || ''} onChange={e => setFormData({ ...formData, date: e.target.value })} className="w-full bg-surface-gray rounded-2xl px-5 py-4 text-xs font-bold outline-none border-2 border-transparent focus:border-primary/20 focus:bg-white transition-all shadow-inner" />
                   </div>
                   <div>
                     <label className="block text-[11px] font-black text-ink-sub mb-2 uppercase tracking-[0.25em]">開始時刻</label>

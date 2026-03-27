@@ -10,6 +10,8 @@ interface Props {
   onCancel: () => void;
   initialExpense?: Expense | null;
   userProfiles: UserProfile[];
+  tripStartDate?: string;
+  tripEndDate?: string;
 }
 
 // カテゴリーにアイコンを対応付け
@@ -24,7 +26,7 @@ const CATEGORY_ICONS: Record<string, string> = {
   'その他': '📌',
 };
 
-const ExpenseForm: React.FC<Props> = ({ onAdd, onCancel, initialExpense, userProfiles }) => {
+const ExpenseForm: React.FC<Props> = ({ onAdd, onCancel, initialExpense, userProfiles, tripStartDate, tripEndDate }) => {
   const [title, setTitle] = useState(initialExpense?.title || '');
   const [amount, setAmount] = useState(initialExpense?.amount?.toString() || '');
   const [currency, setCurrency] = useState<string>(initialExpense?.currency || 'AUD');
@@ -273,6 +275,8 @@ const ExpenseForm: React.FC<Props> = ({ onAdd, onCancel, initialExpense, userPro
               type="date"
               value={date}
               onChange={e => setDate(e.target.value)}
+              min={tripStartDate}
+              max={tripEndDate}
               className="w-full bg-surface-gray border-2 border-transparent focus:border-primary/40 rounded-2xl px-4 py-4 text-[16px] text-ink outline-none transition-colors"
             />
           </div>

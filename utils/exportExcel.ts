@@ -187,13 +187,30 @@ export async function exportToExcel(params: {
 
   // ファイルの書き出し
   const buffer = await workbook.xlsx.writeBuffer();
-  const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const fileName = `TabiLog_${tripSettings.tripName || 'Export'}_${new Date().toISOString().split('T')[0]}.xlsx`;
+  const fileType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
   
-  // ネイティブ実装でのダウンロード処理
+  // スマホ(Web Share API)でのファイル共有/保存ルート
+  const file = new File([buffer], fileName, { type: fileType });
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    try {
+      await navigator.share({
+        files: [file],
+        title: fileName,
+      });
+      return; // 共有成功時はここで終了
+    } catch (err) {
+      console.log('Share canceled or failed', err);
+      // 失敗、キャンセル時は通常のダウンロード方式へフォールバック
+    }
+  }
+
+  // ノートPC等 / ネイティブ実装でのダウンロード処理
+  const blob = new Blob([buffer], { type: fileType });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `TabiLog_${tripSettings.tripName || 'Export'}_${new Date().toISOString().split('T')[0]}.xlsx`;
+  a.download = fileName;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);

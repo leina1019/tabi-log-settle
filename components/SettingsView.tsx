@@ -114,12 +114,33 @@ const SettingsView: React.FC<Props> = ({
       packingList
     };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `tabilog-backup-${new Date().toISOString().split('T')[0]}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
+    const fileName = `tabilog-backup-${new Date().toISOString().split('T')[0]}.json`;
+    const file = new File([blob], fileName, { type: 'application/json' });
+
+    const doFallbackDownload = () => {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    };
+
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      navigator.share({
+        files: [file],
+        title: fileName,
+      }).catch(err => {
+        console.log('Share canceled', err);
+        // Fallback is optional here, as cancellation is normal UI flow on mobile
+        // but if it failed for arbitrary reasons, we could try fallback
+      });
+      return;
+    }
+
+    doFallbackDownload();
   };
 
   const handleImportJSONChange = (e: React.ChangeEvent<HTMLInputElement>) => {

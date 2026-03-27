@@ -740,6 +740,8 @@ const App: React.FC = () => {
               onCancel={() => setView('history')}
               initialExpense={editingExpense}
               userProfiles={userProfiles}
+              tripStartDate={tripStartDate}
+              tripEndDate={tripEndDate}
             />
           )}
           {view === 'settings' && (
