@@ -14,6 +14,8 @@ interface Props {
   tripStartDate: string;
   tripEndDate: string;
   coverImage: string;
+  settlementMethod: 'smart' | 'individual';
+  onUpdateSettlementMethod: (method: 'smart' | 'individual') => void;
   onUpdateProfile: (id: Participant, updates: Partial<UserProfile>) => void;
   onAddMember: (name: string, color: string) => void;     // 新規メンバー追加
   onRemoveMember: (id: string) => void;                   // メンバー削除
@@ -29,6 +31,7 @@ import { exportToExcel } from '../utils/exportExcel';
 
 const SettingsView: React.FC<Props> = ({
   userProfiles, expenses, itinerary, tickets, packingList = [], budget, tripName, tripStartDate, tripEndDate, coverImage,
+  settlementMethod, onUpdateSettlementMethod,
   onUpdateProfile, onAddMember, onRemoveMember, onLoadSample, onRestoreData, onBack, viewModeSize, onUpdateViewModeSize,
   onImportFullData
 }) => {
@@ -53,11 +56,11 @@ const SettingsView: React.FC<Props> = ({
         itinerary,
         tickets,
         packingList,
-        tripSettings: { tripName, tripStartDate, tripEndDate, coverImage, budget }
+        tripSettings: { tripName, tripStartDate, tripEndDate, coverImage, budget, settlementMethod }
       });
     } catch (error) {
       console.error('Export failed', error);
-      alert('Excelファイルの生成に失敗しました。');
+      alert('Excelファイルの生成に失敗しました。\n' + (error as Error).message);
     } finally {
       setIsExporting(false);
     }
@@ -103,11 +106,12 @@ const SettingsView: React.FC<Props> = ({
     const data = {
       version: '1.0',
       exportDate: new Date().toISOString(),
-      tripDetails: { tripName, tripStartDate, tripEndDate, coverImage, budget },
+      tripDetails: { tripName, tripStartDate, tripEndDate, coverImage, budget, settlementMethod },
       userProfiles,
       expenses,
       itinerary,
-      tickets
+      tickets,
+      packingList
     };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -297,7 +301,53 @@ const SettingsView: React.FC<Props> = ({
         )}
       </section>
 
-      {/* 2. 表示設定 */}
+      {/* 2. 精算方式の設定 */}
+      <section className="space-y-4">
+        <div className="flex items-center gap-2 px-2">
+           <span className="text-xl">🧮</span>
+           <h3 className="text-xs font-black text-ink uppercase tracking-[0.2em]">精算の方式</h3>
+        </div>
+        <div className="bg-white rounded-[32px] p-6 shadow-xl shadow-ink/5 border border-surface-gray-mid/50">
+           <p className="text-[11px] text-ink-sub leading-relaxed font-bold mb-6 px-1">
+             グループ全体の精算方針を選択します。
+           </p>
+           <div className="grid grid-cols-2 gap-4">
+             <button
+               onClick={() => onUpdateSettlementMethod('smart')}
+               className={`group p-5 rounded-3xl border-2 transition-all flex flex-col items-center gap-3 relative ${settlementMethod === 'smart' ? 'border-primary bg-primary/5 shadow-lg' : 'border-surface-gray-mid/30 bg-surface-gray/50 hover:bg-white hover:border-primary/20 hover:shadow-md'}`}
+             >
+               <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-3xl transition-transform group-hover:scale-110 ${settlementMethod === 'smart' ? 'bg-primary text-white shadow-xl shadow-primary/20' : 'bg-white text-ink-sub shadow-sm'}`}>
+                 ⚡
+               </div>
+               <div className="text-center">
+                 <span className={`text-[10px] font-black uppercase tracking-widest block mb-1 ${settlementMethod === 'smart' ? 'text-primary' : 'text-ink-sub'}`}>スマート精算</span>
+                 <span className="text-[8px] font-bold text-ink-light opacity-60 block leading-tight">全体で送金を最小化</span>
+               </div>
+               {settlementMethod === 'smart' && (
+                 <div className="absolute top-3 right-3 w-2.5 h-2.5 rounded-full bg-accent shadow-[0_0_8px_rgba(255,215,0,0.8)] animate-pulse" />
+               )}
+             </button>
+
+             <button
+               onClick={() => onUpdateSettlementMethod('individual')}
+               className={`group p-5 rounded-3xl border-2 transition-all flex flex-col items-center gap-3 relative ${settlementMethod === 'individual' ? 'border-primary bg-primary/5 shadow-lg' : 'border-surface-gray-mid/30 bg-surface-gray/50 hover:bg-white hover:border-primary/20 hover:shadow-md'}`}
+             >
+               <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-3xl transition-transform group-hover:scale-110 ${settlementMethod === 'individual' ? 'bg-primary text-white shadow-xl shadow-primary/20' : 'bg-white text-ink-sub shadow-sm'}`}>
+                 🤝
+               </div>
+               <div className="text-center">
+                 <span className={`text-[10px] font-black uppercase tracking-widest block mb-1 ${settlementMethod === 'individual' ? 'text-primary' : 'text-ink-sub'}`}>個別精算</span>
+                 <span className="text-[8px] font-bold text-ink-light opacity-60 block leading-tight">立替者へ直接送金</span>
+               </div>
+               {settlementMethod === 'individual' && (
+                 <div className="absolute top-3 right-3 w-2.5 h-2.5 rounded-full bg-accent shadow-[0_0_8px_rgba(255,215,0,0.8)] animate-pulse" />
+               )}
+             </button>
+           </div>
+        </div>
+      </section>
+
+      {/* 3. 表示設定 */}
       <section className="space-y-4">
         <div className="flex items-center gap-2 px-2">
           <span className="text-xl">📱</span>

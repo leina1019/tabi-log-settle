@@ -10,9 +10,10 @@ interface Props {
   expenses: Expense[];
   onBack?: () => void;
   userProfiles: UserProfile[];
+  settlementMethod?: 'smart' | 'individual';
 }
 
-const SettlementView: React.FC<Props> = ({ settlements, expenses, onBack, userProfiles }) => {
+const SettlementView: React.FC<Props> = ({ settlements, expenses, onBack, userProfiles, settlementMethod = 'smart' }) => {
   const [selectedPId, setSelectedPId] = useState<string | null>(null);
   const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
 
@@ -82,7 +83,9 @@ const SettlementView: React.FC<Props> = ({ settlements, expenses, onBack, userPr
       {/* 送金プラン */}
       <div className="glass p-6 rounded-3xl">
         <h3 className="text-lg font-bold text-ink mb-1">送金プラン</h3>
-        <p className="text-[10px] text-ink-light mb-6 font-bold uppercase tracking-widest">推奨される送金方法</p>
+        <p className="text-[10px] text-ink-light mb-6 font-bold uppercase tracking-widest">
+          {settlementMethod === 'individual' ? '個別精算（相殺あり）' : '推奨される送金方法（スマート精算）'}
+        </p>
 
         {settlements.length === 0 ? (
           <div className="text-center py-12">

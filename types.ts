@@ -93,6 +93,7 @@ export interface TripData {
   endDate?: string;
   coverImage?: string;
   budget?: number;
+  settlementMethod?: 'smart' | 'individual';
   expenses?: Expense[];
   itinerary?: ItineraryItem[];
   tickets?: Ticket[];

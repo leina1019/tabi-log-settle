@@ -1,8 +1,7 @@
 import * as ExcelJS from 'exceljs';
-import { saveAs } from 'file-saver';
 import { Expense, ItineraryItem, Ticket, UserProfile, PackingItem } from '../types';
 import { convertToJPY } from './currency';
-import { calculateBalances, calculateSettlements } from './settlementUtils';
+import { calculateBalances, calculateSettlements, calculateIndividualSettlements } from './settlementUtils';
 
 export async function exportToExcel(params: {
   tripId: string;
@@ -17,6 +16,7 @@ export async function exportToExcel(params: {
     tripEndDate: string;
     coverImage: string;
     budget: number;
+    settlementMethod?: 'smart' | 'individual';
   };
 }) {
   const { profiles, expenses, itinerary, tickets, packingList, tripSettings } = params;
@@ -28,7 +28,9 @@ export async function exportToExcel(params: {
   // Helper functions
   const getDisplayName = (id: string) => profiles.find(p => p.id === id)?.displayName || id;
   const balances = calculateBalances(expenses, profiles);
-  const settlements = calculateSettlements(balances);
+  const settlements = tripSettings.settlementMethod === 'individual' 
+    ? calculateIndividualSettlements(expenses, profiles)
+    : calculateSettlements(balances);
   const totalJPY = expenses.reduce((sum, e) => sum + convertToJPY(e.amount, e.currency, e.exchangeRate), 0);
 
   // 1. 概要シート
@@ -45,6 +47,7 @@ export async function exportToExcel(params: {
   summarySheet.addRow({ item: '合計支出', value: `${Math.round(totalJPY).toLocaleString()}円` });
   summarySheet.addRow({});
   
+  summarySheet.addRow({ item: '精算方式', value: tripSettings.settlementMethod === 'individual' ? '個別精算（相殺あり）' : 'スマート精算（推奨ルート）' });
   summarySheet.addRow({ item: '【精算指示】', value: '送金する人', note: '受け取る人' }).font = { bold: true };
   if (settlements.length === 0) {
     summarySheet.addRow({ item: '精算完了', value: '全員の収支は均等です' });
@@ -185,5 +188,14 @@ export async function exportToExcel(params: {
   // ファイルの書き出し
   const buffer = await workbook.xlsx.writeBuffer();
   const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-  saveAs(blob, `TabiLog_${tripSettings.tripName || 'Export'}_${new Date().toISOString().split('T')[0]}.xlsx`);
+  
+  // ネイティブ実装でのダウンロード処理
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `TabiLog_${tripSettings.tripName || 'Export'}_${new Date().toISOString().split('T')[0]}.xlsx`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }

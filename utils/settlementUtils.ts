@@ -64,3 +64,62 @@ export const calculateSettlements = (balances: Record<string, number>): Settleme
 
     return results;
 };
+
+/**
+ * 立て替えた人に直接支払う（ただし2者間でのみ相殺する）個別精算プランを計算する
+ */
+export const calculateIndividualSettlements = (expenses: Expense[], userProfiles: UserProfile[]): Settlement[] => {
+    // debts[debtor][creditor] = amount
+    const debts: Record<string, Record<string, number>> = {};
+    const memberIds = userProfiles.map(p => p.id);
+    
+    // 初期化
+    memberIds.forEach(id => {
+        debts[id] = {};
+        memberIds.forEach(otherId => {
+            debts[id][otherId] = 0;
+        });
+    });
+
+    // 1. 各経費ごとに貸し借りを記録
+    expenses.forEach(exp => {
+        const totalJPY = convertToJPY(exp.amount, exp.currency, exp.exchangeRate);
+        const share = totalJPY / (exp.splitWith.length || 1);
+        const creditor = exp.paidBy;
+
+        exp.splitWith.forEach(debtor => {
+            if (debtor !== creditor && debts[debtor] && debts[debtor][creditor] !== undefined) {
+                debts[debtor][creditor] += share;
+            }
+        });
+    });
+
+    // 2. 2者間（ペア）でのみ相殺（Netting）を行う
+    const results: Settlement[] = [];
+    const processedPairs = new Set<string>();
+
+    memberIds.forEach(idA => {
+        memberIds.forEach(idB => {
+            if (idA === idB) return;
+            const pairKey = [idA, idB].sort().join('-');
+            if (processedPairs.has(pairKey)) return;
+            processedPairs.add(pairKey);
+
+            const aOwesB = debts[idA][idB] || 0;
+            const bOwesA = debts[idB][idA] || 0;
+
+            const netDiff = aOwesB - bOwesA;
+            
+            // 1円未満の端数は無視
+            if (netDiff > 1) {
+                // AがBにより多く払うべき
+                results.push({ from: idA, to: idB, amount: Math.round(netDiff) });
+            } else if (netDiff < -1) {
+                // BがAにより多く払うべき
+                results.push({ from: idB, to: idA, amount: Math.round(Math.abs(netDiff)) });
+            }
+        });
+    });
+
+    return results;
+};

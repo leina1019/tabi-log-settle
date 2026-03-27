@@ -3,6 +3,7 @@ import { Expense, Participant, Settlement, ItineraryItem, Ticket, UserProfile, P
 import { AppIcon } from './components/AppIcon';
 import { MEMBER_COLORS, DEVICE_CONFIG } from './constants';
 import { convertToJPY } from './utils/currency';
+import { calculateBalances, calculateSettlements, calculateIndividualSettlements } from './utils/settlementUtils';
 import ExpenseForm from './components/ExpenseForm';
 import ExpenseList from './components/ExpenseList';
 import Dashboard from './components/Dashboard';
@@ -31,6 +32,7 @@ const App: React.FC = () => {
   const [itinerary, setItinerary] = useState<ItineraryItem[]>([]);
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [packingList, setPackingList] = useState<PackingItem[]>([]);
+  const [settlementMethod, setSettlementMethod] = useState<'smart' | 'individual'>('smart');
 
   const [view, setView] = useState<ViewState>('home');
   const [viewModeSize, setViewModeSize] = useState<ViewModeSize>(() => {
@@ -59,6 +61,9 @@ const App: React.FC = () => {
       const prefix = `tabilog-${id}-`;
       const sBudget = localStorage.getItem(prefix + 'budget');
       if (sBudget) setBudget(parseInt(sBudget, 10));
+
+      const sMethod = localStorage.getItem(prefix + 'settlementMethod');
+      if (sMethod === 'smart' || sMethod === 'individual') setSettlementMethod(sMethod);
 
       const sProfiles = localStorage.getItem(prefix + 'profiles');
       if (sProfiles) {
@@ -140,6 +145,7 @@ const App: React.FC = () => {
       if (data.endDate) setTripEndDate(data.endDate);
       if (data.coverImage) setTripCoverImage(data.coverImage);
       if (data.packingList) setPackingList(data.packingList);
+      if (data.settlementMethod) setSettlementMethod(data.settlementMethod);
     });
     return () => unsubscribe();
   }, [tripId]);
@@ -169,7 +175,8 @@ const App: React.FC = () => {
       expenses,
       itinerary,
       tickets,
-      packing: packingList
+      packing: packingList,
+      settlementMethod
     };
 
     // 各キーを個別に保存（Firebaseのキャッシュとして機能）
@@ -502,33 +509,16 @@ const App: React.FC = () => {
   };
 
   const settlements = useMemo(() => {
-    const balances: Record<string, number> = {};
-    const memberIds = userProfiles.map(u => u.id);
-    if (memberIds.length === 0) return [];
-
-    memberIds.forEach(id => { balances[id] = 0; });
-    expenses.forEach(exp => {
-      const amountJPY = convertToJPY(exp.amount, exp.currency, exp.exchangeRate);
-      const share = amountJPY / (exp.splitWith.length || 1);
-      balances[exp.paidBy] += amountJPY;
-      exp.splitWith.forEach(id => {
-        if (balances[id] !== undefined) balances[id] -= share;
-      });
-    });
-    const result: Settlement[] = [];
-    let payers = memberIds.map(id => ({ name: id, balance: balances[id] })).filter(p => p.balance < -1).sort((a, b) => a.balance - b.balance);
-    let receivers = memberIds.map(id => ({ name: id, balance: balances[id] })).filter(p => p.balance > 1).sort((a, b) => b.balance - a.balance);
-    payers.forEach(p => {
-      while (Math.abs(p.balance) > 1 && receivers.length > 0) {
-        const r = receivers[0];
-        const amount = Math.min(Math.abs(p.balance), r.balance);
-        result.push({ from: p.name as Participant, to: r.name as Participant, amount: Math.round(amount) });
-        p.balance += amount; r.balance -= amount;
-        if (r.balance < 1) receivers.shift();
-      }
-    });
-    return result;
-  }, [expenses, userProfiles]);
+    if (userProfiles.length === 0) return [];
+    
+    if (settlementMethod === 'individual') {
+      return calculateIndividualSettlements(expenses, userProfiles);
+    }
+    
+    // 'smart' mode (default)
+    const balances = calculateBalances(expenses, userProfiles);
+    return calculateSettlements(balances);
+  }, [expenses, userProfiles, settlementMethod]);
 
   return (
     <div className={`min-h-[100dvh] bg-ocean-light flex flex-col items-center antialiased font-sans select-none`}>
@@ -772,6 +762,8 @@ const App: React.FC = () => {
               tripStartDate={tripStartDate}
               tripEndDate={tripEndDate}
               coverImage={tripCoverImage}
+              settlementMethod={settlementMethod}
+              onUpdateSettlementMethod={(m) => { setSettlementMethod(m); pushUpdate({ settlementMethod: m }); }}
               onImportFullData={handleImportFullData}
             />
           )}
