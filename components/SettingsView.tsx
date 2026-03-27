@@ -2,6 +2,7 @@ import React, { useRef } from 'react';
 import { Participant, UserProfile, ViewModeSize, Expense, ItineraryItem, Ticket, TripData } from '../types';
 import { AppIcon } from './AppIcon';
 import { MEMBER_COLORS, DEVICE_CONFIG } from '../constants';
+import { useTranslation, Language } from '../contexts/LanguageContext';
 
 interface Props {
   userProfiles: UserProfile[];
@@ -35,6 +36,7 @@ const SettingsView: React.FC<Props> = ({
   onUpdateProfile, onAddMember, onRemoveMember, onLoadSample, onRestoreData, onBack, viewModeSize, onUpdateViewModeSize,
   onImportFullData
 }) => {
+  const { t, language, setLanguage } = useTranslation();
   const [isExporting, setIsExporting] = React.useState(false);
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const jsonImportRef = useRef<HTMLInputElement>(null);
@@ -401,7 +403,41 @@ const SettingsView: React.FC<Props> = ({
         </div>
       </section>
 
-      {/* 3. Excelデータの書き出し */}
+      {/* 4. 言語設定 */}
+      <section className="space-y-4">
+        <div className="flex items-center gap-2 px-2">
+          <span className="text-xl">🌍</span>
+          <h3 className="text-xs font-black text-ink uppercase tracking-[0.2em]">{t('settings.language' as any) || '言語 / Language'}</h3>
+        </div>
+        <div className="bg-white rounded-[32px] p-6 shadow-xl shadow-ink/5 border border-surface-gray-mid/50">
+          <p className="text-[11px] text-ink-sub leading-relaxed font-bold mb-6 px-1">
+            {t('settings.languageDesc' as any) || 'アプリの表示言語を変更します (端末ごとに保存)'}
+          </p>
+          <div className="grid grid-cols-3 gap-3">
+            {[
+              { code: 'ja', label: '日本語', icon: '🇯🇵' },
+              { code: 'en', label: 'English', icon: '🇺🇸' },
+              { code: 'zh', label: '中文', icon: '🇨🇳' }
+            ].map(lang => (
+              <button
+                key={lang.code}
+                onClick={() => setLanguage(lang.code as Language)}
+                className={`group p-4 rounded-3xl border-2 transition-all flex flex-col items-center gap-2 relative ${language === lang.code ? 'border-primary bg-primary/5 shadow-lg' : 'border-surface-gray-mid/30 bg-surface-gray/50 hover:bg-white hover:border-primary/20 hover:shadow-md'}`}
+              >
+                <div className="text-2xl mb-1 group-hover:scale-110 transition-transform">{lang.icon}</div>
+                <div className={`text-[11px] font-black uppercase tracking-widest ${language === lang.code ? 'text-primary' : 'text-ink-sub'}`}>
+                  {lang.label}
+                </div>
+                {language === lang.code && (
+                  <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-accent shadow-[0_0_8px_rgba(255,215,0,0.8)] animate-pulse" />
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 5. Excelデータの書き出し */}
       <section className="space-y-4">
         <div className="flex items-center gap-2 px-2">
           <span className="text-xl">📊</span>

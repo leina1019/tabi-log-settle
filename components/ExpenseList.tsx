@@ -5,6 +5,7 @@ import { CATEGORIES } from '../constants';
 import { AppIcon } from './AppIcon';
 import { useTripDates } from '../hooks/useTripDates';
 import { useMemberFilter } from '../hooks/useMemberFilter';
+import { useTranslation } from '../contexts/LanguageContext';
 
 interface Props {
   expenses: Expense[];
@@ -22,6 +23,7 @@ const ExpenseList: React.FC<Props> = ({ expenses, onDelete, onEdit, onResetAll, 
   // 共通 Hook
   const { selectedDate, setSelectedDate, dateRange, getDayLabel, isTodayDate } = useTripDates(tripStartDate, tripEndDate);
   const { showOverall, setShowOverall, visibleMemberIds, setVisibleMemberIds, toggleMember } = useMemberFilter(userProfiles);
+  const { t } = useTranslation();
 
   // 既存の検索・フィルタステート
   const [searchQuery, setSearchQuery] = useState('');
@@ -79,8 +81,8 @@ const ExpenseList: React.FC<Props> = ({ expenses, onDelete, onEdit, onResetAll, 
         <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mb-4">
           <span className="text-4xl">🧾</span>
         </div>
-        <p className="font-bold text-ink mb-1">支出の記録がまだありません</p>
-        <p className="text-xs text-ink-light">右下の「+」ボタンから記録してみましょう</p>
+        <p className="font-bold text-ink mb-1">{t('expenseList.noExpense')}</p>
+        <p className="text-xs text-ink-light">{t('expenseList.noExpenseSub')}</p>
       </div>
     );
   }
@@ -108,14 +110,14 @@ const ExpenseList: React.FC<Props> = ({ expenses, onDelete, onEdit, onResetAll, 
                 className={`flex-1 py-3 text-[11px] font-black uppercase tracking-widest rounded-full transition-all duration-500 flex items-center justify-center gap-2.5 ${showOverall ? 'bg-ink text-white shadow-xl shadow-ink/20 scale-[1.02]' : 'bg-transparent text-ink-sub hover:text-ink'}`}
               >
                 <span className="text-sm">🌎</span>
-                全員
+                {t('expenseList.all')}
               </button>
               <button
                 onClick={() => setShowOverall(false)}
                 className={`flex-1 py-3 text-[11px] font-black uppercase tracking-widest rounded-full transition-all duration-500 flex items-center justify-center gap-2.5 ${!showOverall ? 'bg-ink text-white shadow-xl shadow-ink/20 scale-[1.02]' : 'bg-transparent text-ink-sub hover:text-ink'}`}
               >
                 <span className="text-sm">👤</span>
-                個人
+                {t('expenseList.individual')}
               </button>
             </div>
 
@@ -145,7 +147,7 @@ const ExpenseList: React.FC<Props> = ({ expenses, onDelete, onEdit, onResetAll, 
                 </svg>
                 <input
                   type="text"
-                  placeholder="タイトルで検索..."
+                  placeholder={t('expenseList.searchPlaceholder')}
                   className="w-full bg-white border border-surface-gray-mid rounded-xl pl-9 pr-3 py-2 text-xs text-ink placeholder-ink-light outline-none focus:border-primary transition-colors h-10 shadow-sm"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -157,7 +159,7 @@ const ExpenseList: React.FC<Props> = ({ expenses, onDelete, onEdit, onResetAll, 
                   onChange={(e) => setSelectedCategory(e.target.value)}
                   className="appearance-none bg-white border border-surface-gray-mid rounded-xl pl-4 pr-8 py-2 text-[10px] font-bold text-ink outline-none focus:border-primary transition-colors h-10 shadow-sm cursor-pointer"
                 >
-                  <option value="All">すべてのカテゴリ</option>
+                  <option value="All">{t('expenseList.allCategories')}</option>
                   {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                 </select>
                 <div className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-ink-light">
@@ -220,7 +222,7 @@ const ExpenseList: React.FC<Props> = ({ expenses, onDelete, onEdit, onResetAll, 
             <div className="w-20 h-20 bg-primary/5 rounded-full flex items-center justify-center mx-auto mb-4 border border-primary/10">
               <span className="text-4xl filter grayscale opacity-50">🧾</span>
             </div>
-            <p className="font-bold text-ink mb-1 text-sm">条件に一致する記録はありません</p>
+            <p className="font-bold text-ink mb-1 text-sm">{t('expenseList.noMatch')}</p>
             <p className="text-[10px] text-ink-light font-bold uppercase tracking-widest">NO EXPENSES</p>
           </div>
         ) : (
@@ -277,7 +279,7 @@ const ExpenseList: React.FC<Props> = ({ expenses, onDelete, onEdit, onResetAll, 
                     </div>
                     <span className="text-surface-gray-mid opacity-50">|</span>
                     <div className="flex items-center gap-1">
-                      <span className="font-medium text-xs text-ink-light">{exp.splitWith.length} 人で割り勘</span>
+                      <span className="font-medium text-xs text-ink-light">{t('expenseList.splitWith', { count: exp.splitWith.length })}</span>
                     </div>
                     <div className="ml-auto text-[10px] text-ink-light font-bold">
                       {exp.date.split('-').slice(1).join('/')}
@@ -333,11 +335,11 @@ const ExpenseList: React.FC<Props> = ({ expenses, onDelete, onEdit, onResetAll, 
           <p className="text-center text-[10px] text-ink-light mb-4 font-bold tracking-[0.2em] uppercase">データ管理</p>
           {resetStage === 'idle' ? (
             <button onClick={() => setResetStage('confirm')} className="w-full py-4 text-ink-light border border-dashed border-surface-gray-mid font-bold text-[10px] uppercase tracking-widest rounded-2xl hover:bg-white transition-all shadow-sm bg-surface-gray">
-              すべての支出データをリセット
+              {t('expenseList.resetAll')}
             </button>
           ) : (
             <button onClick={() => { onResetAll(); setResetStage('idle'); }} className="w-full py-4 bg-rose-500 text-white font-bold text-[10px] uppercase tracking-widest rounded-2xl shadow-lg shadow-rose-500/20 active:scale-95 transition-transform animate-in fade-in zoom-in duration-200">
-              本当にリセットしますか？
+              {t('expenseList.confirmReset')}
             </button>
           )}
         </div>

@@ -17,6 +17,7 @@ import { SAMPLE_PROFILES, SAMPLE_ITINERARY, SAMPLE_EXPENSES, SAMPLE_TICKETS, SAM
 import { GET_ULTIMATE_TRIP } from './utils/ultimateDemoData';
 import WelcomeView from './components/WelcomeView';
 import { AppLogo } from './components/AppLogo';
+import { useTranslation } from './contexts/LanguageContext';
 
 type ViewState = 'onboarding' | 'home' | 'history' | 'schedule' | 'tickets' | 'packing' | 'add_expense' | 'settle' | 'settings';
 
@@ -46,9 +47,12 @@ const App: React.FC = () => {
   const [tripId, setTripId] = useState<string | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
   // 直接登録フォームを開くためのフラグ
+  // Directly open add form flag
   const [autoOpenAdd, setAutoOpenAdd] = useState<{ schedule?: boolean; tickets?: boolean; packing?: boolean }>({});
-  // 削除済みIDを一時的に保持して、同期時のゾンビ復活を防ぐ
+  // Deleted IDs cache
   const deletedIdsRef = useRef<Set<string>>(new Set());
+
+  const { t } = useTranslation();
 
   // --- Initialize & Subscribe (Firebase) ---
   useEffect(() => {
@@ -791,7 +795,7 @@ const App: React.FC = () => {
                     onClick={() => { setEditingExpense(null); setView('add_expense'); setIsAddMenuOpen(false); }}
                     className="flex items-center gap-3 bg-white pl-5 pr-4 py-3 rounded-2xl shadow-xl border border-surface-gray-mid whitespace-nowrap active:scale-95 transition-transform"
                   >
-                    <span className="text-xs font-bold text-ink">支出の追加</span>
+                    <span className="text-xs font-bold text-ink">{t('nav.addExpense')}</span>
                     <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
                       <AppIcon name="expense" className="w-5 h-5 text-primary" />
                     </div>
@@ -800,7 +804,7 @@ const App: React.FC = () => {
                     onClick={() => { setView('schedule'); setAutoOpenAdd({ schedule: true }); setIsAddMenuOpen(false); setTimeout(() => setAutoOpenAdd({}), 100); }}
                     className="flex items-center gap-3 bg-white pl-5 pr-4 py-3 rounded-2xl shadow-xl border border-surface-gray-mid whitespace-nowrap active:scale-95 transition-transform"
                   >
-                    <span className="text-xs font-bold text-ink">予定の追加</span>
+                    <span className="text-xs font-bold text-ink">{t('nav.addSchedule')}</span>
                     <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
                       <AppIcon name="itinerary" className="w-5 h-5 text-primary" />
                     </div>
@@ -809,7 +813,7 @@ const App: React.FC = () => {
                     onClick={() => { setView('tickets'); setAutoOpenAdd({ tickets: true }); setIsAddMenuOpen(false); setTimeout(() => setAutoOpenAdd({}), 100); }}
                     className="flex items-center gap-3 bg-white pl-5 pr-4 py-3 rounded-2xl shadow-xl border border-surface-gray-mid whitespace-nowrap active:scale-95 transition-transform"
                   >
-                    <span className="text-xs font-bold text-ink">チケットの追加</span>
+                    <span className="text-xs font-bold text-ink">{t('nav.addTicket')}</span>
                     <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
                       <AppIcon name="ticket" className="w-5 h-5 text-primary" />
                     </div>
@@ -818,7 +822,7 @@ const App: React.FC = () => {
                     onClick={() => { setView('packing'); setAutoOpenAdd({ packing: true }); setIsAddMenuOpen(false); setTimeout(() => setAutoOpenAdd({}), 100); }}
                     className="flex items-center gap-3 bg-white pl-5 pr-4 py-3 rounded-2xl shadow-xl border border-surface-gray-mid whitespace-nowrap active:scale-95 transition-transform"
                   >
-                    <span className="text-xs font-bold text-ink">持ち物の追加</span>
+                    <span className="text-xs font-bold text-ink">{t('nav.addPacking')}</span>
                     <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
                       <AppIcon name="packing" className="w-5 h-5 text-primary" />
                     </div>

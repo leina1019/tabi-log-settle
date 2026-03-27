@@ -4,6 +4,7 @@ import { Expense, Settlement, Participant, UserProfile, ItineraryItem } from '..
 import { formatCurrency, convertToJPY } from '../utils/currency';
 import { fetchWeather, WeatherData, searchLocation } from '../services/weatherService';
 import { WeatherIcon } from './WeatherIcon';
+import { useTranslation } from '../contexts/LanguageContext';
 
 interface Props {
   expenses: Expense[];
@@ -40,6 +41,7 @@ const Dashboard: React.FC<Props> = ({
   itinerary,
   isTablet = false
 }) => {
+  const { t } = useTranslation();
   const [selectedMemberId, setSelectedMemberId] = useState<Participant | 'ALL' | null>(null);
   const [isEditingBudget, setIsEditingBudget] = useState(false);
   const [tempBudget, setTempBudget] = useState(budget.toString());
@@ -293,8 +295,8 @@ const Dashboard: React.FC<Props> = ({
       {/* Member Cards */}
       <div className="space-y-4">
         <div className="flex justify-between items-end px-2">
-          <h3 className="text-[10px] font-bold text-ink-sub uppercase tracking-[0.2em]">メンバー</h3>
-          <button onClick={onOpenSettle} className="text-[10px] font-bold text-primary uppercase tracking-widest hover:text-primary-dark transition-colors">合計と精算を確認 &gt;</button>
+          <h3 className="text-[10px] font-bold text-ink-sub uppercase tracking-[0.2em]">{t('dashboard.members')}</h3>
+          <button onClick={onOpenSettle} className="text-[10px] font-bold text-primary uppercase tracking-widest hover:text-primary-dark transition-colors">{t('dashboard.checkSettlement')}</button>
         </div>
         <div className="grid grid-cols-1 gap-3">
           {memberStats.map(m => {
@@ -307,7 +309,7 @@ const Dashboard: React.FC<Props> = ({
                   </div>
                   <div>
                     <h4 className="font-bold text-ink text-sm tracking-wide">{profile.displayName}</h4>
-                    <p className="text-[9px] font-bold text-ink-light uppercase tracking-tighter">支払総額</p>
+                    <p className="text-[9px] font-bold text-ink-light uppercase tracking-tighter">{t('dashboard.totalPaid')}</p>
                   </div>
                 </div>
                 <div className="text-right">
@@ -323,7 +325,7 @@ const Dashboard: React.FC<Props> = ({
       <section className="space-y-4">
         <div className="flex items-center gap-2 px-2">
           <span className="text-lg">📊</span>
-          <h3 className="text-[10px] font-bold text-ink-sub uppercase tracking-[0.2em]">支出サマリー</h3>
+          <h3 className="text-[10px] font-bold text-ink-sub uppercase tracking-[0.2em]">{t('dashboard.summary')}</h3>
         </div>
 
         {/* 予算設定プログレス＆トリガーボタン */}
@@ -339,13 +341,13 @@ const Dashboard: React.FC<Props> = ({
           </div>
           <div className="flex justify-between items-start mb-2 relative z-10">
             <div>
-              <p className="text-[9px] font-bold text-ink-light uppercase tracking-widest mb-1">旅行の予算</p>
+              <p className="text-[9px] font-bold text-ink-light uppercase tracking-widest mb-1">{t('dashboard.budget')}</p>
               <div className="flex items-baseline gap-1">
                 <span className="text-2xl font-sans font-black text-ink leading-none">¥{Math.round(budget).toLocaleString()}</span>
               </div>
             </div>
             <div className="text-right">
-              <p className="text-[9px] font-bold text-ink-light uppercase tracking-widest mb-1">{budgetPercentage >= 100 ? 'オーバー！' : '残額'} (JPY)</p>
+              <p className="text-[9px] font-bold text-ink-light uppercase tracking-widest mb-1">{budgetPercentage >= 100 ? t('dashboard.overBudget') : t('dashboard.remaining')} (JPY)</p>
               <p className={`text-base font-sans font-black leading-none ${budgetPercentage >= 100 ? 'text-rose-500' : 'text-primary'}`}>
                 {budgetPercentage >= 100 ? '-' : ''}¥{Math.abs(Math.round(remaining)).toLocaleString()}
               </p>
@@ -353,7 +355,7 @@ const Dashboard: React.FC<Props> = ({
           </div>
           <div className="flex justify-between items-center mt-3 pt-3 border-t border-surface-gray-mid/50 relative z-10">
             <p className="text-[10px] font-bold text-ink-sub/70">
-              {budget > 0 ? `${budgetPercentage.toFixed(1)}% 消化` : '予算を設定してください'}
+              {budget > 0 ? `${budgetPercentage.toFixed(1)}${t('dashboard.consumed')}` : t('dashboard.setBudgetAlert')}
             </p>
             <div className="w-6 h-6 rounded-full bg-white/50 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors border border-surface-gray-mid/50">
               <svg className="w-3 h-3 text-ink-sub group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
@@ -366,17 +368,17 @@ const Dashboard: React.FC<Props> = ({
           {/* 総支出 (円換算) */}
           <div className="glass p-5 rounded-3xl border-white/40 flex flex-col items-center justify-center text-center shadow-sm">
             <p className="text-xl font-sans font-black text-primary leading-none">¥{Math.round(totalJPY).toLocaleString()}</p>
-            <p className="text-[9px] font-bold text-ink-light mt-1.5">総支出（円換算）</p>
+            <p className="text-[9px] font-bold text-ink-light mt-1.5">{t('dashboard.totalSpent')}</p>
           </div>
           {/* 支払い回数 */}
           <div className="glass p-5 rounded-3xl border-white/40 flex flex-col items-center justify-center text-center shadow-sm">
-            <p className="text-xl font-sans font-black text-primary leading-none">{summaryData.totalCount}件</p>
-            <p className="text-[9px] font-bold text-ink-light mt-1.5">支払い回数</p>
+            <p className="text-xl font-sans font-black text-primary leading-none">{summaryData.totalCount}</p>
+            <p className="text-[9px] font-bold text-ink-light mt-1.5">{t('dashboard.paymentCount')}</p>
           </div>
           {/* 1人あたり */}
           <div className="glass p-5 rounded-3xl border-white/40 flex flex-col items-center justify-center text-center shadow-sm">
             <p className="text-xl font-sans font-black text-primary leading-none">¥{Math.round(summaryData.averagePerPerson).toLocaleString()}</p>
-            <p className="text-[9px] font-bold text-ink-light mt-1.5">1人あたり</p>
+            <p className="text-[9px] font-bold text-ink-light mt-1.5">{t('dashboard.perPerson')}</p>
           </div>
           {/* 外貨合計（最初の外貨 or JPY表示） */}
           {summaryData.foreignCurrencies.length > 0 ? (
@@ -394,7 +396,7 @@ const Dashboard: React.FC<Props> = ({
           ) : (
             <div className="glass p-5 rounded-3xl border-white/40 flex flex-col items-center justify-center text-center shadow-sm">
               <p className="text-xl font-sans font-black text-ink-light leading-none">—</p>
-              <p className="text-[9px] font-bold text-ink-light mt-1.5">外貨支出なし</p>
+              <p className="text-[9px] font-bold text-ink-light mt-1.5">{t('dashboard.noForeignDiff')}</p>
             </div>
           )}
         </div>

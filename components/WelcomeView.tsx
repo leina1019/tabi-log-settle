@@ -1,8 +1,9 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { UserProfile } from '../types';
 import { AppIcon } from './AppIcon';
 import { MEMBER_COLORS } from '../constants';
 import { AppLogo } from './AppLogo';
+import { useTranslation } from '../contexts/LanguageContext';
 
 interface OnboardingData {
     name: string;
@@ -18,6 +19,7 @@ interface Props {
 }
 
 const WelcomeView: React.FC<Props> = ({ onStart, onDemoStart }) => {
+    const { t } = useTranslation();
     const [step, setStep] = useState<'welcome' | 'info' | 'members' | 'share'>('welcome');
     const [name, setName] = useState('');
     const [startDate, setStartDate] = useState('');
@@ -34,7 +36,7 @@ const WelcomeView: React.FC<Props> = ({ onStart, onDemoStart }) => {
         if (step === 'welcome') setStep('info');
         else if (step === 'info') {
             if (!name || !startDate || !endDate) {
-                alert('タイトルと日程を入力してください');
+                alert(t('welcome.alertTitleDate'));
                 return;
             }
             setStep('members');
@@ -44,7 +46,7 @@ const WelcomeView: React.FC<Props> = ({ onStart, onDemoStart }) => {
     const handleFinish = () => {
         const validMembers = tempMembers.filter(m => m.name.trim() !== '');
         if (validMembers.length === 0) {
-            alert('メンバーを1人以上入力してください');
+            alert(t('welcome.alertMember'));
             return;
         }
 
@@ -88,8 +90,8 @@ const WelcomeView: React.FC<Props> = ({ onStart, onDemoStart }) => {
         if (navigator.share) {
             try {
                 await navigator.share({
-                    title: '旅行グループに参加してください！',
-                    text: `「${name}」の旅行グループに招待します。このリンクを開いてください。`,
+                    title: t('welcome.shareTitle'),
+                    text: t('welcome.shareText', { name }),
                     url: shareUrl
                 });
             } catch (e) {
@@ -126,22 +128,22 @@ const WelcomeView: React.FC<Props> = ({ onStart, onDemoStart }) => {
                         <div className="mb-4 animate-in zoom-in duration-700">
                             <AppLogo className="w-40 h-40" />
                         </div>
-                        <h2 className="text-4xl font-sans font-black text-ink mb-4 leading-tight tracking-tighter">たびログへ<br />ようこそ！</h2>
+                        <h2 className="text-4xl font-sans font-black text-ink mb-4 leading-tight tracking-tighter whitespace-pre-line">{t('welcome.heroTitle')}</h2>
                         <p className="text-ink-sub text-sm mb-12 leading-relaxed px-4">
-                            旅行のスケジュール管理から、面倒な割り勘の計算まで。みんなで共有して最高の旅を作りましょう。
+                            {t('welcome.heroDesc')}
                         </p>
                         <button
                             onClick={handleNext}
                             className="w-full bg-primary text-white py-5 rounded-3xl font-bold shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all text-lg"
                         >
-                            旅を計画！始める ✨
+                            {t('welcome.btnStart')}
                         </button>
                         {onDemoStart && (
                             <button
                                 onClick={onDemoStart}
                                 className="w-full mt-4 bg-white border-2 border-primary/20 text-primary py-4 rounded-3xl font-bold hover:bg-primary/5 active:scale-95 transition-all text-sm"
                             >
-                                デモ版をひらく（検証用）
+                                {t('welcome.btnDemo')}
                             </button>
                         )}
                         <p className="mt-8 text-[10px] text-ink-light uppercase tracking-widest font-bold">Powered by Reina</p>
@@ -153,14 +155,14 @@ const WelcomeView: React.FC<Props> = ({ onStart, onDemoStart }) => {
                     <div className="w-full animate-in slide-in-from-right-8 fade-in duration-300">
                         <div className="mb-8">
                             <span className="text-primary font-bold text-xs uppercase tracking-widest">Step 1 / 2</span>
-                            <h2 className="text-2xl font-bold text-ink mt-1">旅行の基本情報</h2>
+                            <h2 className="text-2xl font-bold text-ink mt-1">{t('welcome.step1Title')}</h2>
                         </div>
                         <div className="space-y-6">
                             <div>
-                                <label className="block text-[10px] font-bold text-ink-sub mb-2 uppercase tracking-widest">旅行のタイトル</label>
+                                <label className="block text-[10px] font-bold text-ink-sub mb-2 uppercase tracking-widest">{t('welcome.tripTitleLabel')}</label>
                                 <input
                                     type="text"
-                                    placeholder="例: 北海道 卒業旅行"
+                                    placeholder={t('welcome.tripTitlePlaceholder') as string}
                                     className="w-full bg-surface-gray border-2 border-transparent focus:border-primary/30 rounded-2xl p-4 text-ink outline-none transition-all shadow-sm"
                                     value={name}
                                     onChange={e => setName(e.target.value)}
@@ -168,7 +170,7 @@ const WelcomeView: React.FC<Props> = ({ onStart, onDemoStart }) => {
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-[10px] font-bold text-ink-sub mb-2 uppercase tracking-widest">開始日</label>
+                                    <label className="block text-[10px] font-bold text-ink-sub mb-2 uppercase tracking-widest">{t('common.startDate')}</label>
                                     <input
                                         type="date"
                                         className="w-full bg-surface-gray border-2 border-transparent focus:border-primary/30 rounded-2xl p-4 text-sm text-ink outline-none transition-all shadow-sm"
@@ -177,7 +179,7 @@ const WelcomeView: React.FC<Props> = ({ onStart, onDemoStart }) => {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-[10px] font-bold text-ink-sub mb-2 uppercase tracking-widest">終了日</label>
+                                    <label className="block text-[10px] font-bold text-ink-sub mb-2 uppercase tracking-widest">{t('common.endDate')}</label>
                                     <input
                                         type="date"
                                         className="w-full bg-surface-gray border-2 border-transparent focus:border-primary/30 rounded-2xl p-4 text-sm text-ink outline-none transition-all shadow-sm"
@@ -191,9 +193,9 @@ const WelcomeView: React.FC<Props> = ({ onStart, onDemoStart }) => {
                                     onClick={handleNext}
                                     className="w-full bg-primary text-white py-5 rounded-3xl font-bold shadow-lg shadow-primary/20 active:scale-95 transition-all"
                                 >
-                                    次へ進む
+                                    {t('common.next')}
                                 </button>
-                                <button onClick={() => setStep('welcome')} className="w-full mt-4 text-ink-light text-xs font-bold py-2">戻る</button>
+                                <button onClick={() => setStep('welcome')} className="w-full mt-4 text-ink-light text-xs font-bold py-2">{t('common.back')}</button>
                             </div>
                         </div>
                     </div>
@@ -204,8 +206,8 @@ const WelcomeView: React.FC<Props> = ({ onStart, onDemoStart }) => {
                     <div className="w-full animate-in slide-in-from-right-8 fade-in duration-300 pb-20">
                         <div className="mb-8">
                             <span className="text-primary font-bold text-xs uppercase tracking-widest">Step 2 / 2</span>
-                            <h2 className="text-2xl font-bold text-ink mt-1">メンバーを追加</h2>
-                            <p className="text-xs text-ink-sub mt-2 leading-relaxed">旅行に参加するメンバーの名前を入力してください。後からでも追加できます。</p>
+                            <h2 className="text-2xl font-bold text-ink mt-1">{t('welcome.step2Title')}</h2>
+                            <p className="text-xs text-ink-sub mt-2 leading-relaxed">{t('welcome.step2Desc')}</p>
                         </div>
                         <div className="space-y-3">
                             {tempMembers.map((m, idx) => (
@@ -215,7 +217,7 @@ const WelcomeView: React.FC<Props> = ({ onStart, onDemoStart }) => {
                                     </div>
                                     <input
                                         type="text"
-                                        placeholder={`メンバー ${idx + 1}`}
+                                        placeholder={t('welcome.memberPlaceholder', { index: idx + 1 }) as string}
                                         className="flex-1 bg-surface-gray border-2 border-transparent focus:border-primary/30 rounded-xl px-4 py-3 text-sm text-ink outline-none transition-all"
                                         value={m.name}
                                         onChange={e => updateMember(m.id, e.target.value)}
@@ -232,7 +234,7 @@ const WelcomeView: React.FC<Props> = ({ onStart, onDemoStart }) => {
                                 onClick={addMember}
                                 className="w-full py-4 border-2 border-dashed border-surface-gray-mid rounded-2xl text-xs font-bold text-ink-light hover:border-primary/40 hover:text-primary transition-all flex items-center justify-center gap-2"
                             >
-                                <span>+</span> メンバーを追加
+                                <span>+</span> {t('welcome.btnAddMember')}
                             </button>
                         </div>
                         <div className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-white via-white to-transparent max-w-sm mx-auto">
@@ -244,13 +246,13 @@ const WelcomeView: React.FC<Props> = ({ onStart, onDemoStart }) => {
                                 {isCreating ? (
                                     <>
                                         <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                        旅行を作成中...
+                                        {t('welcome.creatingTrip')}
                                     </>
                                 ) : (
-                                    <>この内容で旅を始める！ <AppIcon name="ticket" className="w-4 h-4" /></>
+                                    <>{t('welcome.btnFinish')} <AppIcon name="ticket" className="w-4 h-4" /></>
                                 )}
                             </button>
-                            <button onClick={() => setStep('info')} className="w-full mt-2 text-ink-light text-xs font-bold py-2">戻る</button>
+                            <button onClick={() => setStep('info')} className="w-full mt-2 text-ink-light text-xs font-bold py-2">{t('common.back')}</button>
                         </div>
                     </div>
                 )}
@@ -263,32 +265,31 @@ const WelcomeView: React.FC<Props> = ({ onStart, onDemoStart }) => {
                             <div className="w-24 h-24 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner animate-bounce">
                                 <span className="text-5xl">🎉</span>
                             </div>
-                            <h2 className="text-2xl font-sans font-black text-ink mb-2">旅行グループ作成完了！</h2>
-                            <p className="text-sm text-ink-sub leading-relaxed">
-                                メンバーと <strong className="text-primary">この専用URLを共有</strong> しないと<br />みんなのデータが同期されません！
+                            <h2 className="text-2xl font-sans font-black text-ink mb-2">{t('welcome.shareCompleteTitle')}</h2>
+                            <p className="text-sm text-ink-sub leading-relaxed whitespace-pre-line">
+                                {t('welcome.shareCompleteDesc1')}<strong className="text-primary">{t('welcome.shareCompleteDesc2')}</strong>{t('welcome.shareCompleteDesc3')}
                             </p>
                         </div>
 
                         {/* 重要バナー */}
                         <div className="w-full bg-amber-50 border-2 border-amber-300 rounded-2xl p-4 mb-6 text-left">
-                            <p className="text-xs font-black text-amber-700 mb-1">⚠️ 必ず共有してください</p>
-                            <p className="text-[11px] text-amber-600 leading-relaxed">
-                                このURLがあなたのグループ専用リンクです。<br />
-                                メンバー全員がこのリンクからアクセスすることで、支出・スケジュール・荷物リストが自動で同期されます。
+                            <p className="text-xs font-black text-amber-700 mb-1">{t('welcome.warningTitle')}</p>
+                            <p className="text-[11px] text-amber-600 leading-relaxed whitespace-pre-line">
+                                {t('welcome.warningText')}
                             </p>
                         </div>
 
                         {/* URL表示 + コピーボタン */}
                         <div className="w-full bg-surface-gray rounded-2xl p-4 mb-4 flex items-center gap-3 border border-surface-gray-mid">
                             <div className="flex-1 min-w-0">
-                                <p className="text-[10px] text-ink-light font-bold mb-1 uppercase tracking-widest">グループURL</p>
+                                <p className="text-[10px] text-ink-light font-bold mb-1 uppercase tracking-widest">{t('welcome.groupUrl')}</p>
                                 <p className="text-xs font-bold text-ink truncate font-mono">{shareUrl}</p>
                             </div>
                             <button
                                 onClick={handleCopy}
                                 className={`flex-shrink-0 px-3 py-2 rounded-xl text-xs font-black transition-all ${copyFeedback ? 'bg-emerald-500 text-white scale-95' : 'bg-white text-primary border border-primary/20 hover:bg-primary/5'}`}
                             >
-                                {copyFeedback ? '✓ コピー済み' : '📋 コピー'}
+                                {copyFeedback ? t('common.copied') : `📋 ${t('common.copy')}`}
                             </button>
                         </div>
 
@@ -300,7 +301,7 @@ const WelcomeView: React.FC<Props> = ({ onStart, onDemoStart }) => {
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
                             </svg>
-                            LINEやメッセージで共有する
+                            {t('welcome.btnShareLine')}
                         </button>
 
                         {/* スキップ */}
@@ -308,7 +309,7 @@ const WelcomeView: React.FC<Props> = ({ onStart, onDemoStart }) => {
                             onClick={() => window.location.reload()}
                             className="text-xs text-ink-light font-bold py-3 opacity-60 hover:opacity-100 transition-opacity"
                         >
-                            あとで共有する → 旅を始める
+                            {t('welcome.btnSkip')}
                         </button>
                     </div>
                 )}
