@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { PackingItem, UserProfile } from '../types';
 import { AppIcon } from './AppIcon';
 import { suggestCategory } from '../utils/packingDictionary';
+import { useTranslation } from '../contexts/LanguageContext';
 
 interface Props {
     items: PackingItem[];
@@ -14,6 +15,7 @@ interface Props {
 const CATEGORIES = ['必需品', '衣類', '洗面用具', '電子機器', '日用品', '医薬品', '食品', 'その他'] as const;
 
 const PackingView: React.FC<Props> = ({ items, userProfiles, onUpdate, isTablet = false, autoOpenAdd }) => {
+    const { t } = useTranslation();
     const [newItemTitle, setNewItemTitle] = useState('');
     const [newItemCategory, setNewItemCategory] = useState<string>(CATEGORIES[0]);
     const [newItemAssignees, setNewItemAssignees] = useState<string[]>([]); // 空=全員
@@ -142,6 +144,21 @@ const PackingView: React.FC<Props> = ({ items, userProfiles, onUpdate, isTablet 
         }
     };
 
+    const translateCategory = (cat: string) => {
+        const map: Record<string, string> = {
+            '必需品': 'essentials',
+            '衣類': 'clothing',
+            '洗面用具': 'toiletries',
+            '電子機器': 'electronics',
+            '日用品': 'daily',
+            '医薬品': 'medical',
+            '食品': 'food',
+            'その他': 'other'
+        };
+        const key = map[cat] || 'other';
+        return t(`packing.cat_${key}`) || cat;
+    };
+
     return (
         <div className="flex flex-col h-full bg-surface-gray relative pb-20 pt-1">
             {/* 画面上部：全員/個人トグル - チケットセクション統一デザイン */}
@@ -152,7 +169,7 @@ const PackingView: React.FC<Props> = ({ items, userProfiles, onUpdate, isTablet 
                         className={`flex-1 py-3 text-[11px] font-black uppercase tracking-widest rounded-full transition-all duration-500 flex items-center justify-center gap-2.5 ${filterMemberId === 'ALL' ? 'bg-ink text-white shadow-xl shadow-ink/20 scale-[1.02]' : 'bg-transparent text-ink-sub hover:text-ink'}`}
                     >
                         <span className="text-sm">🌎</span>
-                        全員
+                        {t('expenseList.all') || '全員'}
                     </button>
                     <button
                         onClick={() => {
@@ -161,7 +178,7 @@ const PackingView: React.FC<Props> = ({ items, userProfiles, onUpdate, isTablet 
                         className={`flex-1 py-3 text-[11px] font-black uppercase tracking-widest rounded-full transition-all duration-500 flex items-center justify-center gap-2.5 ${filterMemberId !== 'ALL' ? 'bg-ink text-white shadow-xl shadow-ink/20 scale-[1.02]' : 'bg-transparent text-ink-sub hover:text-ink'}`}
                     >
                         <span className="text-sm">👤</span>
-                        個人
+                        {t('expenseList.individual') || '個人'}
                     </button>
                 </div>
 
@@ -186,13 +203,13 @@ const PackingView: React.FC<Props> = ({ items, userProfiles, onUpdate, isTablet 
 
             <div className="flex justify-between items-center mb-4 px-4 mt-4">
                 <h2 className="text-xl font-sans font-black text-ink flex items-center gap-2 tracking-tight">
-                    <span className="text-2xl">🎒</span> 持ち物リスト
+                    <span className="text-2xl">🎒</span> {t('packing.title') || '持ち物リスト'}
                 </h2>
                 <button
                     onClick={() => setShowAddForm(!showAddForm)}
                     className={`h-10 px-5 rounded-full flex items-center justify-center text-white transition-all shadow-lg font-black text-[10px] uppercase tracking-widest gap-2 ${showAddForm ? 'bg-rose-500' : 'bg-primary hover:bg-ocean-dark'}`}
                 >
-                    {showAddForm ? '閉じる' : '+ 追加'}
+                    {showAddForm ? (t('common.close') || '閉じる') : ('+ ' + (t('common.add') || '追加'))}
                 </button>
             </div>
 
@@ -203,11 +220,11 @@ const PackingView: React.FC<Props> = ({ items, userProfiles, onUpdate, isTablet 
                     <div className="relative z-10">
                         <div className="flex justify-between items-end mb-4">
                             <div>
-                                <p className="text-[10px] font-bold uppercase tracking-[0.2em] opacity-80 mb-1">全体進捗</p>
-                                <h3 className="text-4xl font-sans font-black">{stats.percent}%<span className="text-lg ml-1 opacity-60">完了</span></h3>
+                                <p className="text-[10px] font-bold uppercase tracking-[0.2em] opacity-80 mb-1">{t('packing.overallProgress') || '全体進捗'}</p>
+                                <h3 className="text-4xl font-sans font-black">{stats.percent}%<span className="text-lg ml-1 opacity-60">{t('packing.completed') || '完了'}</span></h3>
                             </div>
                             <div className="text-right">
-                                <p className="text-[10px] font-bold opacity-80 uppercase tracking-widest mb-1">個数</p>
+                                <p className="text-[10px] font-bold opacity-80 uppercase tracking-widest mb-1">{t('packing.count') || '個数'}</p>
                                 <p className="text-sm font-bold">{stats.packed} / {stats.total}</p>
                             </div>
                         </div>
@@ -246,23 +263,23 @@ const PackingView: React.FC<Props> = ({ items, userProfiles, onUpdate, isTablet 
                 <form onSubmit={handleAddItem} className="glass p-6 rounded-[32px] animate-in slide-in-from-top-4 duration-300 mx-1 border border-primary/10 bg-white/90 shadow-xl">
                     <div className="space-y-5">
                         <div className="flex justify-between items-center">
-                            <h4 className="text-sm font-black text-ink">新規アイテム追加</h4>
-                            <span className="text-[10px] font-bold text-ink-light bg-surface-gray px-2 py-1 rounded-md uppercase tracking-wider">新規</span>
+                            <h4 className="text-sm font-black text-ink">{t('packing.addNewItem') || '新規アイテム追加'}</h4>
+                            <span className="text-[10px] font-bold text-ink-light bg-surface-gray px-2 py-1 rounded-md uppercase tracking-wider">{t('packing.new') || '新規'}</span>
                         </div>
                         <div>
-                            <label className="text-[10px] font-bold text-ink-sub uppercase tracking-widest mb-2 block">アイテム名</label>
+                            <label className="text-[10px] font-bold text-ink-sub uppercase tracking-widest mb-2 block">{t('packing.itemName') || 'アイテム名'}</label>
                             <input
                                 autoFocus
                                 type="text"
-                                placeholder="例: パスポート、モバイルバッテリー..."
+                                placeholder={t('packing.itemNamePlaceholder') || "例: パスポート、モバイルバッテリー..."}
                                 value={newItemTitle}
                                 onChange={(e) => handleTitleChange(e.target.value)}
                                 className="w-full bg-surface-gray/50 border border-surface-gray-mid rounded-2xl px-5 py-3.5 text-sm font-bold focus:border-primary focus:bg-white outline-none transition-all shadow-inner"
                             />
                         </div>
                         <div>
-                            <label className="text-[10px] font-bold text-ink-sub uppercase tracking-widest mb-2 block">このアイテムが必要なのは？</label>
-                            <p className="text-[10px] text-ink-light mb-3">複数選択OK。選択なし=全員の共有持ち物になります。</p>
+                            <label className="text-[10px] font-bold text-ink-sub uppercase tracking-widest mb-2 block">{t('packing.whoNeedsThis') || 'このアイテムが必要なのは？'}</label>
+                            <p className="text-[10px] text-ink-light mb-3">{t('packing.whoNeedsThisDesc') || '複数選択OK。選択なし=全員の共有持ち物になります。'}</p>
                             <div className="flex flex-wrap gap-2">
                                 {userProfiles.map(p => {
                                     const selected = newItemAssignees.includes(p.id);
@@ -283,11 +300,11 @@ const PackingView: React.FC<Props> = ({ items, userProfiles, onUpdate, isTablet 
                                 })}
                             </div>
                             {newItemAssignees.length === 0 && (
-                                <p className="mt-2 text-[10px] font-bold text-emerald-600">✓ 全員の共有持ち物として追加されます</p>
+                                <p className="mt-2 text-[10px] font-bold text-emerald-600">{t('packing.sharedItemInfo') || '✓ 全員の共有持ち物として追加されます'}</p>
                             )}
                         </div>
                         <div>
-                            <label className="text-[10px] font-bold text-ink-sub uppercase tracking-widest mb-2 block">カテゴリー選択</label>
+                            <label className="text-[10px] font-bold text-ink-sub uppercase tracking-widest mb-2 block">{t('packing.selectCategory') || 'カテゴリー選択'}</label>
                             <div className="flex flex-wrap gap-2">
                                 {CATEGORIES.map(cat => (
                                     <button
@@ -296,7 +313,7 @@ const PackingView: React.FC<Props> = ({ items, userProfiles, onUpdate, isTablet 
                                         onClick={() => setNewItemCategory(cat)}
                                         className={`px-4 py-2 rounded-xl text-[10px] font-bold transition-all border ${newItemCategory === cat ? 'bg-primary text-white border-primary shadow-md' : 'bg-white text-ink-sub border-surface-gray-mid hover:bg-surface-gray'}`}
                                     >
-                                        {cat}
+                                        {translateCategory(cat)}
                                     </button>
                                 ))}
                             </div>
@@ -305,7 +322,7 @@ const PackingView: React.FC<Props> = ({ items, userProfiles, onUpdate, isTablet 
                             type="submit"
                             className="w-full py-[18px] bg-gradient-to-r from-ocean-dark to-primary text-white rounded-2xl text-xs font-black uppercase tracking-[0.2em] shadow-lg shadow-primary/30 active:scale-95 transition-all mt-2"
                         >
-                            追加を確定する
+                            {t('packing.confirmAdd') || '追加を確定する'}
                         </button>
                     </div>
                 </form>
@@ -318,8 +335,8 @@ const PackingView: React.FC<Props> = ({ items, userProfiles, onUpdate, isTablet 
                         <div className="mb-4 opacity-20">
                             <span className="text-8xl">🎒</span>
                         </div>
-                        <h4 className="text-sm font-black text-ink">まだアイテムがありません</h4>
-                        <p className="text-[10px] text-ink-light mt-2 px-10">旅行の準備を始めましょう！<br />上の「持ち物を追加」ボタンから追加できます。</p>
+                        <h4 className="text-sm font-black text-ink">{t('packing.noItems') || 'まだアイテムがありません'}</h4>
+                        <p className="text-[10px] text-ink-light mt-2 px-10">{t('packing.noItemsDesc1') || '旅行の準備を始めましょう！'}<br />{t('packing.noItemsDesc2') || '上の「持ち物を追加」ボタンから追加できます。'}</p>
                     </div>
                 ) : (
                     (Object.entries(categorizedItems) as [string, PackingItem[]][]).map(([category, catItems]) => {
@@ -338,7 +355,7 @@ const PackingView: React.FC<Props> = ({ items, userProfiles, onUpdate, isTablet 
                                 <div className="flex items-center gap-3 px-2">
                                     <h4 className="text-[11px] font-black text-ink uppercase tracking-[0.3em] flex items-center gap-2">
                                         <span className="w-1.5 h-4 bg-premium-gold rounded-full shadow-[0_0_8px_rgba(207,168,110,0.5)]"></span>
-                                        {category}
+                                        {translateCategory(category)}
                                     </h4>
                                     <span className="flex-1 h-[1px] bg-gradient-to-r from-surface-gray-mid to-transparent opacity-50"></span>
                                     <span className="text-[10px] font-bold text-ink-light">{filteredCatItems.length}</span>
@@ -363,9 +380,10 @@ const PackingView: React.FC<Props> = ({ items, userProfiles, onUpdate, isTablet 
                                                                 <span className="text-[9px] font-bold text-ink-light uppercase tracking-tighter opacity-60">
                                                                     {(() => {
                                                                         const a = item.assignees || [];
-                                                                        if (a.length === 0) return '全員の共有持ち物';
+                                                                        if (a.length === 0) return t('packing.sharedItem') || '全員の共有持ち物';
                                                                         const names = a.map(id => userProfiles.find(p => p.id === id)?.displayName || id);
-                                                                        return names.join('・') + 'が持参';
+                                                                        const suffix = t('packing.bringsIt') || 'が持参';
+                                                                        return names.join('・') + suffix;
                                                                     })()}
                                                                 </span>
                                                             </div>
@@ -430,7 +448,7 @@ const PackingView: React.FC<Props> = ({ items, userProfiles, onUpdate, isTablet 
                         onClick={e => e.stopPropagation()}
                     >
                         <div className="flex justify-between items-center mb-8">
-                            <h3 className="text-xl font-sans font-black text-ink">アイテム設定</h3>
+                            <h3 className="text-xl font-sans font-black text-ink">{t('packing.itemSettings') || 'アイテム設定'}</h3>
                             <button type="button" onClick={() => deleteItem(editingItem.id)} className="w-10 h-10 flex items-center justify-center text-ink-light hover:text-rose-500 hover:bg-rose-50 rounded-full transition-all">
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                             </button>
@@ -438,7 +456,7 @@ const PackingView: React.FC<Props> = ({ items, userProfiles, onUpdate, isTablet 
 
                         <div className="space-y-6">
                             <div>
-                                <label className="text-[10px] font-bold text-ink-sub uppercase tracking-widest mb-2 block">アイテム名</label>
+                                <label className="text-[10px] font-bold text-ink-sub uppercase tracking-widest mb-2 block">{t('packing.itemName') || 'アイテム名'}</label>
                                 <input
                                     autoFocus
                                     type="text"
@@ -449,8 +467,8 @@ const PackingView: React.FC<Props> = ({ items, userProfiles, onUpdate, isTablet 
                             </div>
 
                             <div>
-                                <label className="text-[10px] font-bold text-ink-sub uppercase tracking-widest mb-2 block">担当者設定（複数可）</label>
-                                <p className="text-[10px] text-ink-light mb-3">選択なし=全員の共有持ち物</p>
+                                <label className="text-[10px] font-bold text-ink-sub uppercase tracking-widest mb-2 block">{t('packing.assigneeSet') || '担当者設定（複数可）'}</label>
+                                <p className="text-[10px] text-ink-light mb-3">{t('packing.assigneeSetDesc') || '選択なし=全員の共有持ち物'}</p>
                                 <div className="flex flex-wrap gap-2">
                                     {userProfiles.map(p => {
                                         const currentAssignees = editingItem.assignees || [];
@@ -480,12 +498,12 @@ const PackingView: React.FC<Props> = ({ items, userProfiles, onUpdate, isTablet 
                                     })}
                                 </div>
                                 {(editingItem.assignees || []).length === 0 && (
-                                    <p className="mt-2 text-[10px] font-bold text-emerald-600">✓ 全員の共有持ち物</p>
+                                    <p className="mt-2 text-[10px] font-bold text-emerald-600">{t('packing.sharedItem') || '✓ 全員の共有持ち物'}</p>
                                 )}
                             </div>
 
                             <div>
-                                <label className="text-[10px] font-bold text-ink-sub uppercase tracking-widest mb-2 block">カテゴリー</label>
+                                <label className="text-[10px] font-bold text-ink-sub uppercase tracking-widest mb-2 block">{t('packing.category') || 'カテゴリー'}</label>
                                 <div className="flex flex-wrap gap-2">
                                     {CATEGORIES.map(cat => (
                                         <button
@@ -494,7 +512,7 @@ const PackingView: React.FC<Props> = ({ items, userProfiles, onUpdate, isTablet 
                                             onClick={() => setEditingItem({ ...editingItem, category: cat })}
                                             className={`px-4 py-2.5 rounded-xl text-[10px] font-bold transition-all border ${editingItem.category === cat ? 'bg-primary text-white border-primary shadow-lg' : 'bg-white text-ink-sub border-surface-gray-mid hover:bg-surface-gray'}`}
                                         >
-                                            {cat}
+                                            {translateCategory(cat)}
                                         </button>
                                     ))}
                                 </div>
@@ -506,13 +524,13 @@ const PackingView: React.FC<Props> = ({ items, userProfiles, onUpdate, isTablet 
                                     onClick={() => setEditingItem(null)}
                                     className="flex-1 py-[18px] text-[11px] font-black text-ink-sub uppercase tracking-[0.2em] bg-surface-gray rounded-2xl hover:bg-white border border-surface-gray-mid transition-all"
                                 >
-                                    戻る
+                                    {t('common.back') || '戻る'}
                                 </button>
                                 <button
                                     type="submit"
                                     className="flex-1 py-[18px] bg-ink text-white rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] shadow-xl hover:opacity-90 active:scale-95 transition-all"
                                 >
-                                    保存する
+                                    {t('common.save') || '保存する'}
                                 </button>
                             </div>
                         </div>

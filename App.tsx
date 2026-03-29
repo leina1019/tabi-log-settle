@@ -505,7 +505,7 @@ const App: React.FC = () => {
     updateTickets(emptyTickets);
 
     // resetSheetData().catch(console.error); // For Google Sheet sync
-    alert('データをリセットしました。');
+    alert(t('common.resetDone'));
     // localStorage.removeItem('oz-wari-expenses'); // Firebase handles state, local storage will update via effect
     // localStorage.removeItem('oz-wari-itinerary');
     // localStorage.removeItem('oz-wari-tickets');
@@ -536,8 +536,8 @@ const App: React.FC = () => {
             <h1 className="text-xl font-sans font-black tracking-tighter text-white">たびログ</h1>
           </div>
           <div className="flex items-center gap-2">
-            {syncStatus === 'syncing' && <span className="text-[10px] text-accent animate-pulse">SYNCING...</span>}
-            {tripId && <span className="text-xs text-white font-bold bg-white/20 px-2 py-1 rounded-full border border-white/30">● 同期中</span>}
+            {syncStatus === 'syncing' && <span className="text-[10px] text-accent animate-pulse">{t('common.syncing')}</span>}
+            {tripId && <span className="text-xs text-white font-bold bg-white/20 px-2 py-1 rounded-full border border-white/30">● {t('common.syncSuccess')}</span>}
             <button
               onClick={async () => {
                 if (tripId) {
@@ -551,13 +551,13 @@ const App: React.FC = () => {
                     }
                   } else {
                     navigator.clipboard.writeText(url).then(() => {
-                      alert("共有リンクをコピーしました！\nLINEなどで送ってください。\n\n" + url);
+                      alert(t('common.copySuccess') + url);
                     }).catch(() => {
-                      prompt("リンクをコピーしてください", url);
+                      prompt(t('common.promptCopy'), url);
                     });
                   }
                 } else {
-                  if (!window.confirm('新しい共有リンクを発行しますか？')) return;
+                  if (!window.confirm(t('common.confirmNewLink'))) return;
                   setSyncStatus('syncing');
                   try {
                     const newId = await createNewTrip({
@@ -583,15 +583,15 @@ const App: React.FC = () => {
                       } catch (e) { console.log('Share canceled', e); }
                     } else {
                       navigator.clipboard.writeText(url).then(() => {
-                        alert("共有リンクを作成・コピーしました！\n\n" + url);
+                        alert(t('common.shareCreated') + url);
                       }).catch(() => {
-                        prompt("リンクをコピーしてください", url);
+                        prompt(t('common.promptCopy'), url);
                       });
                     }
                     setSyncStatus('success');
                   } catch (e) {
                     console.error(e);
-                    alert("作成に失敗しました");
+                    alert(t('common.createFailed'));
                     setSyncStatus('error');
                   } finally {
                     setTimeout(() => setSyncStatus('idle'), 2000);
@@ -602,7 +602,7 @@ const App: React.FC = () => {
             >
               <span className="flex items-center gap-1">
                 <AppIcon name={tripId ? "copy" : "share"} className="w-4 h-4" />
-                {tripId ? 'コピー' : '共有'}
+                {tripId ? t('common.copy') : t('common.share')}
               </span>
             </button>
             <button
@@ -841,27 +841,27 @@ const App: React.FC = () => {
             <nav className="fixed bottom-4 left-1/2 -translate-x-1/2 w-[92%] max-w-[400px] h-16 bg-white rounded-full flex justify-between items-center px-4 sm:px-6 shadow-lg border border-surface-gray-mid z-[40] safe-pb">
               <button onClick={() => { setView('home'); setIsAddMenuOpen(false); setAutoOpenAdd({}); }} className={`flex flex-col items-center gap-1 transition-all flex-1 ${view === 'home' ? 'text-primary -translate-y-1' : 'text-ink-light hover:text-ink-sub'}`}>
                 <AppIcon name="home" className="w-5 h-5 sm:w-6 sm:h-6" />
-                <span className="text-[8px] sm:text-[9px] font-bold tracking-[0.1em] uppercase">HOME</span>
+                <span className="text-[8px] sm:text-[9px] font-bold tracking-[0.1em] uppercase">{t('nav.dashboard')}</span>
               </button>
 
               <button onClick={() => { setView('history'); setIsAddMenuOpen(false); setAutoOpenAdd({}); }} className={`flex flex-col items-center gap-1 transition-all flex-1 ${view === 'history' ? 'text-primary -translate-y-1' : 'text-ink-light hover:text-ink-sub'}`}>
                 <AppIcon name="expense" className="w-5 h-5 sm:w-6 sm:h-6" />
-                <span className="text-[8px] sm:text-[9px] font-bold tracking-[0.1em] uppercase">SPEND</span>
+                <span className="text-[8px] sm:text-[9px] font-bold tracking-[0.1em] uppercase">{t('nav.expense')}</span>
               </button>
 
               <button onClick={() => { setView('schedule'); setIsAddMenuOpen(false); setAutoOpenAdd({}); }} className={`flex flex-col items-center gap-1 transition-all flex-1 ${view === 'schedule' ? 'text-primary -translate-y-1' : 'text-ink-light hover:text-ink-sub'}`}>
                 <AppIcon name="itinerary" className="w-5 h-5 sm:w-6 sm:h-6" />
-                <span className="text-[8px] sm:text-[9px] font-bold tracking-[0.1em] uppercase">PLAN</span>
+                <span className="text-[8px] sm:text-[9px] font-bold tracking-[0.1em] uppercase">{t('nav.schedule')}</span>
               </button>
 
               <button onClick={() => { setView('tickets'); setIsAddMenuOpen(false); setAutoOpenAdd({}); }} className={`flex flex-col items-center gap-1 transition-all flex-1 ${view === 'tickets' ? 'text-primary -translate-y-1' : 'text-ink-light hover:text-ink-sub'}`}>
                 <AppIcon name="ticket" className="w-5 h-5 sm:w-6 sm:h-6" />
-                <span className="text-[8px] sm:text-[9px] font-bold tracking-[0.1em] uppercase">TICKETS</span>
+                <span className="text-[8px] sm:text-[9px] font-bold tracking-[0.1em] uppercase">{t('nav.tickets')}</span>
               </button>
 
               <button onClick={() => { setView('packing'); setIsAddMenuOpen(false); setAutoOpenAdd({}); }} className={`flex flex-col items-center gap-1 transition-all flex-1 ${view === 'packing' ? 'text-primary -translate-y-1' : 'text-ink-light hover:text-ink-sub'}`}>
                 <AppIcon name="packing" className="w-5 h-5 sm:w-6 sm:h-6" />
-                <span className="text-[8px] sm:text-[9px] font-bold tracking-[0.1em] uppercase">PACKING</span>
+                <span className="text-[8px] sm:text-[9px] font-bold tracking-[0.1em] uppercase">{t('nav.packing')}</span>
               </button>
             </nav>
           </>

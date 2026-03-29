@@ -58,11 +58,13 @@ const SettingsView: React.FC<Props> = ({
         itinerary,
         tickets,
         packingList,
-        tripSettings: { tripName, tripStartDate, tripEndDate, coverImage, budget, settlementMethod }
+        tripSettings: { tripName, tripStartDate, tripEndDate, coverImage, budget, settlementMethod },
+        t
       });
     } catch (error) {
       console.error('Export failed', error);
-      alert('Excelファイルの生成に失敗しました。\n' + (error as Error).message);
+      const msg = t('settings.exportFailed') || 'Excelファイルの生成に失敗しました。';
+      alert(msg + '\n' + (error as Error).message);
     } finally {
       setIsExporting(false);
     }
@@ -176,7 +178,7 @@ const SettingsView: React.FC<Props> = ({
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" /></svg>
           </button>
-          <h2 className="text-2xl font-sans font-black text-ink tracking-tight">アプリ設定</h2>
+          <h2 className="text-2xl font-sans font-black text-ink tracking-tight">{t('settings.title')}</h2>
         </div>
         <div className="text-[10px] font-bold text-ink-light bg-surface-gray px-3 py-1.5 rounded-full uppercase tracking-widest border border-surface-gray-mid/50 shadow-sm">
           Ver 1.2
@@ -187,7 +189,7 @@ const SettingsView: React.FC<Props> = ({
       <section className="space-y-4">
         <div className="flex items-center gap-2 px-2">
           <span className="text-xl">👤</span>
-          <h3 className="text-xs font-black text-ink uppercase tracking-[0.2em]">プロフィール編集</h3>
+          <h3 className="text-xs font-black text-ink uppercase tracking-[0.2em]">{t('settings.memberManage')}</h3>
         </div>
         <div className="grid grid-cols-1 gap-4">
           {userProfiles.map(profile => {
@@ -211,7 +213,7 @@ const SettingsView: React.FC<Props> = ({
                         </svg>
                       )}
                       <div className="absolute inset-0 bg-ink/40 flex items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-opacity backdrop-blur-[2px]">
-                        <span className="text-[10px] font-black text-white tracking-widest">変更</span>
+                        <span className="text-[10px] font-black text-white tracking-widest">{t('common.edit')}</span>
                       </div>
                     </div>
                     <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-white rounded-full shadow-md flex items-center justify-center border border-surface-gray-mid">
@@ -222,17 +224,17 @@ const SettingsView: React.FC<Props> = ({
                   {/* 詳細 */}
                   <div className="flex-1 w-full space-y-5">
                     <div>
-                      <label className="text-[10px] font-bold text-ink-sub uppercase tracking-widest mb-2 block">表示名</label>
+                      <label className="text-[10px] font-bold text-ink-sub uppercase tracking-widest mb-2 block">{t('common.member')}</label>
                       <input
                         type="text"
                         value={profile.displayName}
                         onChange={(e) => onUpdateProfile(pId, { displayName: e.target.value })}
                         className="w-full bg-surface-gray border-2 border-transparent focus:border-primary/20 focus:bg-white rounded-2xl px-5 py-3.5 text-sm font-bold text-ink outline-none transition-all shadow-inner"
-                        placeholder="名前を入力..."
+                        placeholder={t('settings.memberNamePlaceholder')}
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] font-bold text-ink-sub uppercase tracking-widest mb-2 block">メンバーカラー</label>
+                      <label className="text-[10px] font-bold text-ink-sub uppercase tracking-widest mb-2 block">{t('common.member')} Color</label>
                       <div className="flex flex-wrap gap-2.5">
                         {MEMBER_COLORS.map(color => (
                           <button
@@ -249,9 +251,9 @@ const SettingsView: React.FC<Props> = ({
                     {userProfiles.length > 1 && (
                       removingMemberId === pId ? (
                         <div className="flex items-center gap-2 p-3 bg-rose-50 rounded-2xl border border-rose-200">
-                          <p className="flex-1 text-xs font-bold text-rose-600">「{profile.displayName}」を削除しますか？</p>
-                          <button onClick={() => { onRemoveMember(pId); setRemovingMemberId(null); }} className="px-3 py-1.5 bg-rose-500 text-white text-xs font-black rounded-xl active:scale-95">削除</button>
-                          <button onClick={() => setRemovingMemberId(null)} className="px-3 py-1.5 bg-white text-ink-sub text-xs font-bold rounded-xl border border-surface-gray-mid active:scale-95">キャンセル</button>
+                          <p className="flex-1 text-xs font-bold text-rose-600">{t('settings.removeMemberConfirm', { name: profile.displayName })}</p>
+                          <button onClick={() => { onRemoveMember(pId); setRemovingMemberId(null); }} className="px-3 py-1.5 bg-rose-500 text-white text-xs font-black rounded-xl active:scale-95">{t('common.delete')}</button>
+                          <button onClick={() => setRemovingMemberId(null)} className="px-3 py-1.5 bg-white text-ink-sub text-xs font-bold rounded-xl border border-surface-gray-mid active:scale-95">{t('common.cancel')}</button>
                         </div>
                       ) : (
                         <button
@@ -259,7 +261,7 @@ const SettingsView: React.FC<Props> = ({
                           className="text-[10px] font-bold text-rose-400 hover:text-rose-600 transition-colors flex items-center gap-1"
                         >
                           <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                          このメンバーを削除
+                          {t('settings.deleteThisMember')}
                         </button>
                       )
                     )}
@@ -285,17 +287,17 @@ const SettingsView: React.FC<Props> = ({
             onClick={() => setIsAddingMember(true)}
             className="w-full py-4 border-2 border-dashed border-primary/30 rounded-3xl text-sm font-bold text-primary hover:border-primary/60 hover:bg-primary/5 active:scale-95 transition-all flex items-center justify-center gap-2"
           >
-            <span className="text-lg">+</span> メンバーを追加
+            <span className="text-lg">+</span> {t('settings.addMember')}
           </button>
         ) : (
           <div className="bg-white rounded-[32px] p-6 shadow-xl border border-primary/20 space-y-4 animate-in slide-in-from-bottom-4 fade-in duration-200">
-            <h4 className="text-sm font-black text-ink">新しいメンバーを追加</h4>
+            <h4 className="text-sm font-black text-ink">{t('settings.addMember')}</h4>
             <div>
-              <label className="text-[10px] font-bold text-ink-sub uppercase tracking-widest mb-2 block">名前</label>
+              <label className="text-[10px] font-bold text-ink-sub uppercase tracking-widest mb-2 block">{t('common.member')}</label>
               <input
                 type="text"
                 autoFocus
-                placeholder="例: たろう"
+                placeholder={t('settings.memberNamePlaceholder')}
                 value={newMemberName}
                 onChange={e => setNewMemberName(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleAddMemberSubmit()}
@@ -303,7 +305,7 @@ const SettingsView: React.FC<Props> = ({
               />
             </div>
             <div>
-              <label className="text-[10px] font-bold text-ink-sub uppercase tracking-widest mb-2 block">カラー</label>
+              <label className="text-[10px] font-bold text-ink-sub uppercase tracking-widest mb-2 block">{t('common.member')} Color</label>
               <div className="flex flex-wrap gap-2.5">
                 {MEMBER_COLORS.map(color => (
                   <button
@@ -317,8 +319,8 @@ const SettingsView: React.FC<Props> = ({
               </div>
             </div>
             <div className="flex gap-3 pt-2">
-              <button onClick={() => setIsAddingMember(false)} className="flex-1 py-3 rounded-2xl text-xs font-bold text-ink-sub bg-surface-gray hover:bg-surface-gray-mid transition-colors">キャンセル</button>
-              <button onClick={handleAddMemberSubmit} disabled={!newMemberName.trim()} className="flex-1 py-3 rounded-2xl text-xs font-bold bg-primary text-white shadow-lg disabled:opacity-40 active:scale-95 transition-all">追加する</button>
+              <button onClick={() => setIsAddingMember(false)} className="flex-1 py-3 rounded-2xl text-xs font-bold text-ink-sub bg-surface-gray hover:bg-surface-gray-mid transition-colors">{t('common.cancel')}</button>
+              <button onClick={handleAddMemberSubmit} disabled={!newMemberName.trim()} className="flex-1 py-3 rounded-2xl text-xs font-bold bg-primary text-white shadow-lg disabled:opacity-40 active:scale-95 transition-all">{t('common.add')}</button>
             </div>
           </div>
         )}
@@ -328,11 +330,11 @@ const SettingsView: React.FC<Props> = ({
       <section className="space-y-4">
         <div className="flex items-center gap-2 px-2">
            <span className="text-xl">🧮</span>
-           <h3 className="text-xs font-black text-ink uppercase tracking-[0.2em]">精算の方式</h3>
+           <h3 className="text-xs font-black text-ink uppercase tracking-[0.2em]">{t('settings.settlementMethod')}</h3>
         </div>
         <div className="bg-white rounded-[32px] p-6 shadow-xl shadow-ink/5 border border-surface-gray-mid/50">
            <p className="text-[11px] text-ink-sub leading-relaxed font-bold mb-6 px-1">
-             グループ全体の精算方針を選択します。
+             {t('settings.settlementMethodDesc')}
            </p>
            <div className="grid grid-cols-2 gap-4">
              <button
@@ -343,8 +345,8 @@ const SettingsView: React.FC<Props> = ({
                  ⚡
                </div>
                <div className="text-center">
-                 <span className={`text-[10px] font-black uppercase tracking-widest block mb-1 ${settlementMethod === 'smart' ? 'text-primary' : 'text-ink-sub'}`}>スマート精算</span>
-                 <span className="text-[8px] font-bold text-ink-light opacity-60 block leading-tight">全体で送金を最小化</span>
+                 <span className={`text-[10px] font-black uppercase tracking-widest block mb-1 ${settlementMethod === 'smart' ? 'text-primary' : 'text-ink-sub'}`}>{t('settings.smartSettlement')}</span>
+                 <span className="text-[8px] font-bold text-ink-light opacity-60 block leading-tight">{t('settings.smartSettlementDesc')}</span>
                </div>
                {settlementMethod === 'smart' && (
                  <div className="absolute top-3 right-3 w-2.5 h-2.5 rounded-full bg-accent shadow-[0_0_8px_rgba(255,215,0,0.8)] animate-pulse" />
@@ -359,8 +361,8 @@ const SettingsView: React.FC<Props> = ({
                  🤝
                </div>
                <div className="text-center">
-                 <span className={`text-[10px] font-black uppercase tracking-widest block mb-1 ${settlementMethod === 'individual' ? 'text-primary' : 'text-ink-sub'}`}>個別精算</span>
-                 <span className="text-[8px] font-bold text-ink-light opacity-60 block leading-tight">立替者へ直接送金</span>
+                 <span className={`text-[10px] font-black uppercase tracking-widest block mb-1 ${settlementMethod === 'individual' ? 'text-primary' : 'text-ink-sub'}`}>{t('settings.individualSettlement')}</span>
+                 <span className="text-[8px] font-bold text-ink-light opacity-60 block leading-tight">{t('settings.individualSettlementDesc')}</span>
                </div>
                {settlementMethod === 'individual' && (
                  <div className="absolute top-3 right-3 w-2.5 h-2.5 rounded-full bg-accent shadow-[0_0_8px_rgba(255,215,0,0.8)] animate-pulse" />
@@ -374,11 +376,11 @@ const SettingsView: React.FC<Props> = ({
       <section className="space-y-4">
         <div className="flex items-center gap-2 px-2">
           <span className="text-xl">📱</span>
-          <h3 className="text-xs font-black text-ink uppercase tracking-[0.2em]">表示設定</h3>
+          <h3 className="text-xs font-black text-ink uppercase tracking-[0.2em]">{t('settings.displaySettings')}</h3>
         </div>
         <div className="bg-white rounded-[32px] p-6 shadow-xl shadow-ink/5 border border-surface-gray-mid/50">
           <p className="text-[11px] text-ink-sub leading-relaxed font-bold mb-6 px-1">
-            利用中のデバイスに合わせて画面サイズを切り替えます。
+            {t('settings.displaySettingsDesc')}
           </p>
           <div className="grid grid-cols-2 gap-4">
             {(Object.entries(DEVICE_CONFIG) as [ViewModeSize, typeof DEVICE_CONFIG[keyof typeof DEVICE_CONFIG]][]).map(([key, config]) => (
@@ -441,7 +443,7 @@ const SettingsView: React.FC<Props> = ({
       <section className="space-y-4">
         <div className="flex items-center gap-2 px-2">
           <span className="text-xl">📊</span>
-          <h3 className="text-xs font-black text-ink uppercase tracking-[0.2em]">Excelデータ ダウンロード</h3>
+          <h3 className="text-xs font-black text-ink uppercase tracking-[0.2em]">{t('settings.exportExcelTitle')}</h3>
         </div>
 
         <div className="bg-gradient-to-br from-[#1D6F42] to-[#124B2C] p-7 rounded-[32px] text-white shadow-xl shadow-[#1D6F42]/20 relative overflow-hidden">
@@ -453,9 +455,9 @@ const SettingsView: React.FC<Props> = ({
                 <span className="text-3xl">🗂️</span>
               </div>
               <div>
-                <h4 className="text-sm font-black uppercase tracking-widest mb-1">Excel書き出し</h4>
+                <h4 className="text-sm font-black uppercase tracking-widest mb-1">{t('settings.exportExcelSub')}</h4>
                 <p className="text-[10px] opacity-80 font-bold leading-relaxed">
-                  すべてのデータをマルチタブ形式の<br />Excelファイルとして保存します
+                  {t('settings.exportExcelDesc1')}<br />{t('settings.exportExcelDesc2')}
                 </p>
               </div>
             </div>
@@ -463,9 +465,9 @@ const SettingsView: React.FC<Props> = ({
             {/* データカウント */}
             <div className="grid grid-cols-3 gap-2">
               {[
-                { label: '支出', count: expenses.length, icon: '💴' },
-                { label: '持ち物', count: packingList.length, icon: '🎒' },
-                { label: 'チケット', count: tickets.length, icon: '🎫' },
+                { label: t('nav.expense'), count: expenses.length, icon: '💴' },
+                { label: t('nav.packing'), count: packingList.length, icon: '🎒' },
+                { label: t('nav.tickets'), count: tickets.length, icon: '🎫' },
               ].map(item => (
                 <div key={item.label} className="bg-white/10 rounded-2xl p-3 text-center backdrop-blur-sm">
                   <p className="text-xl mb-1">{item.icon}</p>
@@ -482,19 +484,19 @@ const SettingsView: React.FC<Props> = ({
               className="w-full group flex items-center justify-center gap-3 py-4 bg-white text-[#1D6F42] font-black text-sm rounded-2xl shadow-xl active:scale-95 transition-all disabled:opacity-50"
             >
               {isExporting ? (
-                <><div className="w-5 h-5 border-2 border-[#1D6F42]/30 border-t-[#1D6F42] rounded-full animate-spin" />作成中...</>
+                <><div className="w-5 h-5 border-2 border-[#1D6F42]/30 border-t-[#1D6F42] rounded-full animate-spin" />{t('settings.exportExcelLoading')}</>
               ) : (
-                <><span className="text-xl">📥</span>Excelデータをダウンロード</>
+                <><span className="text-xl">📥</span>{t('settings.exportExcelBtn')}</>
               )}
             </button>
 
             {/* 注意書き */}
             <div className="bg-black/20 border border-white/10 rounded-xl p-3 space-y-1.5">
-              <p className="text-[9px] font-bold opacity-80">📋 エクスポートについて</p>
+              <p className="text-[9px] font-bold opacity-80">{t('settings.exportAbout')}</p>
               <ul className="text-[9px] font-bold opacity-70 space-y-1 list-disc list-inside">
-                <li>概要・精算・スケジュール等を分けて出力します</li>
-                <li>ダウンロードしたデータは端末内で共有可能です</li>
-                <li>オフラインの状態でも出力できます</li>
+                <li>{t('settings.exportNote1')}</li>
+                <li>{t('settings.exportNote2')}</li>
+                <li>{t('settings.exportNote3')}</li>
               </ul>
             </div>
           </div>
@@ -505,7 +507,7 @@ const SettingsView: React.FC<Props> = ({
       <section className="space-y-4">
         <div className="flex items-center gap-2 px-2">
           <span className="text-xl">📁</span>
-          <h3 className="text-xs font-black text-ink uppercase tracking-[0.2em]">データ管理</h3>
+          <h3 className="text-xs font-black text-ink uppercase tracking-[0.2em]">{t('settings.dataManagement')}</h3>
         </div>
         <div className="bg-white rounded-[32px] p-6 shadow-xl shadow-ink/5 border border-surface-gray-mid/50">
           <div className="grid grid-cols-2 gap-4">
@@ -516,16 +518,20 @@ const SettingsView: React.FC<Props> = ({
               <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm">
                 <AppIcon name="save" className="w-6 h-6 text-primary" />
               </div>
-              <span className="text-[10px] font-black uppercase tracking-widest text-ink">JSON エクスポート</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-ink">{t('settings.jsonExport')}</span>
             </button>
             <button
-              onClick={() => jsonImportRef.current?.click()}
+              onClick={() => {
+                if (window.confirm(t('settings.jsonImportConfirm') as string)) {
+                  jsonImportRef.current?.click();
+                }
+              }}
               className="flex flex-col items-center justify-center p-5 bg-surface-gray/50 hover:bg-white border-2 border-transparent hover:border-primary/20 rounded-3xl gap-3 transition-all active:scale-95 hover:shadow-md"
             >
               <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm">
                 <AppIcon name="folder" className="w-6 h-6 text-primary" />
               </div>
-              <span className="text-[10px] font-black uppercase tracking-widest text-ink">JSON インポート</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-ink">{t('settings.jsonImport')}</span>
             </button>
             {/* インポート結果フィードバック */}
             {importFeedback && (
@@ -549,7 +555,7 @@ const SettingsView: React.FC<Props> = ({
       <section className="space-y-4">
         <div className="flex items-center gap-2 px-2">
           <span className="text-xl">🚀</span>
-          <h3 className="text-xs font-black text-ink uppercase tracking-[0.2em]">デモデータ</h3>
+          <h3 className="text-xs font-black text-ink uppercase tracking-[0.2em]">{t('settings.demoData')}</h3>
         </div>
         <div className="px-1 space-y-4">
           <button
@@ -561,8 +567,8 @@ const SettingsView: React.FC<Props> = ({
               🌍
             </div>
             <div className="text-center relative z-10">
-              <p className="text-sm font-black text-white tracking-tight">デモデータを読み込む</p>
-              <p className="text-[10px] text-white/80 font-bold mt-1">「パリ・ロンドン海外旅行版」の公式デモデータを読み込みます。</p>
+              <p className="text-sm font-black text-white tracking-tight">{t('settings.loadDemo')}</p>
+              <p className="text-[10px] text-white/80 font-bold mt-1">{t('settings.loadDemoDesc')}</p>
             </div>
           </button>
 
@@ -575,8 +581,8 @@ const SettingsView: React.FC<Props> = ({
                 <AppIcon name="back" className="w-6 h-6" />
               </div>
               <div className="text-left">
-                <p className="text-xs font-black text-emerald-700 uppercase tracking-widest">前のデータを復元</p>
-                <p className="text-[9px] text-emerald-600/60 font-bold">デモ読み込み前のデータに復元します。</p>
+                <p className="text-xs font-black text-emerald-700 uppercase tracking-widest">{t('settings.restoreData')}</p>
+                <p className="text-[9px] text-emerald-600/60 font-bold">{t('settings.restoreDataDesc')}</p>
               </div>
             </button>
           )}
@@ -590,7 +596,7 @@ const SettingsView: React.FC<Props> = ({
           onClick={onBack}
           className="w-full py-5 bg-ink text-white rounded-[24px] text-xs font-black uppercase tracking-[0.3em] shadow-xl shadow-ink/20 active:scale-95 transition-all"
         >
-          ダッシュボードに戻る
+          {t('settings.backToDashboard')}
         </button>
       </div>
     </div>

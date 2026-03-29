@@ -221,16 +221,16 @@ const Dashboard: React.FC<Props> = ({
   };
 
   const tripStatus = useMemo(() => {
-    if (!tripStartDate) return { text: "Date not set", sub: "Plan your trip" };
+    if (!tripStartDate) return { text: t('dashboard.dateNotSet') || "Date not set", sub: t('dashboard.planTrip') || "Plan your trip" };
     const now = new Date(); now.setHours(0, 0, 0, 0);
     const start = new Date(tripStartDate); start.setHours(0, 0, 0, 0);
     const end = tripEndDate ? new Date(tripEndDate) : null; if (end) end.setHours(0, 0, 0, 0);
     const diffDays = Math.ceil((start.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-    if (diffDays > 0) return { text: `${diffDays} Days to Go`, sub: "Countdown" };
-    if (end && now > end) return { text: "Trip Ended", sub: "Memories" };
+    if (diffDays > 0) return { text: (t('dashboard.daysToGo') || "あと{{days}}日").replace('{{days}}', String(diffDays)), sub: t('dashboard.countdown') || "Countdown" };
+    if (end && now > end) return { text: t('dashboard.tripEnded') || "Trip Ended", sub: t('dashboard.memories') || "Memories" };
     const day = Math.ceil((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-    return { text: `Day ${day}`, sub: "Enjoy your trip!" };
-  }, [tripStartDate, tripEndDate]);
+    return { text: (t('dashboard.dayN') || "Day {{day}}").replace('{{day}}', String(day)), sub: t('dashboard.enjoy') || "Enjoy your trip!" };
+  }, [tripStartDate, tripEndDate, t]);
 
   // 天気情報の取得
   React.useEffect(() => {
@@ -286,7 +286,7 @@ const Dashboard: React.FC<Props> = ({
                 </div>
               )}
               <span className="px-2 py-0.5 border border-white/30 rounded-full bg-black/20 backdrop-blur-sm text-[8px] sm:text-[10px]">{formattedDateRange}</span>
-              <span className="text-[8px] sm:text-[10px] font-medium opacity-60">{userProfiles.length} Travelers</span>
+              <span className="text-[8px] sm:text-[10px] font-medium opacity-60">{userProfiles.length} {t('dashboard.travelers') || 'Travelers'}</span>
             </div>
           </div>
         </div>
@@ -391,7 +391,7 @@ const Dashboard: React.FC<Props> = ({
                         summaryData.foreignCurrencies[0].currency}
                 {summaryData.foreignCurrencies[0].amount.toLocaleString(undefined, { maximumFractionDigits: 2 })}
               </p>
-              <p className="text-[9px] font-bold text-ink-light mt-1.5">{summaryData.foreignCurrencies[0].currency}支出合計</p>
+              <p className="text-[9px] font-bold text-ink-light mt-1.5">{summaryData.foreignCurrencies[0].currency} {t('dashboard.foreignTotal') || '支出合計'}</p>
             </div>
           ) : (
             <div className="glass p-5 rounded-3xl border-white/40 flex flex-col items-center justify-center text-center shadow-sm">
@@ -404,8 +404,8 @@ const Dashboard: React.FC<Props> = ({
         <div className="glass p-5 rounded-[32px] space-y-8">
           <div>
             <div className="flex justify-between items-center mb-4">
-              <h4 className="text-[9px] font-bold text-ink uppercase tracking-wider flex items-center gap-1.5"><span className="w-1.5 h-3 bg-ocean-light rounded-full"></span>日別・ユーザー別の支出</h4>
-              <p className="text-[8px] text-ink-light font-bold">日別積上グラフ</p>
+              <h4 className="text-[9px] font-bold text-ink uppercase tracking-wider flex items-center gap-1.5"><span className="w-1.5 h-3 bg-ocean-light rounded-full"></span>{t('dashboard.dailyUserExpense') || '日別・ユーザー別の支出'}</h4>
+              <p className="text-[8px] text-ink-light font-bold">{t('dashboard.dailyGraph') || '日別積上グラフ'}</p>
             </div>
             <div className="h-[200px] w-full">
               <ResponsiveContainer width="100%" height="100%">
@@ -434,9 +434,9 @@ const Dashboard: React.FC<Props> = ({
                               ))}
                             </div>
                             <div className="pt-2 border-t border-dashed border-surface-gray-mid flex justify-between items-center gap-4">
-                              <span className="text-[9px] font-black text-primary uppercase tracking-widest">合計</span>
+                              <span className="text-[9px] font-black text-primary uppercase tracking-widest">{t('common.total') || '合計'}</span>
                               <span className="text-xs font-sans font-black text-primary">
-                                {Math.round(total).toLocaleString()}円
+                                {Math.round(total).toLocaleString()}{(t('common.jpy') || '円')}
                               </span>
                             </div>
                           </div>
@@ -452,15 +452,15 @@ const Dashboard: React.FC<Props> = ({
           </div>
           <div className="border-t border-surface-gray-mid/50 pt-6">
             <div className="flex justify-between items-center mb-4">
-              <h4 className="text-[9px] font-bold text-ink uppercase tracking-wider flex items-center gap-1.5"><span className="w-1.5 h-3 bg-premium-gold rounded-full"></span>支払い者別の負担比率</h4>
-              <p className="text-[8px] text-ink-light font-bold">メンバー別の支出金額</p>
+              <h4 className="text-[9px] font-bold text-ink uppercase tracking-wider flex items-center gap-1.5"><span className="w-1.5 h-3 bg-premium-gold rounded-full"></span>{t('dashboard.payerRatio') || '支払い者別の負担比率'}</h4>
+              <p className="text-[8px] text-ink-light font-bold">{t('dashboard.memberExpense') || 'メンバー別の支出金額'}</p>
             </div>
             <div className="h-[140px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={memberStats} layout="vertical" margin={{ left: -10, right: 20 }}>
                   <XAxis type="number" hide />
                   <YAxis dataKey="id" type="category" axisLine={false} tickLine={false} tickFormatter={(id) => getProfile(id).displayName} tick={{ fontSize: 9, fill: '#5A7184', fontWeight: '800' }} width={70} />
-                  <Tooltip cursor={{ fill: 'rgba(207,168,110,0.05)' }} contentStyle={{ background: 'rgba(255,255,255,0.95)', border: 'none', borderRadius: '12px', boxShadow: '0 10px 30px rgba(0,0,0,0.1)', fontSize: '10px' }} formatter={(v: number) => [`${Math.round(v).toLocaleString()}円`, '支払額']} />
+                  <Tooltip cursor={{ fill: 'rgba(207,168,110,0.05)' }} contentStyle={{ background: 'rgba(255,255,255,0.95)', border: 'none', borderRadius: '12px', boxShadow: '0 10px 30px rgba(0,0,0,0.1)', fontSize: '10px' }} formatter={(v: number) => [`${Math.round(v).toLocaleString()}${(t('common.jpy') || '円')}`, t('dashboard.paidAmount') || '支払額']} />
                   <Bar dataKey="paid" barSize={12}>
                     {memberStats.map((e, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} fillOpacity={0.8} />)}
                   </Bar>
@@ -475,10 +475,10 @@ const Dashboard: React.FC<Props> = ({
       {isEditingBudget && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-primary/20 backdrop-blur-sm" onClick={() => setIsEditingBudget(false)}>
           <div className="bg-white w-full max-w-xs rounded-3xl p-6 shadow-2xl border border-surface-gray-mid" onClick={e => e.stopPropagation()}>
-            <h3 className="text-lg font-bold text-ink mb-4">予算を編集</h3>
+            <h3 className="text-lg font-bold text-ink mb-4">{t('dashboard.editBudget') || '予算を編集'}</h3>
             <div className="space-y-4">
               <div>
-                <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">目標予算 (JPY)</label>
+                <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">{t('dashboard.targetBudget') || '目標予算 (JPY)'}</label>
                 <input
                   type="number"
                   className="w-full bg-surface-gray border border-surface-gray-mid rounded-xl p-3 text-sm text-ink outline-none focus:border-primary"
@@ -488,8 +488,8 @@ const Dashboard: React.FC<Props> = ({
                 />
               </div>
               <div className="flex gap-3">
-                <button onClick={() => setIsEditingBudget(false)} className="flex-1 py-3 rounded-xl text-xs font-bold text-ink-sub hover:bg-surface-gray transition-colors">キャンセル</button>
-                <button onClick={saveBudget} className="flex-1 py-3 rounded-xl bg-primary text-white text-xs font-bold shadow-lg hover:bg-primary/90 active:scale-95 transition-all">保存</button>
+                <button onClick={() => setIsEditingBudget(false)} className="flex-1 py-3 rounded-xl text-xs font-bold text-ink-sub hover:bg-surface-gray transition-colors">{t('common.cancel')}</button>
+                <button onClick={saveBudget} className="flex-1 py-3 rounded-xl bg-primary text-white text-xs font-bold shadow-lg hover:bg-primary/90 active:scale-95 transition-all">{t('common.save')}</button>
               </div>
             </div>
           </div>
@@ -501,7 +501,7 @@ const Dashboard: React.FC<Props> = ({
         <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-ocean-dark/40 backdrop-blur-md" onClick={() => { setIsEditingTrip(false); setError(null); }}>
           <div className="bg-white w-full max-w-sm rounded-[32px] p-6 shadow-2xl border border-surface-gray-mid overflow-y-auto max-h-[90dvh]" onClick={e => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-sans font-bold text-ink">旅行の設定</h3>
+              <h3 className="text-xl font-sans font-bold text-ink">{t('dashboard.tripSettings') || '旅行の設定'}</h3>
               <button onClick={() => { setIsEditingTrip(false); setError(null); }} className="p-2 text-ink-light hover:text-ink hover:bg-surface-gray rounded-full">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
               </button>
@@ -512,16 +512,16 @@ const Dashboard: React.FC<Props> = ({
               <div className="relative aspect-[21/9] rounded-2xl overflow-hidden shadow-md group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
                 <img src={tempCoverImage || tripCoverImage} className="w-full h-full object-cover" alt="" />
                 <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                  <span className="bg-white/20 backdrop-blur-md border border-white/40 text-white px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest">画像を編集 📷</span>
+                  <span className="bg-white/20 backdrop-blur-md border border-white/40 text-white px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest">{t('dashboard.editCoverImage') || '画像を編集 📷'}</span>
                 </div>
                 <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageChange} />
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">旅行先 / タイトル</label>
+                <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">{t('dashboard.tripDestination') || '旅行先 / タイトル'}</label>
                 <input
                   type="text"
-                  placeholder="例: オーストラリア 2026"
+                  placeholder={t('dashboard.tripDestPlaceholder') || "例: オーストラリア 2026"}
                   className="w-full bg-surface-gray border border-surface-gray-mid rounded-xl p-3 text-sm text-ink outline-none focus:border-primary"
                   value={tempTripName}
                   onChange={e => { setTempTripName(e.target.value); setError(null); }}
@@ -530,7 +530,7 @@ const Dashboard: React.FC<Props> = ({
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">出発日</label>
+                  <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">{t('common.startDate')}</label>
                   <input
                     type="date"
                     className="w-full bg-surface-gray border border-surface-gray-mid rounded-xl p-3 text-sm text-ink outline-none"
@@ -539,7 +539,7 @@ const Dashboard: React.FC<Props> = ({
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">最終日</label>
+                  <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">{t('common.endDate')}</label>
                   <input
                     type="date"
                     className="w-full bg-surface-gray border border-surface-gray-mid rounded-xl p-3 text-sm text-ink outline-none"
@@ -553,7 +553,7 @@ const Dashboard: React.FC<Props> = ({
 
               <div className="pt-2">
                 <button onClick={handleSaveTripSettings} className="w-full py-4 rounded-2xl bg-primary text-white text-sm font-bold shadow-lg shadow-primary/30 hover:bg-primary/90 active:scale-95 transition-all">
-                  設定を保存する
+                  {t('dashboard.saveSettings') || '設定を保存する'}
                 </button>
               </div>
             </div>
@@ -573,7 +573,7 @@ const Dashboard: React.FC<Props> = ({
                   </div>
                 )}
                 <div>
-                  <h3 className="text-xl sm:text-2xl font-sans font-black text-ink leading-tight">{selectedMemberId === 'ALL' ? '全員の支出概要' : getProfile(selectedMemberId).displayName}</h3>
+                  <h3 className="text-xl sm:text-2xl font-sans font-black text-ink leading-tight">{selectedMemberId === 'ALL' ? (t('dashboard.allMembersSummary') || '全員の支出概要') : getProfile(selectedMemberId).displayName}</h3>
                   <p className="text-[8px] font-bold text-ink-light uppercase tracking-[0.2em] mt-0.5">Analytics & Settlement</p>
                 </div>
               </div>
@@ -585,25 +585,25 @@ const Dashboard: React.FC<Props> = ({
                   <>
                     <div className="flex justify-between items-end">
                       {/* #4: 英語ラベルを日本語化 */}
-                      <div><p className="text-[9px] font-bold text-ink-sub uppercase tracking-widest mb-1">支出合計</p><h4 className="text-2xl font-sans font-black text-ink">{Math.round(totalJPY).toLocaleString()}<span className="text-xs font-bold ml-1 opacity-50">JPY</span></h4></div>
-                      <div className="text-right"><p className="text-[9px] font-bold text-ink-sub uppercase tracking-widest mb-1">予算消化率</p><span className={`text-xs font-black ${budgetPercentage > 100 ? 'text-rose-500' : 'text-ocean-dark'}`}>{budgetPercentage.toFixed(1)}%</span></div>
+                      <div><p className="text-[9px] font-bold text-ink-sub uppercase tracking-widest mb-1">{t('dashboard.totalExpense') || '支出合計'}</p><h4 className="text-2xl font-sans font-black text-ink">{Math.round(totalJPY).toLocaleString()}<span className="text-xs font-bold ml-1 opacity-50">JPY</span></h4></div>
+                      <div className="text-right"><p className="text-[9px] font-bold text-ink-sub uppercase tracking-widest mb-1">{t('dashboard.budgetUsedRate') || '予算消化率'}</p><span className={`text-xs font-black ${budgetPercentage > 100 ? 'text-rose-500' : 'text-ocean-dark'}`}>{budgetPercentage.toFixed(1)}%</span></div>
                     </div>
                     <div className="w-full bg-surface-gray-mid h-2 rounded-full overflow-hidden"><div className={`h-full transition-all duration-1000 ${totalJPY > budget ? 'bg-rose-500' : 'bg-ocean-light'}`} style={{ width: `${budgetPercentage}%` }} /></div>
                   </>
                 ) : (
                   <div className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-0.5"><p className="text-[8px] font-bold text-ink-sub uppercase tracking-widest">実際に支払った合計</p><p className="text-lg font-sans font-black text-ink">{Math.round(detailData.stats!.paid).toLocaleString()}</p></div>
-                      <div className="space-y-0.5 text-right"><p className="text-[8px] font-bold text-ink-sub uppercase tracking-widest">本来負担すべき額</p><p className="text-lg font-sans font-bold text-ink-sub">- {Math.round(detailData.stats!.cost).toLocaleString()}</p></div>
+                      <div className="space-y-0.5"><p className="text-[8px] font-bold text-ink-sub uppercase tracking-widest">{t('dashboard.actualPaid') || '実際に支払った合計'}</p><p className="text-lg font-sans font-black text-ink">{Math.round(detailData.stats!.paid).toLocaleString()}</p></div>
+                      <div className="space-y-0.5 text-right"><p className="text-[8px] font-bold text-ink-sub uppercase tracking-widest">{t('dashboard.shouldBurden') || '本来負担すべき額'}</p><p className="text-lg font-sans font-bold text-ink-sub">- {Math.round(detailData.stats!.cost).toLocaleString()}</p></div>
                     </div>
-                    <div className="pt-3 border-t border-surface-gray-mid flex justify-between items-center text-xs font-bold uppercase tracking-widest">差引残高<span className={`text-xl font-black ${detailData.stats!.balance >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>{detailData.stats!.balance >= 0 ? '+' : ''}{Math.round(detailData.stats!.balance).toLocaleString()}</span></div>
+                    <div className="pt-3 border-t border-surface-gray-mid flex justify-between items-center text-xs font-bold uppercase tracking-widest">{t('dashboard.balance') || '差引残高'}<span className={`text-xl font-black ${detailData.stats!.balance >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>{detailData.stats!.balance >= 0 ? '+' : ''}{Math.round(detailData.stats!.balance).toLocaleString()}</span></div>
                   </div>
                 )}
               </div>
               <div className="space-y-10">
                 <section>
-                  <div className="flex items-center gap-2 mb-4"><span className="w-1.5 h-4 bg-premium-gold rounded-full"></span><h4 className="text-[10px] font-bold text-ink uppercase tracking-[0.3em]">支出カテゴリー分布</h4></div>
-                  <div className="h-[180px] w-full"><ResponsiveContainer><PieChart><Pie data={detailData.categoryData} cx="50%" cy="50%" innerRadius={50} outerRadius={70} paddingAngle={5} dataKey="value" stroke="none">{detailData.categoryData.map((e, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}</Pie><Tooltip contentStyle={{ background: 'rgba(255,255,255,0.95)', border: 'none', borderRadius: '12px', boxShadow: '0 10px 30px rgba(0,0,0,0.1)', fontSize: '10px' }} formatter={(v: number) => [`${Math.round(v).toLocaleString()}円`, '支出額']} /></PieChart></ResponsiveContainer></div>
+                  <div className="flex items-center gap-2 mb-4"><span className="w-1.5 h-4 bg-premium-gold rounded-full"></span><h4 className="text-[10px] font-bold text-ink uppercase tracking-[0.3em]">{t('dashboard.expenseCategory') || '支出カテゴリー分布'}</h4></div>
+                  <div className="h-[180px] w-full"><ResponsiveContainer><PieChart><Pie data={detailData.categoryData} cx="50%" cy="50%" innerRadius={50} outerRadius={70} paddingAngle={5} dataKey="value" stroke="none">{detailData.categoryData.map((e, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}</Pie><Tooltip contentStyle={{ background: 'rgba(255,255,255,0.95)', border: 'none', borderRadius: '12px', boxShadow: '0 10px 30px rgba(0,0,0,0.1)', fontSize: '10px' }} formatter={(v: number) => [`${Math.round(v).toLocaleString()}${(t('common.jpy') || '円')}`, t('dashboard.expenseAmount') || '支出額']} /></PieChart></ResponsiveContainer></div>
                 </section>
                 <section className="space-y-4">
                   {selectedMemberId === 'ALL' ? (
@@ -619,14 +619,14 @@ const Dashboard: React.FC<Props> = ({
                       {detailData.iPaidForOthers.length === 0 && detailData.othersPaidForMe.length === 0 && (
                         <div className="py-6 text-center">
                           <p className="text-2xl mb-2">💸</p>
-                          <p className="text-xs font-bold text-ink-light">まだ支出の記録がありません</p>
+                          <p className="text-xs font-bold text-ink-light">{t('dashboard.noExpenseRecord') || 'まだ支出の記録がありません'}</p>
                         </div>
                       )}
                       {detailData.iPaidForOthers.map(i => (
-                        <div key={i.id} className="flex justify-between items-center p-3.5 rounded-xl bg-emerald-50 border border-emerald-100"><span className="text-xs font-bold">{getProfile(i.id).displayName} さんの分を立替</span><span className="text-xs font-black text-emerald-600">+{Math.round(i.value).toLocaleString()}</span></div>
+                        <div key={i.id} className="flex justify-between items-center p-3.5 rounded-xl bg-emerald-50 border border-emerald-100"><span className="text-xs font-bold">{getProfile(i.id).displayName} {(t('dashboard.paidForOthers') || 'さんの分を立替')}</span><span className="text-xs font-black text-emerald-600">+{Math.round(i.value).toLocaleString()}</span></div>
                       ))}
                       {detailData.othersPaidForMe.map(o => (
-                        <div key={o.id} className="flex justify-between items-center p-3.5 rounded-xl bg-rose-50 border border-rose-100"><span className="text-xs font-bold">{getProfile(o.id).displayName} さんが支出</span><span className="text-xs font-black text-rose-500">-{Math.round(o.value).toLocaleString()}</span></div>
+                        <div key={o.id} className="flex justify-between items-center p-3.5 rounded-xl bg-rose-50 border border-rose-100"><span className="text-xs font-bold">{getProfile(o.id).displayName} {(t('dashboard.othersPaidForMe') || 'さんが支出')}</span><span className="text-xs font-black text-rose-500">-{Math.round(o.value).toLocaleString()}</span></div>
                       ))}
                     </>
                   )}

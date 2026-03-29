@@ -3,6 +3,7 @@ import { Ticket, UserProfile } from '../types';
 import { AppIcon } from './AppIcon';
 import { useTripDates } from '../hooks/useTripDates';
 import { useMemberFilter } from '../hooks/useMemberFilter';
+import { useTranslation } from '../contexts/LanguageContext';
 
 interface Props {
   tickets: Ticket[];
@@ -25,6 +26,7 @@ const TYPE_LABELS: Record<string, string> = {
 };
 
 const TicketView: React.FC<Props> = ({ tickets, userProfiles, onSave, onDelete, tripStartDate, tripEndDate, isTablet = false, autoOpenAdd }) => {
+  const { t } = useTranslation();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { selectedDate, setSelectedDate, dateRange, getDayLabel, isTodayDate } = useTripDates(tripStartDate || '', tripEndDate);
   const { showOverall, setShowOverall, visibleMemberIds, toggleMember } = useMemberFilter(userProfiles);
@@ -69,11 +71,11 @@ const TicketView: React.FC<Props> = ({ tickets, userProfiles, onSave, onDelete, 
     setError(null);
 
     if (!formData.title) {
-      setError('タイトルを入力してください');
+      setError(t('itinerary.errTitle') || 'タイトルを入力してください');
       return;
     }
     if (!formData.date) {
-      setError('日付を入力してください');
+      setError(t('common.errDate') || '日付を入力してください');
       return;
     }
 
@@ -89,7 +91,7 @@ const TicketView: React.FC<Props> = ({ tickets, userProfiles, onSave, onDelete, 
       setIsModalOpen(false);
     } catch (err) {
       console.error(err);
-      setError('保存中にエラーが発生しました');
+      setError(t('common.saveError') || '保存中にエラーが発生しました');
     }
   };
 
@@ -222,7 +224,7 @@ const TicketView: React.FC<Props> = ({ tickets, userProfiles, onSave, onDelete, 
 
     } catch (err) {
       console.error('File processing/OCR error:', err);
-      setError('ファイルの処理に失敗しました。');
+      setError(t('ticket.fileProcessError') || 'ファイルの処理に失敗しました。');
     } finally {
       setIsOcrRunning(false);
       setOcrProgress(0);
@@ -234,13 +236,13 @@ const TicketView: React.FC<Props> = ({ tickets, userProfiles, onSave, onDelete, 
     <div className="space-y-6 pt-2">
       {/* ヘッダー */}
       <div className="flex justify-between items-center px-4">
-        <h2 className="text-2xl font-sans font-black tracking-tight text-ink">チケット</h2>
+        <h2 className="text-2xl font-sans font-black tracking-tight text-ink">{t('ticket.title') || 'チケット'}</h2>
         <button
           type="button"
           onClick={handleOpenAdd}
           className="bg-primary hover:bg-primary/90 text-white text-[11px] font-black uppercase tracking-widest px-6 py-2.5 rounded-full shadow-xl shadow-primary/20 active:scale-95 transition-all"
         >
-          + 追加
+          {'+ ' + (t('common.add') || '追加')}
         </button>
       </div>
 
@@ -252,14 +254,14 @@ const TicketView: React.FC<Props> = ({ tickets, userProfiles, onSave, onDelete, 
             className={`flex-1 py-3 text-[11px] font-black uppercase tracking-widest rounded-full transition-all duration-500 flex items-center justify-center gap-2.5 ${showOverall ? 'bg-ink text-white shadow-xl shadow-ink/20 scale-[1.02]' : 'bg-transparent text-ink-sub hover:text-ink'}`}
           >
             <span className="text-sm">🌎</span>
-            全員
+            {t('expenseList.all') || '全員'}
           </button>
           <button
             onClick={() => setShowOverall(false)}
             className={`flex-1 py-3 text-[11px] font-black uppercase tracking-widest rounded-full transition-all duration-500 flex items-center justify-center gap-2.5 ${!showOverall ? 'bg-ink text-white shadow-xl shadow-ink/20 scale-[1.02]' : 'bg-transparent text-ink-sub hover:text-ink'}`}
           >
             <span className="text-sm">👤</span>
-            個人
+            {t('expenseList.individual') || '個人'}
           </button>
         </div>
 
@@ -333,13 +335,13 @@ const TicketView: React.FC<Props> = ({ tickets, userProfiles, onSave, onDelete, 
             <div className="mb-4 opacity-20">
               <span className="text-7xl">🎫</span>
             </div>
-            <p className="text-sm font-black text-ink mb-1">チケットはまだありません</p>
-            <p className="text-[11px] text-ink-sub mt-1 mb-6">「+ 追加」からフライトや宿泊を登録しましょう</p>
+            <p className="text-sm font-black text-ink mb-1">{t('ticket.noTickets') || 'チケットはまだありません'}</p>
+            <p className="text-[11px] text-ink-sub mt-1 mb-6">{t('ticket.noTicketsSub') || '「+ 追加」からフライトや宿泊を登録しましょう'}</p>
             <button
               onClick={handleOpenAdd}
               className="px-6 py-3 bg-primary text-white text-sm font-bold rounded-full shadow-lg shadow-primary/20 active:scale-95 transition-all"
             >
-              + チケットを追加
+              {'+ ' + (t('ticket.addTicket') || 'チケットを追加')}
             </button>
           </div>
         )}
@@ -363,7 +365,7 @@ const TicketView: React.FC<Props> = ({ tickets, userProfiles, onSave, onDelete, 
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-1.5 mb-0.5">
-                        <span className="text-[8px] font-black text-primary uppercase tracking-[0.15em] shrink-0">{TYPE_LABELS[ticket.type] || ticket.type}</span>
+                        <span className="text-[8px] font-black text-primary uppercase tracking-[0.15em] shrink-0">{t(`ticket.type_${ticket.type}`) || (TYPE_LABELS[ticket.type] || ticket.type)}</span>
                         <div className="w-1 h-1 rounded-full bg-surface-gray-mid/60" />
                         <span className="text-[9px] font-bold text-ink-sub/60 truncate opacity-60">{ticket.provider}</span>
                       </div>
@@ -407,7 +409,7 @@ const TicketView: React.FC<Props> = ({ tickets, userProfiles, onSave, onDelete, 
                         className="flex-1 sm:flex-none h-11 px-5 bg-primary text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-ink transition-all shadow-xl shadow-primary/20 active:scale-95 flex items-center justify-center gap-2"
                       >
                         <span className="text-sm">🔍</span>
-                        表示する
+                        {t('common.show') || '表示する'}
                       </button>
                     )}
 
@@ -423,7 +425,7 @@ const TicketView: React.FC<Props> = ({ tickets, userProfiles, onSave, onDelete, 
                         onClick={(e) => e.stopPropagation()}
                       >
                         <span className="text-sm">{ticket.imageUrl ? '' : '🎟️'}</span>
-                        {ticket.imageUrl ? '🎫リンクOPEN' : 'OPEN'}
+                        {ticket.imageUrl ? ('🎫 ' + (t('ticket.linkOpen') || 'リンクOPEN')) : 'OPEN'}
                       </a>
                     )}
 
@@ -498,23 +500,23 @@ const TicketView: React.FC<Props> = ({ tickets, userProfiles, onSave, onDelete, 
             <button onClick={() => setIsModalOpen(false)} className="absolute top-8 right-8 w-12 h-12 rounded-full bg-surface-gray flex items-center justify-center text-ink-sub hover:bg-ink hover:text-white transition-all shadow-sm text-2xl font-light">×</button>
 
             <h3 className="text-3xl font-sans font-black mb-6 text-ink tracking-tighter">
-              {formData.id ? '✏️ 編集' : '🎫 チケット追加'}
+              {formData.id ? ('✏️ ' + (t('common.edit') || '編集')) : ('🎫 ' + (t('ticket.addTicket') || 'チケット追加'))}
             </h3>
 
             {/* C1: OCR・PDF自動読み取りセクション */}
             <div className="mb-8 p-5 bg-primary/5 border border-primary/20 rounded-[28px]">
               <p className="text-[11px] font-black text-primary uppercase tracking-widest mb-3 flex items-center gap-2">
-                <span>📷</span> 画像 / PDFから自動入力
+                <span>📷</span> {t('ticket.autoFillFromImg') || '画像 / PDFから自動入力'}
               </p>
               <p className="text-[10px] text-ink-sub mb-4 leading-relaxed">
-                eチケットのPDFや予約完了メールのスクショを選択すると、予約番号を自動で読み取ります。
+                {t('ticket.autoFillDesc') || 'eチケットのPDFや予約完了メールのスクショを選択すると、予約番号を自動で読み取ります。'}
               </p>
 
               {/* OCR進行中のプログレスバー */}
               {isOcrRunning && (
                 <div className="mb-4">
                   <div className="flex justify-between items-center mb-1">
-                    <span className="text-[10px] font-bold text-primary">読み取り中...</span>
+                    <span className="text-[10px] font-bold text-primary">{t('ticket.readingOcr') || '読み取り中...'}</span>
                     <span className="text-[10px] font-bold text-primary">{ocrProgress}%</span>
                   </div>
                   <div className="w-full bg-surface-gray rounded-full h-2">
@@ -542,7 +544,7 @@ const TicketView: React.FC<Props> = ({ tickets, userProfiles, onSave, onDelete, 
                   : 'border-primary/40 hover:border-primary hover:bg-primary/5 text-primary'
                   }`}
               >
-                {isOcrRunning ? '🔍 読み取り中...' : '📷 チケットをアップロード'}
+                {isOcrRunning ? ('🔍 ' + (t('ticket.readingOcr') || '読み取り中...')) : ('📷 ' + (t('ticket.uploadTicket') || 'チケットをアップロード'))}
               </button>
 
               {/* 画像プレビュー（モーダル内） */}
@@ -572,8 +574,8 @@ const TicketView: React.FC<Props> = ({ tickets, userProfiles, onSave, onDelete, 
 
               {/* 搭乗者・利用者（複数選択） */}
               <div>
-                <label className="block text-[11px] font-black text-ink-sub mb-1 uppercase tracking-[0.25em] px-1">搭乗者・利用者</label>
-                <p className="text-[10px] text-ink-light mb-4 px-1">複数選択OK。選択なし=全員対象</p>
+                <label className="block text-[11px] font-black text-ink-sub mb-1 uppercase tracking-[0.25em] px-1">{t('ticket.passengers') || '搭乗者・利用者'}</label>
+                <p className="text-[10px] text-ink-light mb-4 px-1">{t('ticket.passengerDesc') || '複数選択OK。選択なし=全員対象'}</p>
                 <div className="flex flex-wrap gap-2.5">
                   {userProfiles.map(p => {
                     const passengers = (formData as any).passengerIds as string[] || [];
@@ -599,23 +601,23 @@ const TicketView: React.FC<Props> = ({ tickets, userProfiles, onSave, onDelete, 
                   })}
                 </div>
                 {((formData as any).passengerIds || []).length === 0 && (
-                  <p className="mt-2 text-[10px] font-bold text-emerald-600">✓ 全員対象のチケット</p>
+                  <p className="mt-2 text-[10px] font-bold text-emerald-600">{t('ticket.allTarget') || '✓ 全員対象のチケット'}</p>
                 )}
               </div>
 
               {/* 種類 */}
               <div>
-                <label className="block text-[11px] font-black text-ink-sub mb-4 uppercase tracking-[0.25em] px-1">種類</label>
+                <label className="block text-[11px] font-black text-ink-sub mb-4 uppercase tracking-[0.25em] px-1">{t('ticket.type') || '種類'}</label>
                 <div className="grid grid-cols-5 gap-3.5">
-                  {(['flight', 'train', 'hotel', 'event', 'other'] as Ticket['type'][]).map(t => (
+                  {(['flight', 'train', 'hotel', 'event', 'other'] as Ticket['type'][]).map(ticketType => (
                     <button
-                      key={t}
+                      key={ticketType}
                       type="button"
-                      onClick={() => setFormData({ ...formData, type: t })}
-                      className={`flex flex-col items-center justify-center p-4 rounded-[22px] border-2 transition-all active:scale-90 ${formData.type === t ? 'bg-primary/5 border-primary text-primary shadow-xl shadow-primary/5' : 'bg-surface-gray border-transparent text-ink-sub hover:border-surface-gray-mid'}`}
+                      onClick={() => setFormData({ ...formData, type: ticketType })}
+                      className={`flex flex-col items-center justify-center p-4 rounded-[22px] border-2 transition-all active:scale-90 ${formData.type === ticketType ? 'bg-primary/5 border-primary text-primary shadow-xl shadow-primary/5' : 'bg-surface-gray border-transparent text-ink-sub hover:border-surface-gray-mid'}`}
                     >
-                      <span className="text-2xl mb-2">{getTypeIcon(t)}</span>
-                      <span className="text-[8px] font-black">{t === 'flight' ? '飛行機' : t === 'train' ? '電車' : t === 'hotel' ? 'ホテル' : t === 'event' ? 'ｲﾍﾞﾝﾄ' : 'その他'}</span>
+                      <span className="text-2xl mb-2">{getTypeIcon(ticketType)}</span>
+                      <span className="text-[8px] font-black">{ticketType === 'flight' ? (t('ticket.type_flight') || '飛行機') : ticketType === 'train' ? (t('ticket.type_train') || '電車') : ticketType === 'hotel' ? (t('ticket.type_hotel') || 'ホテル') : ticketType === 'event' ? (t('ticket.type_event') || 'ｲﾍﾞﾝﾄ') : (t('ticket.type_other') || 'その他')}</span>
                     </button>
                   ))}
                 </div>
@@ -624,11 +626,11 @@ const TicketView: React.FC<Props> = ({ tickets, userProfiles, onSave, onDelete, 
               {/* タイトル & プロバイダー */}
               <div className="space-y-5">
                 <div>
-                  <label className="block text-[11px] font-black text-ink-sub mb-2.5 uppercase tracking-[0.25em] px-1">タイトル *</label>
-                  <input type="text" placeholder="例: 成田フライト" className="w-full bg-surface-gray border-2 border-transparent focus:border-primary/20 focus:bg-white rounded-2xl px-6 py-4 text-base font-bold text-ink outline-none transition-all shadow-inner" value={formData.title || ''} onChange={e => setFormData({ ...formData, title: e.target.value })} />
+                  <label className="block text-[11px] font-black text-ink-sub mb-2.5 uppercase tracking-[0.25em] px-1">{t('expenseForm.title') || 'タイトル'} *</label>
+                  <input type="text" placeholder={t('ticket.titlePlaceholder') || "例: 成田フライト"} className="w-full bg-surface-gray border-2 border-transparent focus:border-primary/20 focus:bg-white rounded-2xl px-6 py-4 text-base font-bold text-ink outline-none transition-all shadow-inner" value={formData.title || ''} onChange={e => setFormData({ ...formData, title: e.target.value })} />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-black text-ink-sub mb-2.5 uppercase tracking-[0.25em] px-1">会社・提供者</label>
+                  <label className="block text-[11px] font-black text-ink-sub mb-2.5 uppercase tracking-[0.25em] px-1">{t('ticket.provider') || '会社・提供者'}</label>
                   <input type="text" placeholder="例: JAL, Hilton" className="w-full bg-surface-gray border-2 border-transparent focus:border-primary/20 focus:bg-white rounded-2xl px-6 py-4 text-base font-bold text-ink outline-none transition-all shadow-inner" value={formData.provider || ''} onChange={e => setFormData({ ...formData, provider: e.target.value })} />
                 </div>
               </div>
@@ -636,11 +638,11 @@ const TicketView: React.FC<Props> = ({ tickets, userProfiles, onSave, onDelete, 
               {/* 日付 + 時間 */}
               <div className="grid grid-cols-2 gap-5">
                 <div>
-                  <label className="block text-[11px] font-black text-ink-sub mb-2.5 uppercase tracking-[0.25em] px-1">日付 *</label>
+                  <label className="block text-[11px] font-black text-ink-sub mb-2.5 uppercase tracking-[0.25em] px-1">{t('expenseForm.date') || '日付'} *</label>
                   <input type="date" min={tripStartDate} max={tripEndDate} className="w-full bg-surface-gray border-2 border-transparent focus:border-primary/20 focus:bg-white rounded-2xl px-6 py-4 text-sm font-bold text-ink outline-none transition-all shadow-inner" value={formData.date || ''} onChange={e => setFormData({ ...formData, date: e.target.value })} />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-black text-ink-sub mb-2.5 uppercase tracking-[0.25em] px-1">時刻</label>
+                  <label className="block text-[11px] font-black text-ink-sub mb-2.5 uppercase tracking-[0.25em] px-1">{t('itinerary.time') || '時刻'}</label>
                   <input type="time" className="w-full bg-surface-gray border-2 border-transparent focus:border-primary/20 focus:bg-white rounded-2xl px-6 py-4 text-sm font-bold text-ink outline-none transition-all shadow-inner" value={formData.time || ''} onChange={e => setFormData({ ...formData, time: e.target.value })} />
                 </div>
               </div>
@@ -648,8 +650,8 @@ const TicketView: React.FC<Props> = ({ tickets, userProfiles, onSave, onDelete, 
               {/* 予約番号 */}
               <div>
                 <label className="block text-[11px] font-black text-ink-sub mb-2.5 uppercase tracking-[0.25em] px-1">
-                  予約番号・座席番号
-                  <span className="ml-2 text-primary/60 normal-case tracking-normal font-bold">← OCRで自動入力</span>
+                  {t('ticket.referenceNumber') || '予約番号・座席番号'}
+                  <span className="ml-2 text-primary/60 normal-case tracking-normal font-bold">{t('ticket.autoFillOcr') || '← OCRで自動入力'}</span>
                 </label>
                 <input
                   type="text"
@@ -662,9 +664,9 @@ const TicketView: React.FC<Props> = ({ tickets, userProfiles, onSave, onDelete, 
 
               {/* メモ */}
               <div>
-                <label className="block text-[11px] font-black text-ink-sub mb-2.5 uppercase tracking-[0.25em] px-1">メモ・注意事項</label>
+                <label className="block text-[11px] font-black text-ink-sub mb-2.5 uppercase tracking-[0.25em] px-1">{t('ticket.notes') || 'メモ・注意事項'}</label>
                 <textarea
-                  placeholder="乗り換えや注意点など..."
+                  placeholder={t('ticket.notesPlaceholder') || "乗り換えや注意点など..."}
                   rows={2}
                   className="w-full bg-surface-gray border-2 border-transparent focus:border-primary/20 focus:bg-white rounded-2xl px-6 py-4 text-base font-bold text-ink outline-none transition-all shadow-inner resize-none"
                   value={formData.notes || ''}
@@ -674,19 +676,19 @@ const TicketView: React.FC<Props> = ({ tickets, userProfiles, onSave, onDelete, 
 
               {/* URL */}
               <div className="pt-2">
-                <label className="block text-[11px] font-black text-ink-sub mb-2.5 uppercase tracking-[0.25em] px-1">チケットURL（予約サイト等）</label>
+                <label className="block text-[11px] font-black text-ink-sub mb-2.5 uppercase tracking-[0.25em] px-1">{t('ticket.url') || 'チケットURL（予約サイト等）'}</label>
                 <input type="url" placeholder="https://..." className="w-full bg-surface-gray border-2 border-transparent focus:border-primary/20 focus:bg-white rounded-2xl px-6 py-4 text-base font-bold text-ink outline-none transition-all shadow-inner" value={formData.link || ''} onChange={e => setFormData({ ...formData, link: e.target.value })} />
               </div>
 
               {/* ボタン */}
               <div className="flex gap-4 pt-10">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-5 rounded-[28px] text-xs font-black uppercase tracking-[0.3em] text-ink-sub hover:bg-surface-gray transition-all active:scale-[0.98]">キャンセル</button>
+                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-5 rounded-[28px] text-xs font-black uppercase tracking-[0.3em] text-ink-sub hover:bg-surface-gray transition-all active:scale-[0.98]">{t('common.cancel') || 'キャンセル'}</button>
                 <button
                   type="button"
                   onClick={(e) => { e.stopPropagation(); handleSubmit(e); }}
                   className="flex-[2] py-5 rounded-[28px] bg-ink text-white text-xs font-black uppercase tracking-[0.4em] shadow-2xl shadow-ink/30 hover:bg-primary transition-all active:scale-[0.98]"
                 >
-                  💾 保存する
+                  {'💾 ' + (t('common.save') || '保存する')}
                 </button>
               </div>
             </div>
@@ -721,7 +723,7 @@ const TicketView: React.FC<Props> = ({ tickets, userProfiles, onSave, onDelete, 
             </div>
 
             <p className="absolute bottom-8 text-white/40 text-[10px] uppercase font-black tracking-[0.3em]">
-              Tap background to close
+              {t('ticket.tapToClose') || 'Tap background to close'}
             </p>
           </div>
         )

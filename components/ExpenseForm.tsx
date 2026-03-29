@@ -4,6 +4,7 @@ import { Participant, Expense, UserProfile } from '../types';
 import { CATEGORIES, CURRENCIES, EXCHANGE_RATE_AUD_TO_JPY } from '../constants';
 import { fetchExchangeRate } from '../services/currencyService';
 import { convertToJPY } from '../utils/currency';
+import { useTranslation } from '../contexts/LanguageContext';
 
 interface Props {
   onAdd: (expense: Omit<import('../types').Expense, 'id' | 'createdAt' | 'updatedAt'>) => void;
@@ -27,6 +28,7 @@ const CATEGORY_ICONS: Record<string, string> = {
 };
 
 const ExpenseForm: React.FC<Props> = ({ onAdd, onCancel, initialExpense, userProfiles, tripStartDate, tripEndDate }) => {
+  const { t } = useTranslation();
   const [title, setTitle] = useState(initialExpense?.title || '');
   const [amount, setAmount] = useState(initialExpense?.amount?.toString() || '');
   const [currency, setCurrency] = useState<string>(initialExpense?.currency || 'AUD');
@@ -92,10 +94,10 @@ const ExpenseForm: React.FC<Props> = ({ onAdd, onCancel, initialExpense, userPro
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (!title.trim()) newErrors.title = 'タイトルを入力してください';
-    if (!amount || amountNum <= 0) newErrors.amount = '0より大きい金額を入力してください';
-    if (!paidBy) newErrors.paidBy = '支払った人を選択してください';
-    if (splitWith.length === 0) newErrors.splitWith = '割り勘する人を1人以上選択してください';
+    if (!title.trim()) newErrors.title = t('expenseForm.errTitle') || 'タイトルを入力してください';
+    if (!amount || amountNum <= 0) newErrors.amount = t('expenseForm.errAmount') || '0より大きい金額を入力してください';
+    if (!paidBy) newErrors.paidBy = t('expenseForm.errPaidBy') || '支払った人を選択してください';
+    if (splitWith.length === 0) newErrors.splitWith = t('expenseForm.errSplitWith') || '割り勘する人を1人以上選択してください';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -127,10 +129,10 @@ const ExpenseForm: React.FC<Props> = ({ onAdd, onCancel, initialExpense, userPro
       <div className="bg-ocean-dark px-6 py-5 flex justify-between items-center">
         <div>
           <p className="text-[10px] font-bold text-white/50 uppercase tracking-widest mb-0.5">
-            {initialExpense ? '編集モード' : '新規登録'}
+            {initialExpense ? (t('common.editMode') || '編集モード') : (t('common.newEntry') || '新規登録')}
           </p>
           <h2 className="text-xl font-sans font-bold text-white">
-            {initialExpense ? '支出を編集' : '💳 新しい支出'}
+            {initialExpense ? t('expenseForm.editTitle') : ('💳 ' + t('expenseForm.addTitle'))}
           </h2>
         </div>
         <button
@@ -150,28 +152,28 @@ const ExpenseForm: React.FC<Props> = ({ onAdd, onCancel, initialExpense, userPro
         <div className="space-y-5">
           <p className="text-[9px] font-black text-ink-light uppercase tracking-[0.25em] flex items-center gap-2">
             <span className="flex-1 h-px bg-surface-gray-mid" />
-            何に使ったか
+            {t('expenseForm.whatFor') || '何に使ったか'}
             <span className="flex-1 h-px bg-surface-gray-mid" />
           </p>
 
           {/* タイトル */}
           <div>
             <label className="block text-[10px] font-bold text-ink-sub mb-2 uppercase tracking-widest">
-              タイトル <span className="text-rose-400">*</span>
+              {t('expenseForm.title')} <span className="text-rose-400">*</span>
             </label>
             <input
               type="text"
               value={title}
               onChange={e => { setTitle(e.target.value); setErrors(p => ({ ...p, title: '' })); }}
               className={`w-full bg-surface-gray border-2 rounded-2xl px-4 py-4 text-[16px] text-ink outline-none transition-colors ${errors.title ? 'border-rose-400' : 'border-transparent focus:border-primary/40'}`}
-              placeholder="例: 夕食、タクシー代、お土産..."
+              placeholder={t('expenseForm.titlePlaceholder') || '例: 夕食、タクシー代、お土産...'}
             />
             {errors.title && <p className="text-xs text-rose-500 font-bold mt-1.5 ml-1">{errors.title}</p>}
           </div>
 
           {/* カテゴリー - U1: アイコン付きボタングリッド */}
           <div>
-            <label className="block text-[10px] font-bold text-ink-sub mb-3 uppercase tracking-widest">カテゴリー</label>
+            <label className="block text-[10px] font-bold text-ink-sub mb-3 uppercase tracking-widest">{t('expenseForm.category')}</label>
             <div className="grid grid-cols-4 gap-2">
               {CATEGORIES.map(c => (
                 <button
@@ -195,7 +197,7 @@ const ExpenseForm: React.FC<Props> = ({ onAdd, onCancel, initialExpense, userPro
         <div className="space-y-5">
           <p className="text-[9px] font-black text-ink-light uppercase tracking-[0.25em] flex items-center gap-2">
             <span className="flex-1 h-px bg-surface-gray-mid" />
-            金額
+            {t('expenseForm.amount')}
             <span className="flex-1 h-px bg-surface-gray-mid" />
           </p>
 
@@ -203,7 +205,7 @@ const ExpenseForm: React.FC<Props> = ({ onAdd, onCancel, initialExpense, userPro
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-[10px] font-bold text-ink-sub mb-2 uppercase tracking-widest">
-                金額 <span className="text-rose-400">*</span>
+                {t('expenseForm.amount')} <span className="text-rose-400">*</span>
               </label>
               <input
                 type="number"
@@ -218,7 +220,7 @@ const ExpenseForm: React.FC<Props> = ({ onAdd, onCancel, initialExpense, userPro
               {errors.amount && <p className="text-xs text-rose-500 font-bold mt-1.5 ml-1">{errors.amount}</p>}
             </div>
             <div>
-              <label className="block text-[10px] font-bold text-ink-sub mb-2 uppercase tracking-widest">通貨</label>
+              <label className="block text-[10px] font-bold text-ink-sub mb-2 uppercase tracking-widest">{t('expenseForm.currency')}</label>
               <select
                 value={currency}
                 onChange={e => setCurrency(e.target.value)}
@@ -232,7 +234,7 @@ const ExpenseForm: React.FC<Props> = ({ onAdd, onCancel, initialExpense, userPro
           {/* U2: JPYリアルタイム換算プレビュー */}
           {amountNum > 0 && (
             <div className="bg-primary/5 border border-primary/20 rounded-2xl px-5 py-3 flex justify-between items-center animate-in fade-in duration-200">
-              <span className="text-[10px] font-bold text-primary uppercase tracking-widest">JPY換算</span>
+              <span className="text-[10px] font-bold text-primary uppercase tracking-widest">{t('expenseForm.jpyConvert') || 'JPY換算'}</span>
               <span className="text-xl font-sans font-black text-primary">
                 ≈ ¥{jpyPreview.toLocaleString()}
               </span>
@@ -244,7 +246,7 @@ const ExpenseForm: React.FC<Props> = ({ onAdd, onCancel, initialExpense, userPro
             <div className="p-4 rounded-2xl border border-surface-gray-mid bg-surface-gray flex flex-col gap-2">
               <div className="flex justify-between items-center">
                 <span className="text-[10px] font-bold text-ink-sub uppercase tracking-wider">
-                  レート (1 {currency} =)
+                  {t('expenseForm.ratePrefix') || 'レート'} (1 {currency} =)
                 </span>
                 <div className="flex items-center gap-2">
                   <input
@@ -254,7 +256,7 @@ const ExpenseForm: React.FC<Props> = ({ onAdd, onCancel, initialExpense, userPro
                     onChange={e => setRate(parseFloat(e.target.value))}
                     className="w-20 bg-transparent text-right font-bold text-lg text-ink outline-none border-b-2 border-primary/30 focus:border-primary transition-colors"
                   />
-                  <span className="text-xs font-bold text-ink-sub">円</span>
+                  <span className="text-xs font-bold text-ink-sub">{t('common.jpy') || '円'}</span>
                 </div>
               </div>
               <button
@@ -263,14 +265,14 @@ const ExpenseForm: React.FC<Props> = ({ onAdd, onCancel, initialExpense, userPro
                 disabled={isFetchingRate}
                 className="self-end text-[10px] font-bold text-primary uppercase tracking-widest hover:opacity-70 disabled:opacity-40 transition-opacity"
               >
-                {isFetchingRate ? '取得中...' : '最新レートに更新'}
+                {isFetchingRate ? (t('expenseForm.fetchingRate') || '取得中...') : (t('expenseForm.updateRate') || '最新レートに更新')}
               </button>
             </div>
           )}
 
           {/* 日付 */}
           <div>
-            <label className="block text-[10px] font-bold text-ink-sub mb-2 uppercase tracking-widest">日付</label>
+            <label className="block text-[10px] font-bold text-ink-sub mb-2 uppercase tracking-widest">{t('expenseForm.date')}</label>
             <input
               type="date"
               value={date}
@@ -286,14 +288,14 @@ const ExpenseForm: React.FC<Props> = ({ onAdd, onCancel, initialExpense, userPro
         <div className="space-y-5">
           <p className="text-[9px] font-black text-ink-light uppercase tracking-[0.25em] flex items-center gap-2">
             <span className="flex-1 h-px bg-surface-gray-mid" />
-            誰が・誰と
+            {t('expenseForm.whoAndWith') || '誰が・誰と'}
             <span className="flex-1 h-px bg-surface-gray-mid" />
           </p>
 
           {/* 支払った人 */}
           <div className="space-y-3">
             <label className="block text-[10px] font-bold text-ink-sub uppercase tracking-widest">
-              支払った人 <span className="text-rose-400">*</span>
+              {t('expenseForm.paidBy')} <span className="text-rose-400">*</span>
             </label>
             <div className="flex gap-2 flex-wrap">
               {userProfiles.map(p => (
@@ -317,10 +319,10 @@ const ExpenseForm: React.FC<Props> = ({ onAdd, onCancel, initialExpense, userPro
           <div className="space-y-3">
             <div className="flex justify-between items-center">
               <label className="block text-[10px] font-bold text-ink-sub uppercase tracking-widest">
-                割り勘する人 <span className="text-rose-400">*</span>
+                {t('expenseForm.splitWith')} <span className="text-rose-400">*</span>
               </label>
               <span className="text-[9px] font-bold text-ink-light">
-                {splitWith.length}人 / {userProfiles.length}人
+                {splitWith.length}{t('common.person') || '人'} / {userProfiles.length}{t('common.person') || '人'}
               </span>
             </div>
             <div className="flex gap-2 flex-wrap">
@@ -346,14 +348,14 @@ const ExpenseForm: React.FC<Props> = ({ onAdd, onCancel, initialExpense, userPro
         {/* U3: sourceUrlラベルをわかりやすく変更 */}
         <div>
           <label className="block text-[10px] font-bold text-ink-sub mb-2 uppercase tracking-widest">
-            メモ・URL（任意）
+            {t('expenseForm.memo') || 'メモ・URL（任意）'}
           </label>
           <input
             type="text"
             value={sourceUrl}
             onChange={e => setSourceUrl(e.target.value)}
             className="w-full bg-surface-gray border-2 border-transparent focus:border-primary/40 rounded-2xl px-4 py-3.5 text-sm text-ink outline-none transition-colors"
-            placeholder="レシートのURL、備考など..."
+            placeholder={t('expenseForm.memoPlaceholder') || 'レシートのURL、備考など...'}
           />
         </div>
 
@@ -364,13 +366,13 @@ const ExpenseForm: React.FC<Props> = ({ onAdd, onCancel, initialExpense, userPro
             onClick={onCancel}
             className="flex-1 py-4 text-ink-sub font-bold text-sm border-2 border-surface-gray-mid rounded-2xl hover:bg-surface-gray transition-colors active:scale-95"
           >
-            キャンセル
+            {t('common.cancel')}
           </button>
           <button
             type="submit"
             className="flex-[2] py-5 bg-primary text-white font-bold text-lg rounded-2xl shadow-lg shadow-primary/20 active:scale-95 transition-all hover:bg-primary/90"
           >
-            {initialExpense ? '✓ 更新する' : '💾 保存する'}
+            {initialExpense ? ('✓ ' + (t('common.update') || '更新する')) : ('💾 ' + t('expenseForm.save'))}
           </button>
         </div>
       </form>

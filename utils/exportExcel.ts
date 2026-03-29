@@ -18,8 +18,9 @@ export async function exportToExcel(params: {
     budget: number;
     settlementMethod?: 'smart' | 'individual';
   };
+  t: (key: string) => string;
 }) {
-  const { profiles, expenses, itinerary, tickets, packingList, tripSettings } = params;
+  const { profiles, expenses, itinerary, tickets, packingList, tripSettings, t } = params;
 
   const workbook = new ExcelJS.Workbook();
   workbook.creator = 'たびログ';
@@ -34,27 +35,30 @@ export async function exportToExcel(params: {
   const totalJPY = expenses.reduce((sum, e) => sum + convertToJPY(e.amount, e.currency, e.exchangeRate), 0);
 
   // 1. 概要シート
-  const summarySheet = workbook.addWorksheet('概要');
+  const summarySheet = workbook.addWorksheet(t('export.summary') || '概要');
   summarySheet.columns = [
-    { header: '項目', key: 'item', width: 25 },
-    { header: '値', key: 'value', width: 35 },
-    { header: '備考', key: 'note', width: 40 }
+    { header: t('export.item') || '項目', key: 'item', width: 25 },
+    { header: t('export.value') || '値', key: 'value', width: 35 },
+    { header: t('export.note') || '備考', key: 'note', width: 40 }
   ];
   
-  summarySheet.addRow({ item: '旅行名', value: tripSettings.tripName });
-  summarySheet.addRow({ item: '期間', value: `${tripSettings.tripStartDate} 〜 ${tripSettings.tripEndDate}` });
-  summarySheet.addRow({ item: '予算', value: `${tripSettings.budget.toLocaleString()}円` });
-  summarySheet.addRow({ item: '合計支出', value: `${Math.round(totalJPY).toLocaleString()}円` });
+  summarySheet.addRow({ item: t('export.tripName') || '旅行名', value: tripSettings.tripName });
+  summarySheet.addRow({ item: t('export.period') || '期間', value: `${tripSettings.tripStartDate} 〜 ${tripSettings.tripEndDate}` });
+  const yen = t('common.yen') || '円';
+  summarySheet.addRow({ item: t('export.budget') || '予算', value: `${tripSettings.budget.toLocaleString()}${yen}` });
+  summarySheet.addRow({ item: t('export.totalExpense') || '合計支出', value: `${Math.round(totalJPY).toLocaleString()}${yen}` });
   summarySheet.addRow({});
   
-  summarySheet.addRow({ item: '精算方式', value: tripSettings.settlementMethod === 'individual' ? '個別精算（相殺あり）' : 'スマート精算（推奨ルート）' });
-  summarySheet.addRow({ item: '【精算指示】', value: '送金する人', note: '受け取る人' }).font = { bold: true };
+  const methodIndividual = t('export.settlementIndividual') || '個別精算（相殺あり）';
+  const methodSmart = t('export.settlementSmart') || 'スマート精算（推奨ルート）';
+  summarySheet.addRow({ item: t('export.settlementMethod') || '精算方式', value: tripSettings.settlementMethod === 'individual' ? methodIndividual : methodSmart });
+  summarySheet.addRow({ item: t('export.settlementInst') || '【精算指示】', value: t('export.sender') || '送金する人', note: t('export.receiver') || '受け取る人' }).font = { bold: true };
   if (settlements.length === 0) {
-    summarySheet.addRow({ item: '精算完了', value: '全員の収支は均等です' });
+    summarySheet.addRow({ item: t('export.settlementDone') || '精算完了', value: t('export.settlementEqual') || '全員の収支は均等です' });
   } else {
     settlements.forEach(s => {
       summarySheet.addRow({
-        item: `${Math.round(s.amount).toLocaleString()}円`,
+        item: `${Math.round(s.amount).toLocaleString()}${yen}`,
         value: getDisplayName(s.from),
         note: `→ ${getDisplayName(s.to)}`
       });
@@ -62,51 +66,53 @@ export async function exportToExcel(params: {
   }
   summarySheet.addRow({});
 
-  summarySheet.addRow({ item: '【個人別収支】', value: '名前', note: '収支(＋が受取/－が支払)' }).font = { bold: true };
+  summarySheet.addRow({ item: t('export.personalBalance') || '【個人別収支】', value: t('export.name') || '名前', note: t('export.balanceDesc') || '収支(＋が受取/－が支払)' }).font = { bold: true };
   profiles.forEach(p => {
     summarySheet.addRow({
       item: p.displayName,
-      value: `${Math.round(balances[p.id] || 0).toLocaleString()}円`,
-      note: balances[p.id] >= 0 ? "受取待ち" : "支払いが必要"
+      value: `${Math.round(balances[p.id] || 0).toLocaleString()}${yen}`,
+      note: balances[p.id] >= 0 ? (t('export.waitingReceive') || "受取待ち") : (t('export.needPay') || "支払いが必要")
     });
   });
 
   // 2. 支出精算シート
-  const expenseSheet = workbook.addWorksheet('支出精算');
+  const expenseSheet = workbook.addWorksheet(t('export.expenseSheet') || '支出精算');
   expenseSheet.columns = [
-    { header: '日付', key: 'date', width: 15 },
-    { header: '内容', key: 'title', width: 30 },
-    { header: 'カテゴリ', key: 'category', width: 15 },
-    { header: '支払者', key: 'paidBy', width: 15 },
-    { header: '金額', key: 'amount', width: 15 },
-    { header: '通貨', key: 'currency', width: 10 },
-    { header: 'レート', key: 'rate', width: 10 },
-    { header: '日本円相当', key: 'jpy', width: 15 },
-    { header: '精算対象', key: 'splitWith', width: 40 },
+    { header: t('export.colDate') || '日付', key: 'date', width: 15 },
+    { header: t('export.colContent') || '内容', key: 'title', width: 30 },
+    { header: t('export.colCategory') || 'カテゴリ', key: 'category', width: 15 },
+    { header: t('export.colPaidBy') || '支払者', key: 'paidBy', width: 15 },
+    { header: t('export.colAmount') || '金額', key: 'amount', width: 15 },
+    { header: t('export.colCurrency') || '通貨', key: 'currency', width: 10 },
+    { header: t('export.colRate') || 'レート', key: 'rate', width: 10 },
+    { header: t('export.colJpy') || '日本円相当', key: 'jpy', width: 15 },
+    { header: t('export.colSplitWith') || '精算対象', key: 'splitWith', width: 40 },
   ];
   expenses.forEach(e => {
     expenseSheet.addRow({
       date: e.date,
       title: e.title,
-      category: e.category,
+      category: t(`expenseForm.cat_${e.category?.toLowerCase()}`) || e.category,
       paidBy: getDisplayName(e.paidBy),
       amount: e.amount.toLocaleString(),
       currency: e.currency,
       rate: e.exchangeRate,
-      jpy: `${Math.round(convertToJPY(e.amount, e.currency, e.exchangeRate)).toLocaleString()}円`,
+      jpy: `${Math.round(convertToJPY(e.amount, e.currency, e.exchangeRate)).toLocaleString()}${yen}`,
       splitWith: e.splitWith.map(id => getDisplayName(id)).join(", ")
     });
   });
 
+  const allLabel = t('expenseList.all') || '全員';
+
   // 3. スケジュールシート
-  const itinerarySheet = workbook.addWorksheet('スケジュール');
+  const itinerarySheet = workbook.addWorksheet(t('export.itinerarySheet') || 'スケジュール');
   itinerarySheet.columns = [
-    { header: '日付', key: 'date', width: 15 },
-    { header: '時刻', key: 'time', width: 10 },
-    { header: '内容', key: 'title', width: 30 },
-    { header: '場所', key: 'location', width: 30 },
-    { header: 'メモ', key: 'memo', width: 40 },
-    { header: '参加者', key: 'participants', width: 25 },
+    { header: t('export.colDate') || '日付', key: 'date', width: 15 },
+    { header: t('export.colTime') || '時刻', key: 'time', width: 10 },
+    { header: t('export.colContent') || '内容', key: 'title', width: 30 },
+    { header: t('export.colLocation') || '場所', key: 'location', width: 30 },
+    { header: t('export.colMemo') || 'メモ', key: 'memo', width: 40 },
+    { header: t('export.colParticipants') || '参加者', key: 'participants', width: 25 },
   ];
   itinerary.forEach(item => {
     itinerarySheet.addRow({
@@ -115,53 +121,70 @@ export async function exportToExcel(params: {
       title: item.title,
       location: item.location || "",
       memo: item.memo || "",
-      participants: item.participantIds && item.participantIds.length > 0 ? item.participantIds.map(id => getDisplayName(id)).join(", ") : "全員"
+      participants: item.participantIds && item.participantIds.length > 0 ? item.participantIds.map(id => getDisplayName(id)).join(", ") : allLabel
     });
   });
 
   // 4. チケットシート
-  const ticketSheet = workbook.addWorksheet('チケット');
+  const ticketSheet = workbook.addWorksheet(t('export.ticketSheet') || 'チケット');
   ticketSheet.columns = [
-    { header: '種類', key: 'type', width: 15 },
-    { header: 'タイトル', key: 'title', width: 30 },
-    { header: '提供元/会社', key: 'provider', width: 25 },
-    { header: '日付', key: 'date', width: 15 },
-    { header: '時刻', key: 'time', width: 10 },
-    { header: '予約番号', key: 'ref', width: 20 },
-    { header: 'メモ', key: 'notes', width: 30 },
-    { header: '利用者', key: 'passengers', width: 25 },
+    { header: t('export.colType') || '種類', key: 'type', width: 15 },
+    { header: t('export.colTitle') || 'タイトル', key: 'title', width: 30 },
+    { header: t('export.colProvider') || '提供元/会社', key: 'provider', width: 25 },
+    { header: t('export.colDate') || '日付', key: 'date', width: 15 },
+    { header: t('export.colTime') || '時刻', key: 'time', width: 10 },
+    { header: t('export.colRef') || '予約番号', key: 'ref', width: 20 },
+    { header: t('export.colNotes') || 'メモ', key: 'notes', width: 30 },
+    { header: t('export.colUsers') || '利用者', key: 'passengers', width: 25 },
   ];
   tickets.forEach(item => {
     ticketSheet.addRow({
-      type: item.type,
+      type: t(`ticket.type_${item.type}`) || item.type,
       title: item.title,
       provider: item.provider || "",
       date: item.date,
       time: item.time || "",
       ref: item.referenceNumber || "",
       notes: item.notes || "",
-      passengers: item.passengerIds && item.passengerIds.length > 0 ? item.passengerIds.map(id => getDisplayName(id)).join(", ") : "全員"
+      passengers: item.passengerIds && item.passengerIds.length > 0 ? item.passengerIds.map(id => getDisplayName(id)).join(", ") : allLabel
     });
   });
 
   // 5. 持ち物シート
-  const packingSheet = workbook.addWorksheet('持ち物');
+  const packingSheet = workbook.addWorksheet(t('export.packingSheet') || '持ち物');
   packingSheet.columns = [
-    { header: 'カテゴリ', key: 'category', width: 15 },
-    { header: 'アイテム', key: 'title', width: 30 },
-    { header: '準備完了', key: 'packed', width: 10 },
-    { header: '担当', key: 'assignees', width: 25 },
-    { header: '完了者', key: 'packedBy', width: 25 },
+    { header: t('export.colCategory') || 'カテゴリ', key: 'category', width: 15 },
+    { header: t('export.colItem') || 'アイテム', key: 'title', width: 30 },
+    { header: t('export.colReady') || '準備完了', key: 'packed', width: 10 },
+    { header: t('export.colAssignees') || '担当', key: 'assignees', width: 25 },
+    { header: t('export.colDoneBy') || '完了者', key: 'packedBy', width: 25 },
   ];
+  
+  const mapCategory = (cat: string) => {
+      const map: Record<string, string> = {
+          '必需品': 'essentials',
+          '衣類': 'clothing',
+          '洗面用具': 'toiletries',
+          '電子機器': 'electronics',
+          '日用品': 'daily',
+          '医薬品': 'medical',
+          '食品': 'food',
+          'その他': 'other'
+      };
+      const key = map[cat] || 'other';
+      return t(`packing.cat_${key}`) || cat;
+  };
+
   packingList.forEach(item => {
     packingSheet.addRow({
-      category: item.category,
-      title: item.title,
-      packed: item.isPacked ? "○" : "×",
-      assignees: item.assignees && item.assignees.length > 0 ? item.assignees.map(id => getDisplayName(id)).join(", ") : "全員",
-      packedBy: item.packedBy && item.packedBy.length > 0 ? item.packedBy.map(id => getDisplayName(id)).join(", ") : ""
+        category: mapCategory(item.category),
+        title: item.title,
+        packed: item.isPacked ? (t('export.markO') || "○") : (t('export.markX') || "×"),
+        assignees: item.assignees && item.assignees.length > 0 ? item.assignees.map(id => getDisplayName(id)).join(", ") : allLabel,
+        packedBy: item.packedBy && item.packedBy.length > 0 ? item.packedBy.map(id => getDisplayName(id)).join(", ") : ""
     });
   });
+
 
   // ヘッダーのスタイル（全シート）
   workbook.worksheets.forEach(sheet => {

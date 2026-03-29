@@ -99,7 +99,7 @@ const ExpenseList: React.FC<Props> = ({ expenses, onDelete, onEdit, onResetAll, 
               <AppIcon name="history" className="w-5 h-5 text-primary" />
               SPEND
             </h2>
-            <span className="text-[10px] font-bold bg-primary-light text-primary px-2 py-0.5 rounded-full">{expenses.length} 件</span>
+            <span className="text-[10px] font-bold bg-primary-light text-primary px-2 py-0.5 rounded-full">{expenses.length} {t('common.itemCount') || '件'}</span>
           </div>
 
           <div className="px-4">
@@ -233,7 +233,7 @@ const ExpenseList: React.FC<Props> = ({ expenses, onDelete, onEdit, onResetAll, 
                 <div className="p-5">
                   {exp.hasConflict && (
                     <div className="mb-3 bg-red-500/10 p-2 rounded-lg border border-red-500/20 text-[10px] text-red-500 font-bold">
-                      ⚠️ 同期の競合が検出されました
+                      {t('expenseList.conflictWarning') || '⚠️ 同期の競合が検出されました'}
                     </div>
                   )}
                   <div className="flex justify-between items-start mb-3">
@@ -243,7 +243,7 @@ const ExpenseList: React.FC<Props> = ({ expenses, onDelete, onEdit, onResetAll, 
                           {exp.category}
                         </span>
                         {exp.isLocalOnly && (
-                          <span className="text-[9px] text-amber-500 font-bold animate-pulse">● 同期中</span>
+                          <span className="text-[9px] text-amber-500 font-bold animate-pulse">{t('expenseList.syncing') || '● 同期中'}</span>
                         )}
                       </div>
                       <h4 className="font-bold text-ink text-lg leading-snug break-all">{exp.title}</h4>
@@ -294,7 +294,7 @@ const ExpenseList: React.FC<Props> = ({ expenses, onDelete, onEdit, onResetAll, 
                     onClick={(e) => { e.stopPropagation(); onEdit(exp); }}
                     className="flex-1 py-4 flex items-center justify-center text-[10px] uppercase tracking-widest text-primary font-bold border-r border-surface-gray-mid hover:bg-primary/5 active:bg-primary/10 transition-colors cursor-pointer"
                   >
-                    編集
+                    {t('common.edit') || '編集'}
                   </button>
                   {deletingId === exp.id ? (
                     <div className="flex flex-1 animate-in fade-in duration-200">
@@ -303,14 +303,14 @@ const ExpenseList: React.FC<Props> = ({ expenses, onDelete, onEdit, onResetAll, 
                         onClick={(e) => { e.stopPropagation(); onDelete(exp.id); setDeletingId(null); }}
                         className="flex-1 py-4 flex items-center justify-center text-[10px] font-black tracking-widest text-white bg-rose-500 hover:bg-rose-600 transition-colors cursor-pointer"
                       >
-                        削除する
+                        {t('common.deleteBtn') || '削除する'}
                       </button>
                       <button
                         type="button"
                         onClick={(e) => { e.stopPropagation(); setDeletingId(null); }}
                         className="flex-1 py-4 flex items-center justify-center text-[10px] font-bold tracking-widest text-ink-sub hover:bg-surface-gray transition-colors cursor-pointer border-l border-surface-gray-mid"
                       >
-                        戻る
+                        {t('common.back') || '戻る'}
                       </button>
                     </div>
                   ) : (
@@ -319,7 +319,7 @@ const ExpenseList: React.FC<Props> = ({ expenses, onDelete, onEdit, onResetAll, 
                       onClick={(e) => { e.stopPropagation(); setDeletingId(exp.id); }}
                       className="flex-1 py-4 flex items-center justify-center text-[10px] uppercase tracking-widest text-rose-500 font-bold hover:bg-rose-50 active:bg-rose-100 transition-colors cursor-pointer"
                     >
-                      削除
+                      {t('common.delete') || '削除'}
                     </button>
                   )}
                 </div>
@@ -332,7 +332,7 @@ const ExpenseList: React.FC<Props> = ({ expenses, onDelete, onEdit, onResetAll, 
       {/* 管理メニュー */}
       {filteredExpenses.length > 0 && (
         <div className="px-4 mt-8 pt-8 border-t border-surface-gray-mid border-dashed">
-          <p className="text-center text-[10px] text-ink-light mb-4 font-bold tracking-[0.2em] uppercase">データ管理</p>
+          <p className="text-center text-[10px] text-ink-light mb-4 font-bold tracking-[0.2em] uppercase">{t('expenseList.dataManagement') || 'データ管理'}</p>
           {resetStage === 'idle' ? (
             <button onClick={() => setResetStage('confirm')} className="w-full py-4 text-ink-light border border-dashed border-surface-gray-mid font-bold text-[10px] uppercase tracking-widest rounded-2xl hover:bg-white transition-all shadow-sm bg-surface-gray">
               {t('expenseList.resetAll')}
