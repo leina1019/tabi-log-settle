@@ -55,9 +55,11 @@ export const zh = {
     exportFailed: 'Excel文件生成失败。',
     itemCount: '项',
     total: '合计',
-    jpy: '元',
-    yen: '元',
+    jpy: '￥',
+    yen: '￥',
     person: '人',
+    time_h: 'h',
+    time_m: 'm',
     saveError: '保存时发生错误',
     confirmDelete: '确定要删除吗？',
     imageProcessError: '处理图片失败'

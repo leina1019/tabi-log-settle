@@ -58,6 +58,8 @@ export const ja = {
     jpy: '円',
     yen: '円',
     person: '人',
+    time_h: '時間',
+    time_m: '分',
     saveError: '保存中にエラーが発生しました',
     confirmDelete: '削除してもよろしいですか？',
     imageProcessError: '画像の処理に失敗しました'

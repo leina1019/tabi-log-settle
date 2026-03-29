@@ -221,16 +221,26 @@ const Dashboard: React.FC<Props> = ({
   };
 
   const tripStatus = useMemo(() => {
-    if (!tripStartDate) return { text: t('dashboard.dateNotSet') || "Date not set", sub: t('dashboard.planTrip') || "Plan your trip" };
+    if (!tripStartDate) return { text: "Date not set", sub: "Plan your trip" };
     const now = new Date(); now.setHours(0, 0, 0, 0);
     const start = new Date(tripStartDate); start.setHours(0, 0, 0, 0);
     const end = tripEndDate ? new Date(tripEndDate) : null; if (end) end.setHours(0, 0, 0, 0);
     const diffDays = Math.ceil((start.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-    if (diffDays > 0) return { text: t('dashboard.daysToGo', { days: diffDays }), sub: t('dashboard.countdown') };
-    if (end && now > end) return { text: t('dashboard.tripEnded'), sub: t('dashboard.memories') };
+    
+    if (diffDays > 0) return { 
+      text: `${diffDays} ${diffDays === 1 ? 'day' : 'days'} to go`, 
+      sub: "COUNTDOWN" 
+    };
+    if (end && now > end) return { 
+      text: "Trip Ended", 
+      sub: "MEMORIES" 
+    };
     const day = Math.ceil((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-    return { text: t('dashboard.dayN', { day: day }), sub: t('dashboard.enjoy') };
-  }, [tripStartDate, tripEndDate, t]);
+    return { 
+      text: `Day ${day}`, 
+      sub: "ENJOY YOUR TRIP!" 
+    };
+  }, [tripStartDate, tripEndDate]);
 
   // 天気情報の取得
   React.useEffect(() => {

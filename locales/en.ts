@@ -58,6 +58,8 @@ export const en = {
     jpy: 'JPY',
     yen: 'JPY',
     person: 'Ppl',
+    time_h: 'h',
+    time_m: 'm',
     saveError: 'Error occurred during save',
     confirmDelete: 'Are you sure you want to delete?',
     imageProcessError: 'Failed to process image'
