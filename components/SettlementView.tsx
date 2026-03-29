@@ -119,14 +119,14 @@ const SettlementView: React.FC<Props> = ({ settlements, expenses, onBack, userPr
                     <p className="text-sm font-bold text-ink">{getDisplayName(s.to)}</p>
                   </div>
                   <div className="pl-3 border-l border-surface-gray-mid ml-1">
-                    <p className="text-lg font-sans font-bold text-ink">{Math.round(s.amount).toLocaleString()}<span className="text-[10px] ml-0.5 font-sans">{(t('common.jpy') || '円')}</span></p>
+                    <p className="text-lg font-sans font-bold text-ink">{Math.round(s.amount).toLocaleString()}<span className="text-[10px] ml-0.5 font-sans">{t('common.jpy')}</span></p>
                   </div>
                   {/* F1: 送金プランのコピーボタン */}
                   <button
                     type="button"
                     onClick={() => handleCopySettlement(s)}
                     className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all text-sm ${isCopied ? 'bg-emerald-500 text-white' : 'bg-white hover:bg-primary/10 text-ink-light hover:text-primary border border-surface-gray-mid'}`}
-                    title="コピー"
+                    title={t('settlement.copyBtn')}
                   >
                     {isCopied ? '✓' : '📋'}
                   </button>
@@ -141,7 +141,7 @@ const SettlementView: React.FC<Props> = ({ settlements, expenses, onBack, userPr
       <div className="glass p-6 rounded-3xl">
         <div className="flex justify-between items-center mb-5">
           <h3 className="text-[10px] font-bold text-ink-sub uppercase tracking-widest">{t('settlement.balance')}</h3>
-          <span className="text-[9px] text-primary bg-primary/10 px-2 py-0.5 rounded-full font-bold">{t('settlement.tapDetails') || 'タップで計算式を表示'}</span>
+          <span className="text-[9px] text-primary bg-primary/10 px-2 py-0.5 rounded-full font-bold">{t('settlement.tapDetails')}</span>
         </div>
         <div className="space-y-4">
           {userProfiles.map(p => (
@@ -166,8 +166,7 @@ const SettlementView: React.FC<Props> = ({ settlements, expenses, onBack, userPr
               <div className="text-right flex items-center gap-2">
                 <p className={`font-bold font-sans ${balances[p.id] >= 0 ? 'text-emerald-600' : 'text-rose-500'}`}>
                   {balances[p.id] >= 0 ? '+' : ''}{Math.round(balances[p.id]).toLocaleString()}
-                  {/* U3: 「円」単位追加 */}
-                  <span className="text-[10px] ml-0.5">{(t('common.jpy') || '円')}</span>
+                  <span className="text-[10px] ml-0.5">{t('common.jpy')}</span>
                 </p>
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-ink-light" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
               </div>
@@ -188,8 +187,8 @@ const SettlementView: React.FC<Props> = ({ settlements, expenses, onBack, userPr
               >
                 ×
               </button>
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em] opacity-80 mb-1">{t('settlement.calcDetail') || '計算明細'}</p>
-              <h3 className="text-xl font-bold">{getDisplayName(selectedPId)} {t('settlement.basis') || 'の精算根拠'}</h3>
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] opacity-80 mb-1">{t('settlement.calcDetail')}</p>
+              <h3 className="text-xl font-bold">{getDisplayName(selectedPId)} {t('settlement.basis')}</h3>
             </div>
 
             <div className="p-6 overflow-y-auto max-h-[60dvh] space-y-6">
@@ -210,7 +209,7 @@ const SettlementView: React.FC<Props> = ({ settlements, expenses, onBack, userPr
                       </div>
                     ))
                   ) : (
-                    <p className="text-[10px] text-ink-light italic">{t('settlement.noPaidRecord') || '支払った記録はありません'}</p>
+                    <p className="text-[10px] text-ink-light italic">{t('settlement.noPaidRecord')}</p>
                   )}
                 </div>
               </section>
@@ -230,7 +229,7 @@ const SettlementView: React.FC<Props> = ({ settlements, expenses, onBack, userPr
                         <span className="text-ink/80 truncate pr-2">{item.title}</span>
                         <span className="font-bold text-rose-700">-{Math.round(item.share).toLocaleString()}</span>
                       </div>
-                      <p className="text-[8px] text-rose-400">{t('settlement.calcFormulaFront') || '計算式:'} {item.fullAmount.toLocaleString()}{(t('common.jpy') || '円')} ÷ {item.count}{(t('common.person') || '人')}</p>
+                      <p className="text-[8px] text-rose-400">{t('settlement.calcFormulaFront')} {item.fullAmount.toLocaleString()}{t('common.jpy')} ÷ {item.count}{t('common.person')}</p>
                     </div>
                   ))}
                 </div>
@@ -239,7 +238,7 @@ const SettlementView: React.FC<Props> = ({ settlements, expenses, onBack, userPr
               {/* 最終計算 */}
               <div className="pt-4 border-t-2 border-dashed border-surface-gray-mid">
                 <div className="bg-surface-gray p-4 rounded-2xl">
-                  <p className="text-[10px] font-bold text-ink-sub mb-2 uppercase tracking-widest text-center">{t('settlement.summaryResult') || '集計結果'}</p>
+                  <p className="text-[10px] font-bold text-ink-sub mb-2 uppercase tracking-widest text-center">{t('settlement.summaryResult')}</p>
                   <div className="flex flex-col items-center gap-1">
                     <div className="flex items-center gap-2 text-sm">
                       <span className="text-emerald-600 font-bold">{participantDetails.totalPaid.toLocaleString()}</span>
@@ -249,7 +248,7 @@ const SettlementView: React.FC<Props> = ({ settlements, expenses, onBack, userPr
                     <div className="w-20 h-0.5 bg-ink/10 my-1"></div>
                     <p className={`text-2xl font-bold font-sans ${participantDetails.balance >= 0 ? 'text-emerald-600' : 'text-rose-500'}`}>
                       {participantDetails.balance >= 0 ? '+' : ''}{Math.round(participantDetails.balance).toLocaleString()}
-                      <span className="text-xs ml-1">{(t('common.jpy') || '円')}</span>
+                      <span className="text-xs ml-1">{t('common.jpy')}</span>
                     </p>
                   </div>
                 </div>

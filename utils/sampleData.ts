@@ -4,7 +4,7 @@ import { MEMBER_COLORS, EXCHANGE_RATE_AUD_TO_JPY } from '../constants';
 
 /**
  * デモ用サンプルデータを生成
- * Reina, Ken, Sarah の3人グループによるシドニー旅行を想定
+ * 最新版：Reina, Ken, Sarah の3人グループによるシドニー旅行
  */
 
 // 今日の日付をベースに6日間の旅行データを生成
@@ -130,7 +130,7 @@ export const SAMPLE_EXPENSES: Expense[] = [
         exchangeRate: EXCHANGE_RATE_AUD_TO_JPY,
         paidBy: 'Ken',
         splitWith: ['Reina', 'Ken', 'Sarah'],
-        category: '交通費',
+        category: 'transport',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
     },
@@ -143,7 +143,7 @@ export const SAMPLE_EXPENSES: Expense[] = [
         exchangeRate: EXCHANGE_RATE_AUD_TO_JPY,
         paidBy: 'Reina',
         splitWith: ['Reina', 'Ken', 'Sarah'],
-        category: '食事',
+        category: 'food',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
     },
@@ -156,7 +156,7 @@ export const SAMPLE_EXPENSES: Expense[] = [
         exchangeRate: EXCHANGE_RATE_AUD_TO_JPY,
         paidBy: 'Sarah',
         splitWith: ['Sarah'],
-        category: '買い物',
+        category: 'shopping',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
     },
@@ -169,7 +169,7 @@ export const SAMPLE_EXPENSES: Expense[] = [
         exchangeRate: EXCHANGE_RATE_AUD_TO_JPY,
         paidBy: 'Reina',
         splitWith: ['Reina', 'Ken', 'Sarah'],
-        category: '観光',
+        category: 'sightseeing',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
     },
@@ -182,7 +182,7 @@ export const SAMPLE_EXPENSES: Expense[] = [
         exchangeRate: EXCHANGE_RATE_AUD_TO_JPY,
         paidBy: 'Ken',
         splitWith: ['Reina', 'Ken', 'Sarah'],
-        category: '交通費',
+        category: 'transport',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
     },
@@ -195,7 +195,7 @@ export const SAMPLE_EXPENSES: Expense[] = [
         exchangeRate: 1,
         paidBy: 'Sarah',
         splitWith: ['Reina', 'Ken', 'Sarah'],
-        category: '食事',
+        category: 'food',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
     }
@@ -209,6 +209,7 @@ export const SAMPLE_TICKETS: Ticket[] = [
         provider: '日本航空 (JAL)',
         date: d(0),
         time: '19:20',
+        passengerIds: ['Reina', 'Ken', 'Sarah'],
         referenceNumber: 'ABC123D',
         notes: '第2ターミナル。搭乗時刻の2時間前に到着すること。',
         link: 'https://www.jal.co.jp/',
@@ -232,6 +233,7 @@ export const SAMPLE_TICKETS: Ticket[] = [
         provider: '日本航空 (JAL)',
         date: d(5),
         time: '08:15',
+        passengerIds: ['Reina', 'Ken', 'Sarah'],
         referenceNumber: 'XYZ987P',
         notes: '朝が早いので前日にパッキングを済ませる。',
         link: 'https://www.jal.co.jp/'
@@ -239,11 +241,11 @@ export const SAMPLE_TICKETS: Ticket[] = [
 ];
 
 export const SAMPLE_PACKING: PackingItem[] = [
-    { id: 'p-1', category: '必需品', title: 'パスポート', isPacked: true, updatedAt: new Date().toISOString() },
-    { id: 'p-2', category: '必需品', title: 'クレジットカード', isPacked: true, updatedAt: new Date().toISOString() },
-    { id: 'p-3', category: '電子機器', title: '変圧器', isPacked: false, updatedAt: new Date().toISOString() },
-    { id: 'p-4', category: '日用品', title: '日焼け止め', isPacked: false, updatedAt: new Date().toISOString() },
-    { id: 'p-5', category: '衣類', title: '水着', isPacked: true, packedBy: ['Reina'], updatedAt: new Date().toISOString() },
-    { id: 'p-6', category: '衣類', title: '厚手のパーカー', isPacked: false, packedBy: ['Ken'], updatedAt: new Date().toISOString() },
-    { id: 'p-7', category: '必需品', title: '海外旅行保険証', isPacked: false, packedBy: ['Sarah'], updatedAt: new Date().toISOString() },
+    { id: 'p-1', category: '必需品', title: 'パスポート', isPacked: true, assignees: ['Reina', 'Ken', 'Sarah'], updatedAt: new Date().toISOString() },
+    { id: 'p-2', category: '必需品', title: 'クレジットカード', isPacked: true, assignees: ['Reina', 'Ken', 'Sarah'], updatedAt: new Date().toISOString() },
+    { id: 'p-3', category: '電子機器', title: '変圧器', isPacked: false, assignees: ['Ken'], updatedAt: new Date().toISOString() },
+    { id: 'p-4', category: '日用品', title: '日焼け止め', isPacked: false, assignees: ['Reina', 'Ken', 'Sarah'], updatedAt: new Date().toISOString() },
+    { id: 'p-5', category: '衣類', title: '水着', isPacked: true, packedBy: ['Reina'], assignees: ['Reina'], updatedAt: new Date().toISOString() },
+    { id: 'p-6', category: '衣類', title: '厚手のパーカー', isPacked: false, packedBy: ['Ken'], assignees: ['Ken'], updatedAt: new Date().toISOString() },
+    { id: 'p-7', category: '必需品', title: '海外旅行保険証', isPacked: false, packedBy: ['Sarah'], assignees: ['Sarah'], updatedAt: new Date().toISOString() },
 ];

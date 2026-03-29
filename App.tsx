@@ -290,7 +290,7 @@ const App: React.FC = () => {
   };
 
   const handleLoadDemoData = async () => {
-    if (!window.confirm('「パリ・ロンドン海外旅行版」のデモデータを読み込みますか？現在のデータは一時的にバックアップされます。')) return;
+    if (!window.confirm(t('common.demoLoadConfirm'))) return;
 
     // バックアップ
     const backupKey = `tabilog-backup-${new Date().getTime()}`;
@@ -328,24 +328,24 @@ const App: React.FC = () => {
       });
     }
 
-    alert('パリ・ロンドン旅行の究極デモデータを読み込みました！');
+    alert(t('common.demoLoaded'));
     setView('home');
   };
 
   const handleRestoreData = async () => {
     const lastBackupKey = localStorage.getItem('tabilog-last-backup-key');
     if (!lastBackupKey) {
-      alert('復元可能なバックアップが見つかりません。');
+      alert(t('common.noBackup'));
       return;
     }
 
     const backupDataStr = localStorage.getItem(lastBackupKey);
     if (!backupDataStr) {
-      alert('バックアップデータが破損しているか、削除されています。');
+      alert(t('common.backupCorrupted'));
       return;
     }
 
-    if (!window.confirm('サンプルデータを読み込む前の状態に戻しますか？')) return;
+    if (!window.confirm(t('common.restoreConfirm'))) return;
 
     try {
       const data = JSON.parse(backupDataStr);
@@ -355,7 +355,7 @@ const App: React.FC = () => {
       setPackingList(data.packingList || []);
       setUserProfiles(data.userProfiles || []);
       setBudget(data.budget || 0);
-      setTripName(data.tripName || '無題の旅行');
+      setTripName(data.tripName || t('common.untitledTrip'));
       setTripStartDate(data.tripStartDate || new Date().toISOString().split('T')[0]);
       setTripEndDate(data.tripEndDate || new Date().toISOString().split('T')[0]);
       setTripCoverImage(data.tripCoverImage || '');
@@ -376,12 +376,12 @@ const App: React.FC = () => {
         });
       }
 
-      alert('データを復元しました！');
+      alert(t('common.restored'));
       localStorage.removeItem('tabilog-last-backup-key'); // 復元後はキーを削除（連続復元防止）
       setView('home');
     } catch (e) {
       console.error('Restore failed', e);
-      alert('復元に失敗しました。');
+      alert(t('common.restoreFailed'));
     }
   };
 
@@ -419,7 +419,7 @@ const App: React.FC = () => {
   };
 
   const handleDeleteExpense = async (id: string) => {
-    if (!window.confirm('この経費を削除してもよろしいですか？')) return;
+    if (!window.confirm(t('common.deleteExpenseConfirm'))) return;
 
     const newExpenses = expenses.filter(e => e.id !== id);
     updateExpenses(newExpenses);
@@ -494,7 +494,7 @@ const App: React.FC = () => {
   // Removed GAS sync functions (handleSyncToSheet, handleFetchFromSheet)
 
   const handleResetAll = async () => {
-    if (!window.confirm('全てのデータを削除しますか？この操作は取り消せません。')) return;
+    if (!window.confirm(t('common.resetConfirm'))) return;
 
     const emptyExpenses: Expense[] = [];
     const emptyItinerary: ItineraryItem[] = [];
@@ -533,7 +533,7 @@ const App: React.FC = () => {
         <header className="sticky top-0 bg-ocean-dark px-5 pt-2 pb-2 flex justify-between items-center z-[60] safe-pt shadow-md">
           <div className="flex items-center gap-2">
             <AppLogo className="w-8 h-8" />
-            <h1 className="text-xl font-sans font-black tracking-tighter text-white">たびログ</h1>
+            <h1 className="text-xl font-sans font-black tracking-tighter text-white">{t('common.appName')}</h1>
           </div>
           <div className="flex items-center gap-2">
             {syncStatus === 'syncing' && <span className="text-[10px] text-accent animate-pulse">{t('common.syncing')}</span>}
@@ -545,7 +545,7 @@ const App: React.FC = () => {
                   const url = `${window.location.origin}${window.location.pathname}?trip=${tripId}`;
                   if (navigator.share) {
                     try {
-                      await navigator.share({ title: 'たびログくん', text: '旅行の計画を立てよう！', url });
+                      await navigator.share({ title: t('common.shareTitle'), text: t('common.shareText'), url });
                     } catch (e) {
                       console.log('Share canceled', e);
                     }
@@ -579,7 +579,7 @@ const App: React.FC = () => {
 
                     if (navigator.share) {
                       try {
-                        await navigator.share({ title: 'たびログくん', text: '旅行の計画を立てよう！', url });
+                        await navigator.share({ title: t('common.shareTitle'), text: t('common.shareText'), url });
                       } catch (e) { console.log('Share canceled', e); }
                     } else {
                       navigator.clipboard.writeText(url).then(() => {
@@ -648,7 +648,7 @@ const App: React.FC = () => {
                 setSyncStatus('success');
               } catch (e) {
                 console.error(e);
-                alert("作成に失敗しました。オフラインモードで開始します。");
+                alert(t('common.createFailedOffline'));
                 setView('home');
               } finally {
                 setTimeout(() => setSyncStatus('idle'), 2000);

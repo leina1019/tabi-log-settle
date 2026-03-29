@@ -12,14 +12,14 @@ import { resizeImage } from '../utils/imageUtils';
 import { getLocalDateString, getCurrentTimeStr } from '../utils/dateUtils';
 
 // 予定種類の定義（ラベル + アイコン）
-const ITEM_TYPES: { value: ItineraryItem['type']; label: string; icon: string }[] = [
-  { value: 'activity', label: 'アクティビティ', icon: '🎾' },
-  { value: 'sightseeing', label: '観光・スポット', icon: '📸' },
-  { value: 'meal', label: '食事・カフェ', icon: '🍴' },
-  { value: 'shopping', label: 'ショッピング', icon: '🛍️' },
-  { value: 'move', label: '移動・交通', icon: '✈️' },
-  { value: 'stay', label: '宿泊', icon: '🏨' },
-  { value: 'other', label: 'その他', icon: '✨' },
+const ITEM_TYPES: { value: ItineraryItem['type']; labelKey: string; icon: string }[] = [
+  { value: 'activity', labelKey: 'itinerary.type_activity', icon: '🎾' },
+  { value: 'sightseeing', labelKey: 'itinerary.type_sightseeing', icon: '📸' },
+  { value: 'meal', labelKey: 'itinerary.type_meal', icon: '🍴' },
+  { value: 'shopping', labelKey: 'itinerary.type_shopping', icon: '🛍️' },
+  { value: 'move', labelKey: 'itinerary.type_move', icon: '✈️' },
+  { value: 'stay', labelKey: 'itinerary.type_stay', icon: '🏨' },
+  { value: 'other', labelKey: 'itinerary.type_other', icon: '✨' },
 ];
 
 // カテゴリ別サンプル画像（AI生成、ローカル配置）
@@ -131,11 +131,11 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
       if (diffMin > 0) {
         const h = Math.floor(diffMin / 60);
         const m = diffMin % 60;
-        res[cur.id] = h > 0 ? `${h}時間${m}分` : `${m}分`;
+        res[cur.id] = h > 0 ? `${h}${t('common.time_h') || '時間'}${m}${t('common.time_m') || '分'}` : `${m}${t('common.time_m') || '分'}`;
       }
     }
     return res;
-  }, [filteredItems]);
+  }, [filteredItems, t]);
 
   const handleOpenAdd = () => {
     setFormData({ type: 'activity', date: selectedDate, time: getCurrentTimeStr() });
@@ -155,7 +155,7 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
     e?.preventDefault(); // formタグがなくても念のため
 
     if (!formData.title?.trim()) {
-      setValidationError(t('itinerary.errTitle') || 'タイトルを入力してください');
+      setValidationError(t('itinerary.errTitle'));
       return;
     }
 
@@ -178,12 +178,12 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
       setValidationError('');
     } catch (err) {
       console.error(err);
-      alert(t('common.saveError') || '保存中にエラーが発生しました');
+      alert(t('common.saveError'));
     }
   };
 
   const handleDeleteClick = (id: string) => {
-    if (window.confirm(t('common.confirmDelete') || 'この予定を削除しますか？')) {
+    if (window.confirm(t('common.confirmDelete'))) {
       onDelete(id);
     }
   };
@@ -198,7 +198,7 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
       setFormData(prev => ({ ...prev, imageUrl: dataUrl }));
     } catch (err) {
       console.error('Image processing failed:', err);
-      alert(t('common.imageProcessError') || '画像の処理に失敗しました');
+      alert(t('common.imageProcessError'));
     }
   };
 
@@ -206,9 +206,10 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
     if (filteredItems.length === 0) return;
 
     const date = new Date(selectedDate);
-    const dateStr = `${date.getMonth() + 1}/${date.getDate()}(${['日', '月', '火', '水', '木', '金', '土'][date.getDay()]})`;
+    const dayNames = t('common.daysShort') ? t('common.daysShort').split(',') : ['日', '月', '火', '水', '木', '金', '土'];
+    const dateStr = `${date.getMonth() + 1}/${date.getDate()}(${dayNames[date.getDay()]})`;
 
-    let text = `【${dateStr}の予定】\n`;
+    let text = t('itinerary.copyFormatTitle', { date: dateStr }) || `【${dateStr}の予定】\n`;
     filteredItems.forEach(item => {
       text += `\n⏰ ${item.time}${item.endTime ? `～${item.endTime}` : ''}\n📍 ${item.title}`;
       if (item.location) text += ` @ ${item.location}`;
@@ -217,15 +218,15 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
       // リンク情報の追加
       const effectiveMapUrl = item.mapUrl || (item.location ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.location)}` : '');
       if (effectiveMapUrl) {
-        text += `\n📍 マップ🔗: ${effectiveMapUrl}`;
+        text += `\n📍 ${t('itinerary.checkMap') || 'マップ'}: ${effectiveMapUrl}`;
       }
       if (item.link) {
-        text += `\n🔗 リンク: ${item.link}`;
+        text += `\n🔗 Link: ${item.link}`;
       }
       if (item.links && item.links.length > 0) {
         item.links.forEach(lnk => {
-          const label = lnk.label || '関連リンク';
-          text += `\n[${label}]🔗: ${lnk.url}`;
+          const label = lnk.label || t('itinerary.relatedLinks') || 'Link';
+          text += `\n[${label}]: ${lnk.url}`;
         });
       }
       text += `\n`;
@@ -275,8 +276,8 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
         <div className="w-16 h-16 bg-primary-light rounded-full flex items-center justify-center mb-4">
           <AppIcon name="itinerary" className="w-10 h-10 text-primary" />
         </div>
-        <h3 className="text-xl font-bold text-ink mb-2">{t('itinerary.startPlanning') || '旅行の計画を始めましょう'}</h3>
-        <p className="text-ink-sub text-sm mb-6">{t('itinerary.setDatesMsg') || 'Homeタブで旅行の日程を設定してください。'}</p>
+        <h3 className="text-xl font-bold text-ink mb-2">{t('itinerary.startPlanning')}</h3>
+        <p className="text-ink-sub text-sm mb-6">{t('itinerary.setDatesMsg')}</p>
       </div>
     );
   }
@@ -284,21 +285,21 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
   return (
     <div className="flex flex-col pt-2">
       <div className="flex justify-between items-center px-4 mb-4">
-        <h2 className="text-xl font-sans font-bold tracking-wide text-ink">{t('itinerary.title') || 'スケジュール'}</h2>
+        <h2 className="text-xl font-sans font-bold tracking-wide text-ink">{t('itinerary.title')}</h2>
         <div className="flex gap-2">
           {filteredItems.length > 0 && (
             <button
               onClick={handleCopySchedule}
               className={`text-[10px] font-bold uppercase tracking-widest border px-3 py-1.5 rounded-full transition-all ${isCopying ? 'bg-emerald-500 border-emerald-500 text-white' : 'text-emerald-600 border-emerald-600/40 hover:bg-emerald-50'}`}
             >
-              {isCopying ? (t('common.copied') || '✅ Copied') : ('📝 ' + (t('itinerary.copySchedule') || '予定をコピー'))}
+              {isCopying ? t('common.copied') : ('📝 ' + t('itinerary.copySchedule'))}
             </button>
           )}
           <button
             onClick={handleOpenAdd}
             className="text-[10px] font-bold text-primary uppercase tracking-widest border border-primary/40 px-3 py-1.5 rounded-full hover:bg-primary hover:text-white transition-colors"
           >
-            {'+ ' + (t('itinerary.addSchedule') || '予定を追加')}
+            {'+ ' + t('itinerary.addSchedule')}
           </button>
         </div>
       </div>
@@ -311,14 +312,14 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
             className={`flex-1 py-3 text-[11px] font-black uppercase tracking-widest rounded-full transition-all duration-500 flex items-center justify-center gap-2.5 ${showOverall ? 'bg-ink text-white shadow-xl shadow-ink/20 scale-[1.02]' : 'bg-transparent text-ink-sub hover:text-ink'}`}
           >
             <span className="text-sm">🌎</span>
-            {t('expenseList.all') || '全員'}
+            {t('expenseList.all')}
           </button>
           <button
             onClick={() => setShowOverall(false)}
             className={`flex-1 py-3 text-[11px] font-black uppercase tracking-widest rounded-full transition-all duration-500 flex items-center justify-center gap-2.5 ${!showOverall ? 'bg-ink text-white shadow-xl shadow-ink/20 scale-[1.02]' : 'bg-transparent text-ink-sub hover:text-ink'}`}
           >
             <span className="text-sm">👤</span>
-            {t('expenseList.individual') || '個人'}
+            {t('expenseList.individual')}
           </button>
         </div>
 
@@ -408,13 +409,13 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
                 <div className="flex items-center gap-3">
                   <WeatherIcon code={dayWeather.weatherCode} className="w-8 h-8" />
                   <div>
-                    <p className="text-[8px] font-bold text-ink-sub uppercase tracking-widest">{t('itinerary.weatherForecast') || '天気予報'}</p>
-                    <p className="text-[10px] font-bold text-ink">{selectedDate === getLocalDateString() ? (t('itinerary.todayForecast') || '今日の予報') : (t('itinerary.dayForecast') || 'この日の予報')}</p>
+                    <p className="text-[8px] font-bold text-ink-sub uppercase tracking-widest">{t('itinerary.weatherForecast')}</p>
+                    <p className="text-[10px] font-bold text-ink">{selectedDate === getLocalDateString() ? t('itinerary.todayForecast') : t('itinerary.dayForecast')}</p>
                   </div>
                 </div>
                 <div className="text-right">
                   <p className="text-sm font-black text-ink">{dayWeather.tempMax}° / {dayWeather.tempMin}°</p>
-                  <p className="text-[8px] font-bold text-ink-light">{t('itinerary.highLowTemp') || '最高 / 最低気温'}</p>
+                  <p className="text-[8px] font-bold text-ink-light">{t('itinerary.highLowTemp')}</p>
                 </div>
               </div>
             </div>
@@ -430,13 +431,13 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
             <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
               <span className="text-3xl">🗓️</span>
             </div>
-            <p className="text-sm font-bold text-ink mb-1">{t('itinerary.noSchedule') || 'この日の予定はまだありません'}</p>
-            <p className="text-xs text-ink-light mb-6">{t('itinerary.noScheduleSub') || '「+ 予定を追加」から旅の計画を立てましょう'}</p>
+            <p className="text-sm font-bold text-ink mb-1">{t('itinerary.noSchedule')}</p>
+            <p className="text-xs text-ink-light mb-6">{t('itinerary.noScheduleSub')}</p>
             <button
               onClick={handleOpenAdd}
               className="px-6 py-3 bg-primary text-white text-sm font-bold rounded-full shadow-lg shadow-primary/20 active:scale-95 transition-all"
             >
-              {'+ ' + (t('itinerary.addSchedule') || '予定を追加')}
+              {'+ ' + t('itinerary.addSchedule')}
             </button>
           </div>
         ) : (
@@ -541,7 +542,7 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
                             <span className="text-xl">{typeInfo.icon}</span>
                             <div className="min-w-0">
                               <div className="flex items-center gap-2">
-                                <span className="text-[10px] font-bold text-primary uppercase tracking-wider block">{typeInfo.label}</span>
+                                <span className="text-[10px] font-bold text-primary uppercase tracking-wider block">{t(typeInfo.labelKey)}</span>
                                 {isNext && (
                                   <span className="bg-emerald-500 text-white text-[7px] font-black px-1.5 py-0.5 rounded-full animate-pulse shadow-sm shadow-emerald-500/20">
                                     NEXT
@@ -584,7 +585,7 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
                                     className="flex-1 min-w-[120px] flex items-center justify-center gap-2 py-2 bg-rose-50 hover:bg-rose-100 rounded-lg text-xs font-bold text-rose-600 transition-colors relative z-20 border border-rose-200"
                                     onClick={(e) => e.stopPropagation()}
                                   >
-                                    <span>📍 マップ</span>
+                                    <span>📍 {t('itinerary.checkMap')}</span>
                                   </a>
                                 );
                               })()}
@@ -631,7 +632,7 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
                           <span className="text-xl">🕑</span>
                           <div className="text-center">
                             <p className="text-sm font-bold text-ocean-dark">
-                              {(t('itinerary.freeTime') || '空き時間')} {gaps[item.id]}
+                              {t('itinerary.freeTime')} {gaps[item.id]}
                             </p>
                           </div>
                         </div>
@@ -654,16 +655,16 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
               onClick={(e) => e.stopPropagation()}
             >
               <h3 className="text-lg font-sans font-bold mb-4 text-ink">
-                {formData.id ? (t('itinerary.editSchedule') || '予定を編集') : (t('itinerary.addSchedule') || '予定を追加')}
+                {formData.id ? t('itinerary.editSchedule') : t('itinerary.addSchedule')}
               </h3>
 
               <div className="space-y-4">
                 {/* タイトル */}
                 <div>
-                  <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">{t('expenseForm.title') || 'タイトル'} *</label>
+                  <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">{t('common.title')} *</label>
                   <input
                     type="text"
-                    placeholder={t('itinerary.titlePlaceholder') || "例: 浅草寺を観光"}
+                    placeholder={t('itinerary.titlePlaceholder')}
                     className="w-full bg-surface-gray border border-surface-gray-mid rounded-xl p-3 text-sm text-ink outline-none focus:border-primary"
                     value={formData.title || ''}
                     onChange={e => { setFormData({ ...formData, title: e.target.value }); setValidationError(''); }}
@@ -675,7 +676,7 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
 
                 {/* A5: 複数メンバー選択（チップ形式） */}
                 <div className="mb-6">
-                  <label className="block text-[11px] font-black text-ink-sub mb-3 uppercase tracking-[0.25em] px-1">{t('itinerary.scheduleMembers') || 'この予定のメンバー'}</label>
+                  <label className="block text-[11px] font-black text-ink-sub mb-3 uppercase tracking-[0.25em] px-1">{t('itinerary.scheduleMembers')}</label>
                   <div className="flex flex-wrap gap-2.5">
                     {userProfiles.map(p => {
                       const pIds = formData.participantIds || (formData.participantId ? [formData.participantId] : []);
@@ -703,7 +704,7 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
                   {(formData.participantIds || []).length === 0 && !formData.participantId && (
                     <p className="mt-2 text-[10px] font-bold text-emerald-600 px-1 flex items-center gap-1">
                       <span>🌎</span>
-                      {t('itinerary.allMembersCommon') || '全員共通の予定'}
+                      {t('itinerary.allMembersCommon')}
                     </p>
                   )}
                 </div>
@@ -711,15 +712,15 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
                 {/* 日付 + 時間 */}
                 <div className="grid grid-cols-2 gap-5 mb-6">
                   <div>
-                    <label className="block text-[11px] font-black text-ink-sub mb-2 uppercase tracking-[0.25em]">{t('expenseForm.date') || '日付'}</label>
+                    <label className="block text-[11px] font-black text-ink-sub mb-2 uppercase tracking-[0.25em]">{t('common.date')}</label>
                     <input type="date" min={tripStartDate} max={tripEndDate} value={formData.date || ''} onChange={e => setFormData({ ...formData, date: e.target.value })} className="w-full bg-surface-gray rounded-2xl px-5 py-4 text-xs font-bold outline-none border-2 border-transparent focus:border-primary/20 focus:bg-white transition-all shadow-inner" />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-black text-ink-sub mb-2 uppercase tracking-[0.25em]">{t('itinerary.startTime') || '開始時刻'}</label>
+                    <label className="block text-[11px] font-black text-ink-sub mb-2 uppercase tracking-[0.25em]">{t('itinerary.startTime')}</label>
                     <input type="time" value={formData.time || ''} onChange={e => setFormData({ ...formData, time: e.target.value })} className="w-full bg-surface-gray rounded-2xl px-5 py-4 text-xs font-bold outline-none border-2 border-transparent focus:border-primary/20 focus:bg-white transition-all shadow-inner" />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">{t('itinerary.endTime') || '終了時間'}</label>
+                    <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">{t('itinerary.endTime')}</label>
                     <input
                       type="time"
                       className="w-full bg-surface-gray border border-surface-gray-mid rounded-xl p-2.5 text-sm text-ink outline-none"
@@ -731,7 +732,7 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
 
                 {/* 種類 - selectに変更 */}
                 <div>
-                  <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">{t('itinerary.type') || '種類'}</label>
+                  <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">{t('itinerary.type')}</label>
                   <div className="flex flex-wrap gap-2 mt-1">
                     {ITEM_TYPES.map(type => (
                       <button
@@ -740,7 +741,7 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
                         onClick={() => setFormData({ ...formData, type: type.value })}
                         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-bold transition-all border ${formData.type === type.value ? 'bg-primary text-white border-primary' : 'bg-surface-gray text-ink-light border-surface-gray-mid'}`}
                       >
-                        <span className="text-xs">{type.icon}</span> {t(`itinerary.type_${type.value}`) || type.label}
+                        <span className="text-xs">{type.icon}</span> {t(type.labelKey)}
                       </button>
                     ))}
                   </div>
@@ -749,10 +750,10 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
                 {/* A1: 場所名入力 → リアルタイムでGoogleマップリンクを自動生成・プレビュー表示 */}
                 <div className="space-y-2">
                   <div>
-                    <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">{t('itinerary.location') || '場所名'}</label>
+                    <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">{t('itinerary.location')}</label>
                     <input
                       type="text"
-                      placeholder={t('itinerary.locationPlaceholder') || "例: 浅草寺、新宿駅"}
+                      placeholder={t('itinerary.locationPlaceholder')}
                       className="w-full bg-surface-gray border border-surface-gray-mid rounded-xl p-3 text-sm text-ink outline-none focus:border-primary"
                       value={formData.location || ''}
                       onChange={e => {
@@ -779,14 +780,14 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
                       rel="noopener noreferrer"
                       className="flex items-center justify-center gap-2 w-full py-2 bg-rose-50 border border-rose-200 rounded-xl text-xs font-bold text-rose-600 hover:bg-rose-100 transition-colors animate-in fade-in duration-200"
                     >
-                      <span>📍</span> {t('itinerary.checkMap') || 'Googleマップで確認する'}
+                      <span>📍</span> {t('itinerary.checkMap')}
                     </a>
                   )}
 
                   {/* マップURLは場所名の有無に関わらず常時表示 */}
                   <div>
                     <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest text-rose-500">
-                      <AppIcon name="map" className="w-3 h-3 inline-block mr-1" /> {t('itinerary.mapUrl') || 'マップURL'}
+                      <AppIcon name="map" className="w-3 h-3 inline-block mr-1" /> {t('itinerary.mapUrl')}
                     </label>
                     <input
                       type="url"
@@ -801,14 +802,14 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
                 {/* Links (複数対応) */}
                 <div>
                   <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">
-                    <AppIcon name="link" className="w-3 h-3 inline-block mr-1" /> {t('itinerary.relatedLinks') || '関連リンク'}
+                    <AppIcon name="link" className="w-3 h-3 inline-block mr-1" /> {t('itinerary.relatedLinks')}
                   </label>
                   <div className="space-y-2">
                     {formData.links?.map((lnk, i) => (
                       <div key={i} className="flex gap-2">
                         <input
                           type="text"
-                          placeholder={t('itinerary.linkLabel') || "ラベル (例: Web)"}
+                          placeholder={t('itinerary.linkLabel') || "Label"}
                           className="w-20 bg-surface-gray border border-surface-gray-mid rounded-lg p-2 text-xs text-ink outline-none"
                           value={lnk.label}
                           onChange={e => {
@@ -844,14 +845,14 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
                       onClick={() => setFormData({ ...formData, links: [...(formData.links || []), { label: '', url: '' }] })}
                       className="w-full py-2 border-2 border-dashed border-surface-gray-mid rounded-xl text-[10px] font-bold text-ink-light hover:border-primary/40 hover:text-primary transition-all"
                     >
-                      <AppIcon name="plus" className="w-3 h-3 inline-block mr-1" /> {t('itinerary.addLink') || 'リンクを追加'}
+                      <AppIcon name="plus" className="w-3 h-3 inline-block mr-1" /> {t('itinerary.addLink')}
                     </button>
                   </div>
                 </div>
 
                 {/* カバー画像設定: 手動取得 & アップロード */}
                 <div className="space-y-3">
-                  <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">{t('itinerary.coverImage') || 'カバー画像'}</label>
+                  <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">{t('itinerary.coverImage')}</label>
 
                   {formData.imageUrl && (
                     <div className="relative aspect-[21/9] rounded-xl overflow-hidden group mb-2 border border-surface-gray-mid">
@@ -872,7 +873,7 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
                       onClick={async () => {
                         const url = (formData.links && formData.links.length > 0 ? formData.links[0].url : '') || formData.link || formData.mapUrl;
                         if (!url || !url.startsWith('http')) {
-                          alert(t('itinerary.noImageLink') || '画像を取得できる有効なリンクがありません');
+                          alert(t('itinerary.noImageLink'));
                           return;
                         }
                         setIsFetchingOgp(true);
@@ -881,7 +882,7 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
                           if (ogp && ogp.image) {
                             setFormData(prev => ({ ...prev, imageUrl: ogp.image }));
                           } else {
-                            alert(t('itinerary.imageFetchFailed') || '画像を取得できませんでした');
+                            alert(t('itinerary.imageFetchFailed'));
                           }
                         } finally {
                           setIsFetchingOgp(false);
@@ -890,7 +891,7 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
                       className={`flex-1 flex items-center justify-center gap-1.5 py-3 rounded-xl text-[10px] font-bold tracking-wider transition-all border ${isFetchingOgp ? 'bg-surface-gray text-ink-sub' : 'bg-ocean-light/10 border-ocean-light/30 text-ocean-dark hover:bg-ocean-light/20'}`}
                       disabled={isFetchingOgp}
                     >
-                      {isFetchingOgp ? <span className="animate-pulse">{t('expenseForm.fetchingRate') || '取得中...'}</span> : <><span>🌍</span> {t('itinerary.fetchImageFromLink') || 'リンクから画像取得'}</>}
+                      {isFetchingOgp ? <span className="animate-pulse">{t('common.fetching')}</span> : <><span>🌍</span> {t('itinerary.fetchImageFromLink')}</>}
                     </button>
 
                     <button
@@ -898,7 +899,7 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
                       onClick={() => imageInputRef.current?.click()}
                       className="flex-1 flex items-center justify-center gap-1.5 py-3 rounded-xl text-[10px] font-bold tracking-wider bg-surface-gray border border-surface-gray-mid text-ink-sub hover:bg-white hover:border-primary/40 transition-all"
                     >
-                      <span>📷</span> {t('itinerary.selectPhoto') || '写真を選択'}
+                      <span>📷</span> {t('itinerary.selectPhoto')}
                     </button>
                     <input type="file" ref={imageInputRef} className="hidden" accept="image/*" onChange={handleImageChange} />
                   </div>
@@ -906,10 +907,10 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
 
                 {/* メモ */}
                 <div>
-                  <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">{t('expenseForm.memo') || 'メモ'}</label>
+                  <label className="block text-[10px] font-bold text-ink-sub mb-1 uppercase tracking-widest">{t('common.notes')}</label>
                   <textarea
                     rows={2}
-                    placeholder={t('itinerary.memoPlaceholder') || "自由にメモ..."}
+                    placeholder={t('itinerary.memoPlaceholder')}
                     className="w-full bg-surface-gray border border-surface-gray-mid rounded-xl p-3 text-sm text-ink outline-none resize-none"
                     value={formData.memo || ''}
                     onChange={e => setFormData({ ...formData, memo: e.target.value })}
@@ -930,7 +931,7 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
                     onClick={(e) => { e.stopPropagation(); handleSubmit(); }}
                     className="flex-[2] py-4 rounded-2xl bg-primary text-white text-sm font-bold shadow-lg shadow-primary/20 hover:bg-primary/90 active:scale-95 transition-all"
                   >
-                    {'💾 ' + (t('common.save') || '保存する')}
+                    {'💾 ' + t('common.save')}
                   </button>
                 </div>
               </div>

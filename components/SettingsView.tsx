@@ -63,7 +63,7 @@ const SettingsView: React.FC<Props> = ({
       });
     } catch (error) {
       console.error('Export failed', error);
-      const msg = t('settings.exportFailed') || 'Excelファイルの生成に失敗しました。';
+      const msg = t('settings.exportFailed');
       alert(msg + '\n' + (error as Error).message);
     } finally {
       setIsExporting(false);
@@ -156,10 +156,10 @@ const SettingsView: React.FC<Props> = ({
         const data = JSON.parse(event.target?.result as string);
         // window.confirm廃止: ファイルを選択した時点で意図確認済みとみなしインポートを実行
         onImportFullData(data);
-        setImportFeedback('✓ インポート完了しました');
+        setImportFeedback(t('settings.importSuccess'));
         setTimeout(() => setImportFeedback(null), 3000);
       } catch (err) {
-        setImportFeedback('⚠️ 無効なJSONファイルです');
+        setImportFeedback(t('settings.importError'));
         setTimeout(() => setImportFeedback(null), 3000);
       }
     };
@@ -234,7 +234,7 @@ const SettingsView: React.FC<Props> = ({
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] font-bold text-ink-sub uppercase tracking-widest mb-2 block">{t('common.member')} Color</label>
+                      <label className="text-[10px] font-bold text-ink-sub uppercase tracking-widest mb-2 block">{t('settings.memberColor')}</label>
                       <div className="flex flex-wrap gap-2.5">
                         {MEMBER_COLORS.map(color => (
                           <button
@@ -394,7 +394,7 @@ const SettingsView: React.FC<Props> = ({
                 </div>
                 <div className="text-center">
                   <span className={`text-[10px] font-black uppercase tracking-widest block mb-1 ${viewModeSize === key ? 'text-primary' : 'text-ink-sub'}`}>{config.label}</span>
-                  <span className="text-[8px] font-bold text-ink-light opacity-60 block leading-tight">{config.description}</span>
+                  <span className="text-[8px] font-bold text-ink-light opacity-60 block leading-tight">{t(config.descriptionKey)}</span>
                 </div>
                 {viewModeSize === key && (
                   <div className="absolute top-3 right-3 w-2.5 h-2.5 rounded-full bg-accent shadow-[0_0_8px_rgba(255,215,0,0.8)] animate-pulse" />
@@ -409,11 +409,11 @@ const SettingsView: React.FC<Props> = ({
       <section className="space-y-4">
         <div className="flex items-center gap-2 px-2">
           <span className="text-xl">🌍</span>
-          <h3 className="text-xs font-black text-ink uppercase tracking-[0.2em]">{t('settings.language' as any) || '言語 / Language'}</h3>
+          <h3 className="text-xs font-black text-ink uppercase tracking-[0.2em]">{t('settings.language')}</h3>
         </div>
         <div className="bg-white rounded-[32px] p-6 shadow-xl shadow-ink/5 border border-surface-gray-mid/50">
           <p className="text-[11px] text-ink-sub leading-relaxed font-bold mb-6 px-1">
-            {t('settings.languageDesc' as any) || 'アプリの表示言語を変更します (端末ごとに保存)'}
+            {t('settings.languageDesc')}
           </p>
           <div className="grid grid-cols-3 gap-3">
             {[
@@ -522,7 +522,7 @@ const SettingsView: React.FC<Props> = ({
             </button>
             <button
               onClick={() => {
-                if (window.confirm(t('settings.jsonImportConfirm') as string)) {
+                if (window.confirm(t('settings.jsonImportConfirm'))) {
                   jsonImportRef.current?.click();
                 }
               }}
