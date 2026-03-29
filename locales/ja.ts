@@ -198,6 +198,7 @@ export const ja = {
     errTripName: '旅行先を入力してください'
   },
   expenseList: {
+    title: '支出項目',
     noExpense: '支出の記録がまだありません',
     noExpenseSub: '右下の「+」ボタンから記録してみましょう',
     all: '全員',

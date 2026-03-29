@@ -16,17 +16,8 @@ interface LanguageContextType {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [language, setLanguageState] = useState<Language>(() => {
-    try {
-      const saved = localStorage.getItem('tabilog_language');
-      if (saved === 'ja' || saved === 'en' || saved === 'zh') {
-        return saved;
-      }
-    } catch (e) {
-      // Ignore
-    }
-    return 'ja';
-  });
+  // Reinaのリクエストに基づき、毎回日本語から開始するように初期値を 'ja' に固定
+  const [language, setLanguageState] = useState<Language>('ja');
 
   const setLanguage = (lang: Language) => {
     setLanguageState(lang);

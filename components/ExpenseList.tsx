@@ -97,7 +97,7 @@ const ExpenseList: React.FC<Props> = ({ expenses, onDelete, onEdit, onResetAll, 
           <div className="px-4 flex justify-between items-center mb-4">
             <h2 className="text-[20px] font-sans font-black tracking-widest uppercase text-ink flex items-center gap-2">
               <AppIcon name="history" className="w-5 h-5 text-primary" />
-              SPEND
+              {t('expenseList.title')}
             </h2>
             <span className="text-[10px] font-bold bg-primary-light text-primary px-2 py-0.5 rounded-full">{expenses.length} {t('common.itemCount')}</span>
           </div>

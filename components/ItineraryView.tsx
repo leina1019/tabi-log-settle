@@ -285,7 +285,7 @@ const ItineraryView: React.FC<Props> = ({ items, userProfiles, onSave, onDelete,
   return (
     <div className="flex flex-col pt-2">
       <div className="flex justify-between items-center px-4 mb-4">
-        <h2 className="text-xl font-sans font-bold tracking-wide text-ink">{t('itinerary.title')}</h2>
+        <h2 className="text-xl font-sans font-black tracking-normal text-ink">{t('itinerary.title')}</h2>
         <div className="flex gap-2">
           {filteredItems.length > 0 && (
             <button

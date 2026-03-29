@@ -198,6 +198,7 @@ export const zh = {
     errTripName: '请输入目的地'
   },
   expenseList: {
+    title: '支出记录',
     noExpense: '暂无支出记录',
     noExpenseSub: '点击右下角“+”号添加记录',
     all: '全部',

@@ -198,6 +198,7 @@ export const en = {
     errTripName: 'Please enter destination'
   },
   expenseList: {
+    title: 'EXPENSES',
     noExpense: 'No expenses recorded yet',
     noExpenseSub: 'Tap the "+" button below to add one',
     all: 'All',

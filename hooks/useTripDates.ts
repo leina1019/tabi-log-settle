@@ -1,7 +1,9 @@
 import { useState, useMemo, useEffect } from 'react';
 import { getLocalDateString } from '../utils/dateUtils';
+import { useTranslation } from '../contexts/LanguageContext';
 
 export const useTripDates = (tripStartDate: string, tripEndDate: string) => {
+    const { t } = useTranslation();
     const [selectedDate, setSelectedDate] = useState<string>('');
 
     const dateRange = useMemo(() => {
@@ -36,9 +38,9 @@ export const useTripDates = (tripStartDate: string, tripEndDate: string) => {
 
     const getDayLabel = (dateStr: string, index: number) => {
         const d = new Date(dateStr);
-        const weekDays = ['日', '月', '火', '水', '木', '金', '土'];
+        const weekDays = t('common.daysShort') ? t('common.daysShort').split(',') : ['日', '月', '火', '水', '木', '金', '土'];
         return {
-            day: `${index + 1}日目`,
+            day: t('dashboard.dayN', { day: index + 1 }),
             date: `${d.getDate()}`,
             week: weekDays[d.getDay()],
         };
